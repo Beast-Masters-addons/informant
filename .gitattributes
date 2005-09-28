@@ -1,9 +1,9 @@
 * text=auto !eol
 auctioneer/AucStorage.lua -text
 informant/InfData.lua -text
-informant/Informer.lua -text
-informant/Informer.toc -text
-informant/Informer.xml -text
+informant/Informant.lua -text
+informant/Informant.toc -text
+informant/Informant.xml -text
 informant/buildLocales.pl -text
 informant/locales/deDE.utf8 -text
 informant/locales/enUS.utf8 -text
