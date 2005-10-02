@@ -12,3 +12,4 @@ informant/locales/enUS.utf8 -text
 informant/locales/esES.utf8 -text
 informant/locales/frFR.utf8 -text
 informant/localization.lua -text
+informant/nopatch -text
