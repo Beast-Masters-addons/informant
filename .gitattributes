@@ -1,5 +1,7 @@
 * text=auto !eol
 auctioneer/AucStorage.lua -text
+informant/Bindings.xml -text
+informant/InfCommand.lua -text
 informant/InfData.lua -text
 informant/Informant.lua -text
 informant/Informant.toc -text
