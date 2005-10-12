@@ -1,4 +1,7 @@
 * text=auto !eol
+OnDemand/OnDemand.lua -text
+OnDemand/OnDemand.toc -text
+OnDemand/OnDemand.xml -text
 auctioneer/AucStorage.lua -text
 enchantrix/locales/deDE.utf8 -text
 enchantrix/locales/esES.utf8 -text
