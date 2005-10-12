@@ -20,3 +20,4 @@ informant/nopatch -text
 stubby/Stubby.lua -text
 stubby/Stubby.toc -text
 stubby/Stubby.xml -text
+stubby/nopatch -text
