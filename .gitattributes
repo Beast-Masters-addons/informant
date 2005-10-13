@@ -12,7 +12,6 @@ informant/Bindings.xml -text
 informant/InfCommand.lua -text
 informant/InfData.lua -text
 informant/Informant.lua -text
-informant/Informant.toc -text
 informant/Informant.xml -text
 informant/buildLocales.pl -text
 informant/locales/deDE.utf8 -text
@@ -22,6 +21,5 @@ informant/locales/frFR.utf8 -text
 informant/localization.lua -text
 informant/nopatch -text
 stubby/Stubby.lua -text
-stubby/Stubby.toc -text
 stubby/Stubby.xml -text
 stubby/nopatch -text
