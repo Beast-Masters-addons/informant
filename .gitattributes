@@ -8,6 +8,7 @@ enchantrix/locales/deDE.utf8 -text
 enchantrix/locales/esES.utf8 -text
 enchantrix/locales/frFR.utf8 -text
 enchantrix/nopatch -text
+enhtooltip/TinyMoneyFrame.xml -text
 informant/Bindings.xml -text
 informant/InfCommand.lua -text
 informant/InfData.lua -text
