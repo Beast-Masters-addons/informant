@@ -4,6 +4,8 @@ OnDemand/OnDemand.toc -text
 OnDemand/OnDemand.xml -text
 OnDemand/nopatch -text
 auctioneer/AucStorage.lua -text
+auctioneer/locales/daDK.utf8 -text
+enchantrix/locales/daDK.utf8 -text
 enchantrix/locales/deDE.utf8 -text
 enchantrix/nopatch -text
 enhtooltip/TinyMoneyFrame.xml -text
@@ -13,6 +15,7 @@ informant/InfData.lua -text
 informant/Informant.lua -text
 informant/Informant.xml -text
 informant/buildLocales.pl -text
+informant/locales/daDK.utf8 -text
 informant/locales/deDE.utf8 -text
 informant/locales/enUS.utf8 -text
 informant/locales/esES.utf8 -text
