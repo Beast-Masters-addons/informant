@@ -16,11 +16,6 @@ informant/Informant.lua -text
 informant/Informant.xml -text
 informant/buildLocales.pl -text
 informant/locales/daDK.utf8 -text
-informant/locales/deDE.utf8 -text
-informant/locales/enUS.utf8 -text
-informant/locales/esES.utf8 -text
-informant/locales/frFR.utf8 -text
-informant/localization.lua -text
 informant/nopatch -text
 stubby/Stubby.lua -text
 stubby/Stubby.xml -text
