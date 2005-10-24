@@ -19,6 +19,5 @@ informant/Informant.xml -text
 informant/buildLocales.pl eol=lf
 informant/locales/daDK.utf8 -text
 informant/nopatch -text
-stubby/Stubby.lua -text
 stubby/Stubby.xml -text
 stubby/nopatch -text
