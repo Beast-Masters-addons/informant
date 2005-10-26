@@ -14,6 +14,7 @@ enhtooltip/TinyMoneyFrame.xml -text
 informant/Bindings.xml -text
 informant/InfCommand.lua -text
 informant/InfData.lua -text
+informant/InfTrades.lua -text
 informant/Informant.lua -text
 informant/Informant.xml -text
 informant/buildLocales.pl eol=lf
