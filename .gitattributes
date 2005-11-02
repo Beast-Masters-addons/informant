@@ -5,7 +5,6 @@ OnDemand/OnDemand.xml -text
 OnDemand/nopatch -text
 auctioneer/AucStorage.lua -text
 auctioneer/buildLocales.pl eol=lf
-auctioneer/locales/daDK.utf8 -text
 enchantrix/buildLocales.pl eol=lf
 enchantrix/locales/daDK.utf8 -text
 enchantrix/locales/deDE.utf8 -text
