@@ -1,4 +1,12 @@
 * text=auto !eol
+Installer/GPL.txt -text
+Installer/Header.bmp -text
+Installer/Install.ico -text
+Installer/Norganna.exe -text
+Installer/Norganna.nsi -text
+Installer/UnInstall.ico -text
+Installer/Welcome.bmp -text
+Installer/nopatch -text
 OnDemand/OnDemand.lua -text
 OnDemand/OnDemand.toc -text
 OnDemand/OnDemand.xml -text
