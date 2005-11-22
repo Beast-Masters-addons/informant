@@ -1,16 +1,20 @@
 * text=auto !eol
+Installer/Auctioneer.exe -text
 Installer/GPL.txt -text
 Installer/Header.bmp -text
 Installer/Install.ico -text
 Installer/Licenses/Chinese[!!-~]Simplified[!!-~]GPL.txt -text
 Installer/Licenses/Chinese[!!-~]Traditional[!!-~]GPL.txt -text
+Installer/Licenses/Czech[!!-~]GPL.txt -text
 Installer/Licenses/Danish[!!-~]GPL.txt -text
 Installer/Licenses/French[!!-~]GPL.txt -text
 Installer/Licenses/German[!!-~]GPL.txt -text
 Installer/Licenses/Italian[!!-~]GPL.txt -text
 Installer/Licenses/Korean[!!-~]GPL.txt -text
+Installer/Licenses/Portuguese[!!-~]GPL.txt -text
+Installer/Licenses/PortugueseBR[!!-~]GPL.txt -text
 Installer/Licenses/Spanish[!!-~]GPL.txt -text
-Installer/Norganna.exe -text
+Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
 Installer/nopatch -text
