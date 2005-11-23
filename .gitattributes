@@ -25,6 +25,8 @@ OnDemand/nopatch -text
 auctioneer/AucLocale.lua -text
 auctioneer/AucStrings.lua -text
 auctioneer/Babylonian.lua -text
+basegen/nopatch -text
+docs/nopatch -text
 enchantrix/Babylonian.lua -text
 enchantrix/EnxLocale.lua -text
 enchantrix/EnxStrings.lua -text
