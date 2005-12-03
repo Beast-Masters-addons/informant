@@ -24,16 +24,13 @@ OnDemand/OnDemand.xml -text
 OnDemand/nopatch -text
 auctioneer/AucLocale.lua -text
 auctioneer/AucStrings.lua -text
-auctioneer/Babylonian.lua -text
 basegen/nopatch -text
 docs/nopatch -text
-enchantrix/Babylonian.lua -text
 enchantrix/EnxLocale.lua -text
 enchantrix/EnxStrings.lua -text
 enchantrix/GPL.txt -text
 enchantrix/nopatch -text
 enhtooltip/GPL.txt -text
-informant/Babylonian.lua -text
 informant/GPL.txt -text
 informant/InfLocale.lua -text
 informant/InfStrings.lua -text
