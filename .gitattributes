@@ -2,6 +2,7 @@
 Installer/Auctioneer.exe -text
 Installer/GPL.txt -text
 Installer/Header.bmp -text
+Installer/InsStrings.nsh -text
 Installer/Install.ico -text
 Installer/Licenses/Chinese[!!-~]Simplified[!!-~]GPL.txt -text
 Installer/Licenses/Chinese[!!-~]Traditional[!!-~]GPL.txt -text
