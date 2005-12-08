@@ -1,5 +1,4 @@
 * text=auto !eol
-Installer/AuctioneerSetup.exe -text
 Installer/GPL.txt -text
 Installer/Header.bmp -text
 Installer/Install.ico -text
