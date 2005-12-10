@@ -23,6 +23,9 @@ OnDemand/OnDemand.xml -text
 OnDemand/nopatch -text
 auctioneer/AucLocale.lua -text
 auctioneer/AucStrings.lua -text
+bandaid/0-BandAid.toc -text
+bandaid/BandAid.lua -text
+bandaid/BandAid.xml -text
 basegen/nopatch -text
 docs/nopatch -text
 enchantrix/EnxLocale.lua -text
