@@ -22,6 +22,12 @@ OnDemand/OnDemand.toc -text
 OnDemand/OnDemand.xml -text
 OnDemand/nopatch -text
 auctioneer/AucLocale.lua -text
+auctioneer/AuctionFrameSearch.lua -text
+auctioneer/AuctionFrameSearch.xml -text
+auctioneer/AuctioneerUI.lua -text
+auctioneer/AuctioneerUI.xml -text
+auctioneer/ListTemplate.lua -text
+auctioneer/ListTemplate.xml -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
 bandaid/BandAid.xml -text
