@@ -17,10 +17,6 @@ Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
 Installer/nopatch -text
-OnDemand/OnDemand.lua -text
-OnDemand/OnDemand.toc -text
-OnDemand/OnDemand.xml -text
-OnDemand/nopatch -text
 auctioneer/AucLocale.lua -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
