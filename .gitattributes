@@ -30,6 +30,7 @@ enchantrix/nopatch -text
 enhtooltip/GPL.txt -text
 informant/GPL.txt -text
 informant/InfLocale.lua -text
+informant/InfQuests.lua -text
 informant/nopatch -text
 stubby/GPL.txt -text
 stubby/nopatch -text
