@@ -23,6 +23,7 @@ bandaid/BandAid.lua -text
 bandaid/BandAid.xml -text
 bandaid/nopatch -text
 basegen/nopatch -text
+docs/AucConvert.pdf -text svneol=unset#unset
 docs/nopatch -text
 enchantrix/EnxLocale.lua -text
 enchantrix/GPL.txt -text
