@@ -1,4 +1,5 @@
 /!ImprovedErrorFrame
+/*.xml
 /AllInOneInventory
 /AllInOneInventoryKhaos
 /AltInvite
@@ -93,6 +94,7 @@ Installer/Thumbs.db
 /TrackerToggle
 /VisibilityOptions
 /WeaponButtons
+/WoWGuru
 /WorldMapInfo
 auctioneer/perlconv
 /sct
