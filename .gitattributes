@@ -17,6 +17,10 @@ Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
 Installer/nopatch -text
+askPrice/askprice.lua -text
+askPrice/askprice.toc -text
+askPrice/askprice.xml -text
+askPrice/localization.lua -text
 auctioneer/AucLocale.lua -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
