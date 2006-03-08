@@ -21,6 +21,7 @@ askPrice/askprice.lua -text
 askPrice/askprice.toc -text
 askPrice/askprice.xml -text
 askPrice/localization.lua -text
+askPrice/nopatch -text
 auctioneer/AucLocale.lua -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
