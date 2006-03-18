@@ -34,6 +34,8 @@ beancounter/nopatch -text
 docs/AucConvert.pdf -text svneol=unset#unset
 docs/changelog.txt -text
 docs/nopatch -text
+enchantrix/EnchantrixBarker.lua -text
+enchantrix/EnchantrixBarker.xml -text
 enchantrix/EnxLocale.lua -text
 enchantrix/GPL.txt -text
 enchantrix/nopatch -text
