@@ -47,10 +47,12 @@
 /CombatStats
 /CooldownCount
 /DamageMeters
+/DevTools
 /DivineBlessing
 /Earth
 /EasyMail
 /EquipCompare
+/FeralSkills
 /Fire
 /FreeBagSlots
 /FriendsFacts
@@ -69,6 +71,7 @@ Installer/Thumbs.db
 /Meteorologist
 /MinimapZoom
 /MobHealth
+/MobInfo2
 /MobileFrames
 /MobileMinimapButtons
 /Modifier2Sell
