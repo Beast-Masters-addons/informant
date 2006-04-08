@@ -24,6 +24,7 @@ bandaid/BandAid.xml -text
 beancounter/BeanCounter.toc -text
 beancounter/GPL.txt -text
 docs/AucConvert.pdf -text svneol=unset#unset
+docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.doc -text
 docs/changelog.txt -text
 enchantrix/EnxLocale.lua -text
 enchantrix/GPL.txt -text
