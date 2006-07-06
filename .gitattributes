@@ -18,7 +18,6 @@ Installer/Licenses/Spanish[!!-~]GPL.txt -text
 Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
-auctioneer/AucAskPrice.lua -text
 auctioneer/AucLocale.lua -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
