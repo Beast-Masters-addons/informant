@@ -45,18 +45,3 @@ itemizer/Art/Slider.tga -text svneol=unset#application/targa
 itemizer/Art/TallRoundCorner.tga -text svneol=unset#application/targa
 itemizer/Art/UpDownButton.tga -text svneol=unset#application/targa
 stubby/GPL.txt -text
-watcher/Watcher.toc -text
-watcher/Watcher.xml -text
-watcher/Watcher_auction.lua -text
-watcher/Watcher_group.lua -text
-watcher/Watcher_hooks.lua -text
-watcher/Watcher_loot.lua -text
-watcher/Watcher_main.lua -text
-watcher/Watcher_mapping.lua -text
-watcher/Watcher_merchant.lua -text
-watcher/Watcher_npc.lua -text
-watcher/Watcher_quest.lua -text
-watcher/Watcher_spell.lua -text
-watcher/Watcher_tooltip.lua -text
-watcher/Watcher_trainer.lua -text
-watcher/Watcher_utils.lua -text
