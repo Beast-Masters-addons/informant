@@ -20,6 +20,7 @@ Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
 \!swatter/!Swatter.toc -text
 \!swatter/Swatter.lua -text
+\!swatter/lgpl.txt -text
 auctioneer/AucLocale.lua -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
 auctioneer/Sounds/ScanComplete.ogg -text svneol=unset#application/ogg
