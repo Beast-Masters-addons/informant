@@ -18,6 +18,8 @@ Installer/Licenses/Spanish[!!-~]GPL.txt -text
 Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
+\!swatter/!Swatter.toc -text
+\!swatter/Swatter.lua -text
 auctioneer/AucLocale.lua -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
 auctioneer/Sounds/ScanComplete.ogg -text svneol=unset#application/ogg
