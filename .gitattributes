@@ -28,6 +28,7 @@ bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
 beancounter/BeanCounter.toc -text
 beancounter/GPL.txt -text
+btmscan/BtmPrices.lua -text
 btmscan/License.txt -text
 docs/AucConvert.pdf -text svneol=unset#unset
 docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.doc -text
