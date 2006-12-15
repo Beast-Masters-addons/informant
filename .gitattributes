@@ -30,8 +30,8 @@ beancounter/BeanCounter.toc -text
 beancounter/GPL.txt -text
 btmscan/BtmPrices.lua -text
 btmscan/License.txt -text
-btmscan/sounds/24102_partymix_Door_Bell.wav -text
-btmscan/sounds/cc-sampling-plus.txt -text
+btmscan/Sounds/24102_partymix_Door_Bell.wav -text
+btmscan/Sounds/cc-sampling-plus.txt -text
 docs/AucConvert.pdf -text svneol=unset#unset
 docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.doc -text
 docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.txt -text
