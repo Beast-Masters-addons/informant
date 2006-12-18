@@ -24,6 +24,9 @@ Installer/Welcome.bmp -text
 auctioneer/AucLocale.lua -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
 auctioneer/Sounds/ScanComplete.ogg -text svneol=unset#application/ogg
+auctioneer/Textures/Clear.tga -text
+auctioneer/Textures/Refresh.tga -text
+auctioneer/Textures/Sort.tga -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
 beancounter/BeanCounter.toc -text
