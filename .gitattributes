@@ -23,7 +23,7 @@ Installer/Welcome.bmp -text
 \!swatter/lgpl.txt -text
 auctioneer/AucLocale.lua -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
-auctioneer/Sounds/ScanComplete.ogg -text svneol=unset#application/ogg
+auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 auctioneer/Textures/Clear.tga -text
 auctioneer/Textures/Refresh.tga -text
 auctioneer/Textures/Sort.tga -text
@@ -33,7 +33,7 @@ beancounter/BeanCounter.toc -text
 beancounter/GPL.txt -text
 btmscan/BtmPrices.lua -text
 btmscan/License.txt -text
-btmscan/Sounds/DoorBell.ogg -text svneol=unset#application/ogg
+btmscan/Sounds/DoorBell.mp3 -text svneol=unset#application/ogg
 btmscan/Textures/Back.blp -text
 btmscan/Textures/Play.blp -text
 btmscan/Textures/Stop.blp -text
