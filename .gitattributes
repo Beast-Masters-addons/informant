@@ -27,6 +27,7 @@ auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 auctioneer/Textures/Clear.tga -text
 auctioneer/Textures/Refresh.tga -text
 auctioneer/Textures/Sort.tga -text
+auctioneer/norgs-funniest-home-convos.txt -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
 beancounter/BeanCounter.toc -text
