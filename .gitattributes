@@ -27,7 +27,6 @@ auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 auctioneer/Textures/Clear.tga -text
 auctioneer/Textures/Refresh.tga -text
 auctioneer/Textures/Sort.tga -text
-auctioneer/norgs-funniest-home-convos.txt -text
 bandaid/0-BandAid.toc -text
 bandaid/BandAid.lua -text
 beancounter/BeanCounter.toc -text
@@ -48,6 +47,7 @@ docs/Auctioneer[!!-~]AddOns[!!-~]3.6.1[!!-~]Change[!!-~]log.txt -text
 docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log[!!-~](Wiki).txt -text
 docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log.doc -text
 docs/conversion_plan.txt -text
+docs/norgs-funniest-home-convos.txt -text
 enchantrix/GPL.txt -text
 enchantrix/README-FIRST-ALPHA-BETA.txt -text
 enhtooltip/GPL.txt -text
