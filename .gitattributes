@@ -18,6 +18,10 @@ Installer/Licenses/Spanish[!!-~]GPL.txt -text
 Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
+\!nlog/!nLog.toc -text
+\!nlog/VeraMono.ttf -text
+\!nlog/lgpl.txt -text
+\!nlog/nLog.lua -text
 \!swatter/!Swatter.toc -text
 \!swatter/Swatter.lua -text
 \!swatter/lgpl.txt -text
