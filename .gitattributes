@@ -19,14 +19,12 @@ Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
 \!nlog/VeraMono.ttf -text
-\!swatter/!Swatter.toc -text
 \!swatter/lgpl.txt -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
 auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 auctioneer/Textures/Clear.tga -text
 auctioneer/Textures/Refresh.tga -text
 auctioneer/Textures/Sort.tga -text
-beancounter/BeanCounter.toc -text
 beancounter/GPL.txt -text
 btmscan/License.txt -text
 btmscan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
