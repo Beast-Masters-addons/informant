@@ -26,7 +26,6 @@ Installer/Welcome.bmp -text
 \!swatter/Swatter.lua -text
 \!swatter/lgpl.txt -text
 auctioneer/AucLocale.lua -text
-auctioneer/AucRevision.lua -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
 auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 auctioneer/Textures/Clear.tga -text
