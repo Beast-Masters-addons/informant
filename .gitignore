@@ -1,6 +1,9 @@
 /*
 Installer/AuctioneerSetup.exe
 Installer/Thumbs.db
+auctioneer/*.luaproj
+auctioneer/*.suo
+auctioneer/tmp
 itemizer/*.CSV
 itemizer/*.DBC
 itemizer/*.csv
