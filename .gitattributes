@@ -1,4 +1,6 @@
 * text=auto !eol
+/.AuxMain.lua.swp -text
+/AuxMain.lua -text
 Installer/GPL.txt -text
 Installer/Header.bmp -text
 Installer/Install.ico -text
@@ -18,6 +20,7 @@ Installer/Licenses/Spanish[!!-~]GPL.txt -text
 Installer/Licenses/Turkish[!!-~]GPL.txt -text
 Installer/UnInstall.ico -text
 Installer/Welcome.bmp -text
+/\!AuctCache.toc -text
 \!nlog/VeraMono.ttf -text
 \!swatter/lgpl.txt -text
 auctioneer/README-FIRST-ALPHA-BETA.txt -text
