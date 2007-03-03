@@ -43,14 +43,6 @@ docs/Auctioneer[!!-~]AddOns[!!-~]3.6.1[!!-~]Change[!!-~]log.txt -text
 docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log[!!-~](Wiki).txt -text
 docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log.doc -text
 docs/conversion_plan.txt -text
-enchantrix/GPL.txt -text
-enchantrix/README-FIRST-ALPHA-BETA.txt -text
 enhtooltip/GPL.txt -text
 informant/GPL.txt -text
-itemizer/Art/CloseButton.tga -text svneol=unset#application/targa
-itemizer/Art/RoundCorner.tga -text svneol=unset#application/targa
-itemizer/Art/RoundedButton.tga -text svneol=unset#application/targa
-itemizer/Art/Slider.tga -text svneol=unset#application/targa
-itemizer/Art/TallRoundCorner.tga -text svneol=unset#application/targa
-itemizer/Art/UpDownButton.tga -text svneol=unset#application/targa
 stubby/GPL.txt -text

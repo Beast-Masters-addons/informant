@@ -4,7 +4,3 @@ Installer/Thumbs.db
 auctioneer/*.luaproj
 auctioneer/*.suo
 auctioneer/tmp
-itemizer/*.CSV
-itemizer/*.DBC
-itemizer/*.csv
-itemizer/*.dbc
