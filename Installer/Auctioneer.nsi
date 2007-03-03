@@ -218,7 +218,7 @@ Section "BottomScanner" BottomScanner
 	File "..\BtmScan\Sounds\*.txt"
 
 	SetOutPath "$INSTDIR\Interface\AddOns\BtmScan\Textures"
-	File "..\BtmScan\Sounds\*.blp"
+	File "..\BtmScan\Textures\*.blp"
 SectionEnd
 
 Section "Informant" Informant
