@@ -179,7 +179,7 @@ Section "Auctioneer" Auctioneer
 	File "GPL.txt"
 
 	SetOutPath "$INSTDIR\Interface\AddOns\Auctioneer\Sounds"
-	File "..\Auctioneer\Sounds\ScanComplete.ogg"
+	File "..\Auctioneer\Sounds\*.mp3"
 
 	SetOutPath "$INSTDIR\Interface\AddOns\Auctioneer\Database"
 	File "..\Auctioneer\Database\*.lua"
@@ -212,20 +212,13 @@ Section "BottomScanner" BottomScanner
 	File "..\BtmScan\BtmScan.toc"
 	File "..\BtmScan\*.lua"
 	File "GPL.txt"
-SectionEnd
 
-Section "Enchantrix" Enchantrix
-	SectionIn 1 4
+	SetOutPath "$INSTDIR\Interface\AddOns\BtmScan\Sounds"
+	File "..\BtmScan\Sounds\*.mp3"
+	File "..\BtmScan\Sounds\*.txt"
 
-	SetOutPath "$INSTDIR\Interface\AddOns\Enchantrix"
-	File "..\Enchantrix\Enchantrix.toc"
-	File "..\Enchantrix\Readme.txt"
-	File "..\Enchantrix\*.xml"
-	File "..\Enchantrix\*.lua"
-	File "GPL.txt"
-
-	SetOutPath "$INSTDIR\Interface\AddOns\Enchantrix\Babylonian"
-	File "..\Babylonian\*.lua"
+	SetOutPath "$INSTDIR\Interface\AddOns\BtmScan\Textures"
+	File "..\BtmScan\Sounds\*.blp"
 SectionEnd
 
 Section "Informant" Informant
@@ -241,22 +234,8 @@ Section "Informant" Informant
 	File "..\Babylonian\*.lua"
 SectionEnd
 
-Section "Itemizer" Itemizer
-	SectionIn 1
-
-	SetOutPath "$INSTDIR\Interface\AddOns\Itemizer"
-	File "..\Itemizer\Itemizer.toc"
-	File "..\Itemizer\*.pl"
-	File "..\Itemizer\*.lua"
-	File "..\Itemizer\Art\*.tga"
-	File "GPL.txt"
-
-	SetOutPath "$INSTDIR\Interface\AddOns\Itemizer\Babylonian"
-	File "..\Babylonian\*.lua"
-SectionEnd
-
 Section "Swatter" Swatter
-	SectionIn 1 4
+	SectionIn 4
 
 	SetOutPath "$INSTDIR\Interface\AddOns\!Swatter"
 	File "..\!Swatter\!Swatter.toc"
@@ -377,16 +356,6 @@ Section "un.BottomScanner" un.BottomScanner
 	RMDir "$INSTDIR"
 SectionEnd
 
-Section "un.Enchantrix" un.Enchantrix
-	SectionIn 1 2
-
-	RMDir /r "$INSTDIR\Interface\AddOns\Enchantrix"
-
-	RMDir "$INSTDIR\Interface\AddOns"
-	RMDir "$INSTDIR\Interface"
-	RMDir "$INSTDIR"
-SectionEnd
-
 Section "un.Informant" un.Informant
 	SectionIn 1 2
 
@@ -394,16 +363,6 @@ Section "un.Informant" un.Informant
 
 	RMDir "$INSTDIR\Interface\AddOns"
 	RMDir "$INSTDIR\Interface"
-	RMDir "$INSTDIR"
-SectionEnd
-
-Section "un.Itemizer" un.Itemizer
-	SectionIn 1 2
-
-	RMDir /r "$INSTDIR\Interface\AddOns\Itemizer"
-
-	RMDir "$INSTDIR\Itemizer\AddOns"
-	RMDir "$INSTDIR\Itemizer"
 	RMDir "$INSTDIR"
 SectionEnd
 
