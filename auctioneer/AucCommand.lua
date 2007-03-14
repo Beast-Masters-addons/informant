@@ -2050,7 +2050,7 @@ function getFilterVal(type)
 end
 
 function getFilter(filter)
-	value = getFilterVal(filter);
+	local value = getFilterVal(filter);
 	if ((value == _AUCT('CmdOn')) or (value == "on")) then
 		return true;
 
