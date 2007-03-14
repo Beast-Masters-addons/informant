@@ -428,12 +428,22 @@ function chatPrint(text, cRed, cGreen, cBlue, id)
 	end
 end
 
+-------------------------------------------------------------------------------
+-- Sets all unset values in AuctionConfig.filters to their default ones using
+-- Auctioneer.Core.Constants.FilterDefaults.
+--
+-- called by:
+--    globally - AucUtil.SetFilterDefaults()
+--       called in Auctioneer: AucCommand.default()
+--       called in Auctioneer: AucCommand.getFilterVal()
+--       called in Auctioneer: AucDatabase.load()
+-------------------------------------------------------------------------------
 function setFilterDefaults()
 	if (not AuctionConfig.filters) then
 		AuctionConfig.filters = {};
 	end
 
-	for k, v in ipairs(Auctioneer.Core.Constants.FilterDefaults) do
+	for k, v in pairs(Auctioneer.Core.Constants.FilterDefaults) do
 		if (AuctionConfig.filters[k] == nil) then
 			AuctionConfig.filters[k] = v;
 		end
