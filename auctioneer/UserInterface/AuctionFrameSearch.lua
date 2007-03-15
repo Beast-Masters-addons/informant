@@ -61,6 +61,7 @@ local debugPrint;
 function load()
 	debugPrint("Loading");
 	local frame = AuctionFrameSearch;
+	local frameName = frame:GetName()
 
 	-- Methods
 	frame.SearchBids = AuctionFrameSearch_SearchBids;
@@ -76,17 +77,17 @@ function load()
 	frame.GetSelectedItemKey = AuctionFrameSearch_GetSelectedItemKey;
 
 	-- Controls
-	frame.savedSearchDropDown = getglobal(frame:GetName().."SavedSearchDropDown");
-	frame.searchDropDown = getglobal(frame:GetName().."SearchDropDown");
-	frame.bidFrame = getglobal(frame:GetName().."Bid");
-	frame.buyoutFrame = getglobal(frame:GetName().."Buyout");
-	frame.competeFrame = getglobal(frame:GetName().."Compete");
-	frame.plainFrame = getglobal(frame:GetName().."Plain");
-	frame.ownerFrame = getglobal(frame:GetName().."Owner");
-	frame.resultsList = getglobal(frame:GetName().."List");
-	frame.bidButton = getglobal(frame:GetName().."BidButton");
-	frame.buyoutButton = getglobal(frame:GetName().."BuyoutButton");
-	frame.pendingBidStatusText = getglobal(frame:GetName().."PendingBidStatusText");
+	frame.savedSearchDropDown = getglobal(frameName.."SavedSearchDropDown");
+	frame.searchDropDown = getglobal(frameName.."SearchDropDown");
+	frame.bidFrame = getglobal(frameName.."Bid");
+	frame.buyoutFrame = getglobal(frameName.."Buyout");
+	frame.competeFrame = getglobal(frameName.."Compete");
+	frame.plainFrame = getglobal(frameName.."Plain");
+	frame.ownerFrame = getglobal(frameName.."Owner");
+	frame.resultsList = getglobal(frameName.."List");
+	frame.bidButton = getglobal(frameName.."BidButton");
+	frame.buyoutButton = getglobal(frameName.."BuyoutButton");
+	frame.pendingBidStatusText = getglobal(frameName.."PendingBidStatusText");
 
 	-- Data members
 	frame.results = {};
@@ -1506,8 +1507,8 @@ end
 function AuctionFrameSearchBuyout_SearchButton_OnClick(button)
 	local frame = button:GetParent();
 	local frameName = frame:GetName();
-	local profitMoneyFrame = getglobal(frame:GetName().."MinProfit");
-	local percentLessEdit = getglobal(frame:GetName().."MinPercentLessEdit");
+	local profitMoneyFrame = getglobal(frameName.."MinProfit");
+	local percentLessEdit = getglobal(frameName.."MinPercentLessEdit");
 	local bidPercentEdit = getglobal(frameName.."MinBidPctEdit");
 
 	local minProfit = MoneyInputFrame_GetCopper(profitMoneyFrame);

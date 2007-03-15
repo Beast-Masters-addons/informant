@@ -49,6 +49,7 @@ local debugPrint;
 function load()
 	debugPrint("Loading");
 	local frame = AuctionFramePost;
+	local frameName = frame:GetName()
 
 	-- Methods
 	frame.CalculateAuctionDeposit = AuctionFramePost_CalculateAuctionDeposit;
@@ -92,14 +93,14 @@ function load()
 	frame.prices = {};
 
 	-- Controls
-	frame.auctionList = getglobal(frame:GetName().."List");
-	frame.bidMoneyInputFrame = getglobal(frame:GetName().."StartPrice");
-	frame.buyoutMoneyInputFrame = getglobal(frame:GetName().."BuyoutPrice");
-	frame.stackSizeEdit = getglobal(frame:GetName().."StackSize");
-	frame.stackSizeCount = getglobal(frame:GetName().."StackCount");
-	frame.depositMoneyFrame = getglobal(frame:GetName().."DepositMoneyFrame");
-	frame.depositErrorLabel = getglobal(frame:GetName().."UnknownDepositText");
-	frame.statusText = getglobal(frame:GetName().."StatusText");
+	frame.auctionList = getglobal(frameName.."List");
+	frame.bidMoneyInputFrame = getglobal(frameName.."StartPrice");
+	frame.buyoutMoneyInputFrame = getglobal(frameName.."BuyoutPrice");
+	frame.stackSizeEdit = getglobal(frameName.."StackSize");
+	frame.stackSizeCount = getglobal(frameName.."StackCount");
+	frame.depositMoneyFrame = getglobal(frameName.."DepositMoneyFrame");
+	frame.depositErrorLabel = getglobal(frameName.."UnknownDepositText");
+	frame.statusText = getglobal(frameName.."StatusText");
 
 	-- Setup the tab order for the money input frames.
 	MoneyInputFrame_SetPreviousFocus(frame.bidMoneyInputFrame, frame.stackSizeCount);
@@ -257,6 +258,7 @@ function AuctionFramePost_UpdatePriceModels(frame)
 
 		local name = frame:GetItemName();
 		local count = frame:GetStackSize();
+		local dropdown = getglobal(frame:GetName().."PriceModelDropDown");
 		if (name and count) then
 			local bag, slot, id, rprop, enchant, uniq = EnhTooltip.FindItemInBags(name);
 			if (id and rprop and enchant) then
@@ -353,7 +355,6 @@ function AuctionFramePost_UpdatePriceModels(frame)
 
 
 			-- Update the price model combo.
-			local dropdown = getglobal(frame:GetName().."PriceModelDropDown");
 			local index = UIDropDownMenu_GetSelectedID(dropdown);
 			if (index == nil) then
 				index = 1;
@@ -361,7 +362,6 @@ function AuctionFramePost_UpdatePriceModels(frame)
 			AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, index);
 		else
 			-- Update the price model combo.
-			local dropdown = getglobal(frame:GetName().."PriceModelDropDown");
 			AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, nil);
 		end
 	end
@@ -550,12 +550,13 @@ end
 -- Sets the price model note (i.e. "Undercutting 5%")
 -------------------------------------------------------------------------------
 function AuctionFramePost_SetNoteText(frame, text, colorize)
-	getglobal(frame:GetName().."PriceModelNoteText"):SetText(text);
+	local priceModelNoteText = getglobal(frame:GetName().."PriceModelNoteText")
+	priceModelNoteText:SetText(text);
 	if (colorize) then
 		local cHex, cRed, cGreen, cBlue = Auctioneer.Util.GetWarnColor(text);
-		getglobal(frame:GetName().."PriceModelNoteText"):SetTextColor(cRed, cGreen, cBlue);
+		priceModelNoteText:SetTextColor(cRed, cGreen, cBlue);
 	else
-		getglobal(frame:GetName().."PriceModelNoteText"):SetTextColor(1.0, 1.0, 1.0);
+		priceModelNoteText:SetTextColor(1.0, 1.0, 1.0);
 	end
 end
 
@@ -643,9 +644,10 @@ end
 -- Gets the duration.
 -------------------------------------------------------------------------------
 function AuctionFramePost_GetDuration(frame)
-	if (getglobal(frame:GetName().."ShortAuctionRadio"):GetChecked()) then
+	local frameName = frame:GetName()
+	if (getglobal(frameName.."ShortAuctionRadio"):GetChecked()) then
 		return 120;
-	elseif(getglobal(frame:GetName().."MediumAuctionRadio"):GetChecked()) then
+	elseif(getglobal(frameName.."MediumAuctionRadio"):GetChecked()) then
 		return 480;
 	else
 		return 1440;
@@ -656,9 +658,10 @@ end
 -- Sets the duration.
 -------------------------------------------------------------------------------
 function AuctionFramePost_SetDuration(frame, duration)
-	local shortRadio = getglobal(frame:GetName().."ShortAuctionRadio");
-	local mediumRadio = getglobal(frame:GetName().."MediumAuctionRadio");
-	local longRadio = getglobal(frame:GetName().."LongAuctionRadio");
+	local frameName = frame:GetName()
+	local shortRadio = getglobal(frameName.."ShortAuctionRadio");
+	local mediumRadio = getglobal(frameName.."MediumAuctionRadio");
+	local longRadio = getglobal(frameName.."LongAuctionRadio");
 
 	-- Figure out radio to set as checked.
 	if (duration == 120) then
@@ -695,7 +698,9 @@ function AuctionFramePost_SetAuctionItem(frame, bag, item, count)
 	frame.updating = true;
 
 	-- Update the controls with the item.
-	local button = getglobal(frame:GetName().."AuctionItem");
+	local frameName = frame:GetName()
+	local button = getglobal(frameName.."AuctionItem");
+	local buttonName = button:GetName()
 	if (bag and item) then
 		-- Get the item's information.
 		local itemLink = GetContainerItemLink(bag, item);
@@ -712,10 +717,10 @@ function AuctionFramePost_SetAuctionItem(frame, bag, item, count)
 		frame.itemName = name;
 
 		-- Show the item
-		getglobal(button:GetName().."Name"):SetText(name);
-		getglobal(button:GetName().."Name"):Show();
-		getglobal(button:GetName().."IconTexture"):SetTexture(itemTexture);
-		getglobal(button:GetName().."IconTexture"):Show();
+		getglobal(buttonName.."Name"):SetText(name);
+		getglobal(buttonName.."Name"):Show();
+		getglobal(buttonName.."IconTexture"):SetTexture(itemTexture);
+		getglobal(buttonName.."IconTexture"):Show();
 
 		-- Set the defaults.
 		local duration = Auctioneer.Command.GetFilterVal('auction-duration')
@@ -736,7 +741,7 @@ function AuctionFramePost_SetAuctionItem(frame, bag, item, count)
 		frame:SetStackCount(1);
 
 		-- Clear the current pricing model so that the default one gets selected.
-		local dropdown = getglobal(frame:GetName().."PriceModelDropDown");
+		local dropdown = getglobal(frameName.."PriceModelDropDown");
 		AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, nil);
 
 		-- Update the Transactions tab if BeanCounter is loaded.
@@ -757,8 +762,8 @@ function AuctionFramePost_SetAuctionItem(frame, bag, item, count)
 		frame.itemName = nil;
 
 		-- Hide the item
-		getglobal(button:GetName().."Name"):Hide();
-		getglobal(button:GetName().."IconTexture"):Hide();
+		getglobal(buttonName.."Name"):Hide();
+		getglobal(buttonName.."IconTexture"):Hide();
 
 		-- Clear the defaults.
 		frame:SetStackSize(1);
@@ -780,6 +785,8 @@ end
 function AuctionFramePost_ValidateAuction(frame)
 	-- Only validate if its not turned off.
 	if (not frame.updating) then
+		local frameName = frame:GetName()
+
 		-- Check that we have an item.
 		local valid = false;
 		if (frame.itemId) then
@@ -788,7 +795,7 @@ function AuctionFramePost_ValidateAuction(frame)
 
 		-- Check that there is a starting price.
 		local startPrice = frame:GetStartPrice();
-		local startErrorText = getglobal(frame:GetName().."StartPriceInvalidText");
+		local startErrorText = getglobal(frameName.."StartPriceInvalidText");
 		if (startPrice == 0) then
 			valid = false;
 			startErrorText:Show();
@@ -798,7 +805,7 @@ function AuctionFramePost_ValidateAuction(frame)
 
 		-- Check that the starting price is less than or equal to the buyout.
 		local buyoutPrice = frame:GetBuyoutPrice();
-		local buyoutErrorText = getglobal(frame:GetName().."BuyoutPriceInvalidText");
+		local buyoutErrorText = getglobal(frameName.."BuyoutPriceInvalidText");
 		if (buyoutPrice > 0 and buyoutPrice < startPrice) then
 			valid = false;
 			buyoutErrorText:Show();
@@ -810,7 +817,7 @@ function AuctionFramePost_ValidateAuction(frame)
 		-- has enough of the item.
 		local stackSize = frame:GetStackSize();
 		local stackCount = frame:GetStackCount();
-		local quantityErrorText = getglobal(frame:GetName().."QuantityInvalidText");
+		local quantityErrorText = getglobal(frameName.."QuantityInvalidText");
 		if (frame.itemId and frame.itemKey) then
 			local quantity = Auctioneer.PostManager.GetItemQuantityByItemKey(frame.itemKey);
 			local maxStackSize = AuctionFramePost_GetMaxStackSize(frame.itemId);
@@ -843,7 +850,7 @@ function AuctionFramePost_ValidateAuction(frame)
 		local deposit = frame:GetDeposit();
 
 		-- Update the state of the Create Auction button.
-		local button = getglobal(frame:GetName().."CreateAuctionButton");
+		local button = getglobal(frameName.."CreateAuctionButton");
 		if (valid) then
 			button:Enable();
 		else
@@ -851,7 +858,7 @@ function AuctionFramePost_ValidateAuction(frame)
 		end
 
 		-- Update the price model to reflect bid and buyout prices.
-		local dropdown = getglobal(frame:GetName().."PriceModelDropDown");
+		local dropdown = getglobal(frameName.."PriceModelDropDown");
 		local index = UIDropDownMenu_GetSelectedID(dropdown);
 		if (index and frame.prices and index <= #frame.prices) then
 			-- Check if the current selection matches
@@ -942,15 +949,16 @@ end
 -------------------------------------------------------------------------------
 function AuctionFramePost_StackSize_OnTextChanged(self)
 	local frame = self:GetParent();
+	local frameName = frame:GetName()
 
 	-- Update the stack size displayed on the graphic.
 	local itemId = frame:GetItemID();
 	local stackSize = frame:GetStackSize();
 	if (itemId and stackSize > 1) then
-		getglobal(frame:GetName().."AuctionItemCount"):SetText(stackSize);
-		getglobal(frame:GetName().."AuctionItemCount"):Show();
+		getglobal(frameName.."AuctionItemCount"):SetText(stackSize);
+		getglobal(frameName.."AuctionItemCount"):Show();
 	else
-		getglobal(frame:GetName().."AuctionItemCount"):Hide();
+		getglobal(frameName.."AuctionItemCount"):Hide();
 	end
 
 	-- Update the deposit and validate the auction.
@@ -1032,6 +1040,7 @@ end
 -------------------------------------------------------------------------------
 function AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, index)
 	local frame = dropdown:GetParent();
+	local frameName = frame:GetName()
 	frame.updating = true;
 	if (index) then
 		local price = frame.prices[index]
@@ -1046,21 +1055,21 @@ function AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, index)
 		end
 
 		if (price.text == _AUCT('UiPriceModelCustom')) then
-			getglobal(frame:GetName().."SavePriceText"):Show();
-			getglobal(frame:GetName().."SavePriceCheckBox"):Show();
-			getglobal(frame:GetName().."PriceModelNoteText"):Hide();
+			getglobal(frameName.."SavePriceText"):Show();
+			getglobal(frameName.."SavePriceCheckBox"):Show();
+			getglobal(frameName.."PriceModelNoteText"):Hide();
 		elseif (price.text == _AUCT('UiPriceModelAuctioneer')) then
-			getglobal(frame:GetName().."SavePriceText"):Hide();
-			getglobal(frame:GetName().."SavePriceCheckBox"):Hide();
-			getglobal(frame:GetName().."PriceModelNoteText"):Show();
+			getglobal(frameName.."SavePriceText"):Hide();
+			getglobal(frameName.."SavePriceCheckBox"):Hide();
+			getglobal(frameName.."PriceModelNoteText"):Show();
 		elseif (price.text == _AUCT('UiPriceModelLastSold')) then
-			getglobal(frame:GetName().."SavePriceText"):Hide();
-			getglobal(frame:GetName().."SavePriceCheckBox"):Hide();
-			getglobal(frame:GetName().."PriceModelNoteText"):Show();
+			getglobal(frameName.."SavePriceText"):Hide();
+			getglobal(frameName.."SavePriceCheckBox"):Hide();
+			getglobal(frameName.."PriceModelNoteText"):Show();
 		else
-			getglobal(frame:GetName().."SavePriceText"):Hide();
-			getglobal(frame:GetName().."SavePriceCheckBox"):Hide();
-			getglobal(frame:GetName().."PriceModelNoteText"):Hide();
+			getglobal(frameName.."SavePriceText"):Hide();
+			getglobal(frameName.."SavePriceCheckBox"):Hide();
+			getglobal(frameName.."PriceModelNoteText"):Hide();
 		end
 
 		Auctioneer.UI.DropDownMenu.Initialize(dropdown, AuctionFramePost_PriceModelDropDown_Initialize);
@@ -1069,9 +1078,9 @@ function AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, index)
 		frame:SetNoteText("");
 		frame:SetStartPrice(0);
 		frame:SetBuyoutPrice(0);
-		getglobal(frame:GetName().."SavePriceText"):Hide();
-		getglobal(frame:GetName().."SavePriceCheckBox"):Hide();
-		getglobal(frame:GetName().."PriceModelNoteText"):Hide();
+		getglobal(frameName.."SavePriceText"):Hide();
+		getglobal(frameName.."SavePriceCheckBox"):Hide();
+		getglobal(frameName.."PriceModelNoteText"):Hide();
 		UIDropDownMenu_ClearAll(dropdown);
 	end
 	frame.updating = false;
