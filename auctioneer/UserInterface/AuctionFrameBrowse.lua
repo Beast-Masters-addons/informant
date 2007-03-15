@@ -146,8 +146,6 @@ end
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function postFilterButtonSetTypeHook(_, _, button, type, text, isLast)
-	--debugPrint("Setting button", button:GetName(), type, text, isLast);
-
 	local buttonName = button:GetName();
 	local buttonID = buttonName:match("(%d+)$");
 	buttonID = tonumber(buttonID);
