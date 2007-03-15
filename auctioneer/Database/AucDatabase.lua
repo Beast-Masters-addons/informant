@@ -60,12 +60,6 @@ local DATABASE_VERSION_40 = 40000;
 local CURRENT_DATABASE_VERSION = 40001;
 
 -------------------------------------------------------------------------------
--- Data members
--------------------------------------------------------------------------------
-AuctionConfig = {}; --Table that stores config settings
-AuctionConfig.version = CURRENT_DATABASE_VERSION;
-
--------------------------------------------------------------------------------
 -- Called when the Auctioneer addon loads. This method should check the
 -- version of the database and upgrade if needed.
 -------------------------------------------------------------------------------
