@@ -64,13 +64,18 @@ local CURRENT_DATABASE_VERSION = 40001;
 -- version of the database and upgrade if needed.
 -------------------------------------------------------------------------------
 function load()
-	-- Load/Upgrade AuctionConfig.
+	-- Load/Upgrade AuctionConfig
 	if (not AuctionConfig) then
+		-- start with a new one, if AuctionConfig does not exist
 		AuctionConfig = {};
 	end
 	if (not AuctionConfig.version) then
+		-- version number is missing, therefore that's a <=3.0 database or an
+		-- empty db... in both cases we want to run the pre 4.0 conversion, so
+		-- set it to 3.0, anyway
 		AuctionConfig.version = 30000;
 	end
+	-- set default values for everything, which has not been set, yet.
 	Auctioneer.Util.SetFilterDefaults();
 
 	-- Load/Upgrade the various databases.
