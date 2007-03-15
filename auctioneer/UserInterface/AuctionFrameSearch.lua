@@ -54,6 +54,7 @@ local onAuctionUpdated;
 local onAuctionRemoved;
 local onBidScanQueued;
 local onBidScanComplete;
+local initializeSavedSearchDropDown
 local debugPrint;
 
 -------------------------------------------------------------------------------
@@ -96,6 +97,9 @@ function load()
 	frame.resultsByAuctionId = {};
 	frame.resultsType = nil;
 	frame.selectedResult = nil;
+
+	-- Initialize the Search SavedSearchDropDown
+	initializeSavedSearchDropDown(frame.savedSearchDropDown)
 
 	-- Initialize the Search drop down
 	Auctioneer.UI.DropDownMenu.Initialize(frame.searchDropDown, AuctionFrameSearch_SearchDropDown_Initialize);
@@ -1605,6 +1609,24 @@ end
 -------------------------------------------------------------------------------
 function debugPrint(...)
 	if debug then EnhTooltip.DebugPrint("[Auc.SearchTab]", ...); end
+end
+
+-------------------------------------------------------------------------------
+-- Initializes the SavedSearchDropDown drop down box.
+--
+-- parameters:
+--    frame - the frame, in which the drop down box will be displayed
+-------------------------------------------------------------------------------
+function initializeSavedSearchDropDown(frame)
+	local frameName = frame:GetName()
+
+	getglobal(frameName.."Left"):Hide();
+	getglobal(frameName.."Middle"):Hide();
+	getglobal(frameName.."Right"):Hide();
+	getglobal(frameName.."Text"):Hide();
+	UIDropDownMenu_SetWidth(getglobal(frame:GetParent():GetName().."SaveSearchEdit"):GetWidth(), frame);
+	Auctioneer.UI.DropDownMenu.Initialize(frame, AuctionFrameSearch_SavedSearchDropDown_Initialize);
+	Auctioneer.UI.DropDownMenu.SetSelectedID(frame, 1);
 end
 
 --=============================================================================
