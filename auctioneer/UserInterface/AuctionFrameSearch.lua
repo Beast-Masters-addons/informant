@@ -57,6 +57,8 @@ local onBidScanComplete;
 local debugPrint;
 
 -------------------------------------------------------------------------------
+-- Being called in AucUI.Load, once Auctioneer and its saved variables has been
+-- loaded.
 -------------------------------------------------------------------------------
 function load()
 	debugPrint("Loading");
@@ -655,6 +657,8 @@ function AuctionFrameSearch_SavedSearchDropDownItem_OnClick()
 end
 
 -------------------------------------------------------------------------------
+-- Callbackfunction for the savedSearchDropDownBox, which populates the box,
+-- whenever the box is opened (i.e. the down-arrow to its right is pressed).
 -------------------------------------------------------------------------------
 function AuctionFrameSearch_SavedSearchDropDown_Initialize()
 	local dropdown = AuctionFrameSearchSavedSearchDropDown
@@ -1613,7 +1617,7 @@ debugPrint("AuctioneerFrameSearch.lua loaded");
 -- Public API
 -------------------------------------------------------------------------------
 Auctioneer.UI.SearchTab = {
-	Load = load;
+	Load = load
 };
 
 
