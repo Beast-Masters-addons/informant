@@ -123,7 +123,9 @@ function loadDatabases(upgrade)
 	Auctioneer.FixedPriceDB.Load(upgrade);
 	Auctioneer.TransactionDB.Load(upgrade);
 
-	-- If we are upgrading from pre-4.0, toss the pre-4.0 tables.
+	-- Although most of the tables of the pre 4.0 version would automatically
+	-- being removed when the user logs out, we remove the data for the current
+	-- run of WoW, too to reduce the current memory usage.
 	if (upgrade and AuctionConfig.version < DATABASE_VERSION_40) then
 		AuctionPrices = nil;
 		AuctionBids = nil;
