@@ -74,14 +74,12 @@ end
 
 function commandHandler(command, source)
 
-	--To print or not to print, that is the question...
-	local chatprint = nil;
-
+	-- Did the command come from khaos or from /auc askprice xxxxx?
+	local khaosCommand
 	if (source == "GUI") then
-		chatprint = false;
-
+		khaosCommand = true;
 	else
-		chatprint = true;
+		khaosCommand = false;
 	end;
 
 	--Divide the large command into smaller logical sections (Shameless copy from the original function)
@@ -99,29 +97,29 @@ function commandHandler(command, source)
 
 	--/auctioneer askprice (on|off|toggle)
 	elseif (cmd == 'on' or cmd == 'off' or cmd == 'toggle') then
-		onOff(cmd, chatprint);
+		onOff(cmd, khaosCommand);
 
 	--/auctioneer askprice trigger (char)
 	elseif (cmd == 'trigger') then
-		setTrigger(param, chatprint)
+		setTrigger(param, khaosCommand)
 
 	--/auctioneer askprice (party|guild|smart|ad|whispers) (on|off|toggle)
 	elseif (
 		cmd == 'vendor'	or cmd == 'party'	or cmd == 'guild' or
 		cmd == 'smart'	or cmd == 'ad'		or cmd == 'whispers'
 	) then
-		genVarSet(cmd, param, chatprint);
+		genVarSet(cmd, param, khaosCommand);
 
 	--/auctioneer askprice word # (customSmartWord)
 	elseif (cmd == 'word') then
-		setCustomSmartWords(param, nil, nil, chatprint);
+		setCustomSmartWords(param, nil, nil, khaosCommand);
 
 	elseif (cmd == 'send') then
 		sendAskPrice(param)
 
 	--Command not recognized
 	else
-		if (chatprint) then
+		if khaosCommand == false then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtActUnknown'):format(command));
 		end
 	end
@@ -163,16 +161,13 @@ end
 
 	If chatprint is "true" then the state will also be printed to the user.
 ]]
-function onOff(state, chatprint)
+function onOff(state, khaosCommand)
 	if (type(state) == "string") then
 		state = Auctioneer.Util.DelocalizeFilterVal(state);
-
 	elseif (state == true) then
 		state = 'on'
-
 	elseif (state == false) then
 		state = 'off'
-
 	elseif (state == nil) then
 		state = 'toggle'
 	end
@@ -184,7 +179,7 @@ function onOff(state, chatprint)
 	end
 
 	--Print the change and alert the GUI if the command came from slash commands. Do nothing if they came from the GUI.
-	if (chatprint) then
+	if khaosCommand == false then
 		state = Auctioneer.Command.GetFilter('askprice')
 		setKhaosSetKeyValue("askprice", state)
 
@@ -197,7 +192,7 @@ function onOff(state, chatprint)
 	end
 end
 
-function setTrigger(param, chatprint)
+function setTrigger(param, khaosCommand)
 	if (not (type(param) == 'string')) then
 		return
 	end
@@ -205,13 +200,13 @@ function setTrigger(param, chatprint)
 	param = param:sub(1, 1)
 	Auctioneer.Command.SetFilter('askprice-trigger', param)
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtActSet'):format("askprice ".._AUCT('CmdAskPriceTrigger'), param));
 		setKhaosSetKeyValue('askprice-trigger', param)
 	end
 end
 
-function genVarSet(variable, param, chatprint)
+function genVarSet(variable, param, khaosCommand)
 	if (type(param) == "string") then
 		param = Auctioneer.Util.DelocalizeFilterVal(param);
 	end
@@ -225,7 +220,7 @@ function genVarSet(variable, param, chatprint)
 		param = Auctioneer.Command.SetFilter(var, not Auctioneer.Command.GetFilter(var));
 	end
 
-	if (chatprint) then
+	if khaosCommand == false then
 		if (Auctioneer.Command.GetFilter(var)) then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtAskPriceEnable'):format(Auctioneer.Util.LocalizeCommand(variable)));
 			setKhaosSetKeyValue(var, true)
@@ -237,7 +232,7 @@ function genVarSet(variable, param, chatprint)
 end
 
 --Function for users to add/modify smartWords (written by Kandoko, integrated into AskPrice by MentalPower)
-function setCustomSmartWords(param, number, word, chatprint)
+function setCustomSmartWords(param, number, word, khaosCommand)
 
 	--Only parse the param if the pre-parsed components are not present.
 	if (not (number and word)) then
@@ -268,7 +263,7 @@ function setCustomSmartWords(param, number, word, chatprint)
 		return;
 	end
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtActSet'):format(
 			"askprice ".._AUCT('CmdAskPriceWord').." "..number,
 			Auctioneer.Command.GetFilterVal('askprice-word'..number)
