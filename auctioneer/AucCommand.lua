@@ -35,8 +35,43 @@ local debug = false
 Auctioneer_RegisterRevision("$URL$", "$Rev$")
 
 --Local function prototypes
-local register, convertKhaos, getKhaosDefault, setKhaosSetKeyParameter, setKhaosSetKeyValue, getKhaosLocaleList, getKhaosDurationsList, getKhaosProtectionList, getKhaosFinishList, registerKhaos, buildCommandMap, commandMap, commandMapRev, command, chatPrintHelp, onOff, clear, alsoInclude, isValidLocale, setLocale, default, getFrameNames, getFrameIndex, setFrame, protectWindow, auctionDuration, finish, genVarSet, percentVarSet, numVarSet, setFilter, getFilterVal, getFilter, findFilterClass, setFilter, getLocale, debugPrint
-
+local register
+local convertKhaos
+local getKhaosDefault
+local setKhaosSetKeyParameter
+local setKhaosSetKeyValue
+local getKhaosLocaleList
+local getKhaosDurationsList
+local getKhaosProtectionList
+local getKhaosFinishList
+local registerKhaos
+local buildCommandMap
+local commandMap
+local commandMapRev
+local command
+local chatPrintHelp
+local onOff
+local clear
+local alsoInclude
+local isValidLocale
+local setLocale
+local default
+local getFrameNames
+local getFrameIndex
+local setFrame
+local protectWindow
+local auctionDuration
+local finish
+local genVarSet
+local percentVarSet
+local numVarSet
+local setFilter
+local getFilterVal
+local getFilter
+local findFilterClass
+local setFilter
+local getLocale
+local debugPrint
 
 function register()
 	if (Khaos) then
