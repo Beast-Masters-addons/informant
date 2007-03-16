@@ -1416,14 +1416,12 @@ end
 --Cleaner Command Handling Functions (added by MentalPower)
 function mainHandler(command, source)
 
-	--To print or not to print, that is the question...
-	local chatprint = nil;
-
+	-- Did the command come from khaos or from /auc xxxxx?
+	local khaosCommand
 	if (source == "GUI") then
-		chatprint = false;
-
+		khaosCommand = true;
 	else
-		chatprint = true;
+		khaosCommand = false;
 	end;
 
 	--Divide the large command into smaller logical sections (Shameless copy from the original function)
@@ -1441,7 +1439,7 @@ function mainHandler(command, source)
 
 	--/auctioneer (on|off|toggle)
 	elseif (cmd == 'on' or cmd == 'off' or cmd == 'toggle') then
-		onOff(cmd, chatprint);
+		onOff(cmd, khaosCommand);
 
 	--/auctioneer disable
 	elseif (cmd == 'disable') then
@@ -1453,7 +1451,7 @@ function mainHandler(command, source)
 	elseif (cmd == 'load') then
 		if (param == "always") or (param == "never") or (param == "auctionhouse") then
 			Stubby.SetConfig("Auctioneer", "LoadType", param);
-			if (chatprint) then
+			if (not khaosCommand) then
 				Auctioneer.Util.ChatPrint("Setting Auctioneer to "..param.." load for this toon");
 				setKhaosSetKeyValue("LoadSettings", param)
 			end
@@ -1461,23 +1459,23 @@ function mainHandler(command, source)
 
 	--/auctioneer clear (all|snapshot|item)
 	elseif (cmd == 'clear') then
-		clear(param, chatprint);
+		clear(param, khaosCommand);
 
 	--/auctioneer also ReamName-Faction
 	elseif (cmd == 'also') then
-		alsoInclude(param, chatprint);
+		alsoInclude(param, khaosCommand);
 
 	--/auctioneer locale
 	elseif (cmd == 'locale') then
-		setLocale(param, chatprint);
+		setLocale(param, khaosCommand);
 
 	--/auctioneer default (all|option)
 	elseif (cmd == 'default') then
-		default(param, chatprint);
+		default(param,  khaosCommand);
 
 	--/auctioneer print-in (FrameName|FrameNumber)
 	elseif (cmd == 'print-in') then
-		setFrame(param, chatprint)
+		setFrame(param, khaosCommand)
 
 	--/auctioneer broker
 	elseif (cmd == 'broker') then
@@ -1503,15 +1501,15 @@ function mainHandler(command, source)
 
 	--/auctioneer protect-window
 	elseif (cmd == 'protect-window') then
-		protectWindow(param, chatprint);
+		protectWindow(param, khaosCommand);
 
 	--/auctioneer auction-duration (2h|8h|24h)
 	elseif (cmd == 'auction-duration') then
-		auctionDuration(param, chatprint);
+		auctionDuration(param, khaosCommand);
 
 	--/auctioneer finish (off|logout|exit)
 	elseif (cmd == 'finish') then
-		finish(param, chatprint);
+		finish(param, khaosCommand);
 
 	--/auctioneer low
 	elseif (cmd == 'low') then
@@ -1537,22 +1535,22 @@ function mainHandler(command, source)
 		cmd == 'show-embed-blankline'	or cmd == 'show-warning'	or cmd == 'warn-color'		or
 		cmd == 'update-price'
 	) then
-		genVarSet(cmd, param, chatprint);
+		genVarSet(cmd, param, khaosCommand);
 
 	--/auctioneer (PercentVars)
 	elseif (
 		cmd == 'pct-bidmarkdown'		or cmd == 'pct-markup'		or cmd == 'pct-maxless'		or
 		cmd == 'pct-nocomp'				or cmd == 'pct-underlow'	or cmd == 'pct-undermkt'
 	) then
-		percentVarSet(cmd, param, chatprint);
+		percentVarSet(cmd, param, khaosCommand);
 
 	--/auctioneer (NumVars)
 	elseif (cmd == 'bid-limit') then
-		numVarSet(cmd, param, chatprint);
+		numVarSet(cmd, param, khaosCommand);
 
 	--Command not recognized
 	else
-		if (chatprint) then
+		if (not khaosCommand) then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtActUnknown'):format(cmd));
 		end
 	end
@@ -1625,7 +1623,7 @@ end
 
 	If chatprint is "true" then the state will also be printed to the user.
 --]]
-function onOff(state, chatprint)
+function onOff(state, khaosCommand)
 	if (type(state) == "string") then
 		state = Auctioneer.Util.DelocalizeFilterVal(state);
 
@@ -1647,7 +1645,7 @@ function onOff(state, chatprint)
 	end
 
 	--Print the change and alert the GUI if the command came from slash commands. Do nothing if they came from the GUI.
-	if (chatprint) then
+	if khaosCommand == false then
 		state = getFilter('all')
 		setKhaosSetKeyValue("enabled", state)
 
@@ -1661,7 +1659,7 @@ function onOff(state, chatprint)
 end
 
 --The following functions are almost verbatim copies of the original functions but modified in order to make them compatible with direct GUI access.
-function clear(param, chatprint)
+function clear(param, khaosCommand)
 	if (not (type(param) == "string")) then
 		return
 	end
@@ -1684,14 +1682,14 @@ function clear(param, chatprint)
 				Auctioneer.Statistic.ClearCache(itemKey, ahKey);
 				Auctioneer.SnapshotDB.Clear(itemKey, ahKey);
 				Auctioneer.HistoryDB.Clear(itemKey, ahKey);
-				if (chatprint) then
+				if khaosCommand == false then
 					Auctioneer.Util.ChatPrint(_AUCT('FrmtActClearOk'):format(itemLinks[pos]));
 				end
 			end
 		end
 	end
 
-	if (chatprint) then
+	if khaosCommand == false then
 		if ((param == _AUCT('CmdClearAll')) or (param == "all")) then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtActClearall'):format(ahKey));
 
@@ -1702,7 +1700,7 @@ function clear(param, chatprint)
 end
 
 
-function alsoInclude(param, chatprint)
+function alsoInclude(param, khaosCommand)
 	local localizedParam = param;
 	param = Auctioneer.Util.DelocalizeFilterVal(param);
 	if ((param == _AUCT('CmdAlsoOpposite')) or (param == "opposite")) then
@@ -1710,7 +1708,7 @@ function alsoInclude(param, chatprint)
 	end
 
 	if (not Auctioneer.Util.IsValidAlso(param)) then
-		if (chatprint) then
+		if khaosCommand == false then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtUnknownRf'):format(param));
 		end
 		return
@@ -1718,7 +1716,7 @@ function alsoInclude(param, chatprint)
 
 	setFilter('also', param);
 
-	if (chatprint) then
+	if khaosCommand == false then
 		setKhaosSetKeyValue('also', param);
 
 		if (param == "off") then
@@ -1736,7 +1734,7 @@ function isValidLocale(param)
 end
 
 
-function setLocale(param, chatprint)
+function setLocale(param, khaosCommand)
 	param = Auctioneer.Util.DelocalizeFilterVal(param);
 	local validLocale;
 
@@ -1753,7 +1751,7 @@ function setLocale(param, chatprint)
 	end
 
 
-	if (chatprint) then
+	if khaosCommand == false then
 		if (validLocale) then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtActSet'):format(_AUCT('CmdLocale'), param));
 			setKhaosSetKeyValue('locale', Babylonian.GetOrder());
@@ -1777,7 +1775,7 @@ function setLocale(param, chatprint)
 end
 
 
-function default(param, chatprint)
+function default(param, khaosCommand)
 	local paramLocalized
 
 	if ( (param == nil) or (param == "") ) then
@@ -1795,7 +1793,7 @@ function default(param, chatprint)
 
 	Auctioneer.Util.SetFilterDefaults();		-- Apply defaults for settings that went missing
 
-	if (chatprint) then
+	if khaosCommand == false then
 		if (param == "all") then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtActDefaultall'));
 			for k,v in pairs(AuctionConfig.filters) do
@@ -1862,7 +1860,7 @@ function getFrameIndex()
 end
 
 
-function setFrame(frame, chatprint)
+function setFrame(frame, khaosCommand)
 	local frameNumber
 	local frameVal
 	frameVal = tonumber(frame)
@@ -1890,7 +1888,7 @@ function setFrame(frame, chatprint)
 	end
 
 	local _, frameName
-	if (chatprint == true) then
+	if khaosCommand == false then
 		_, frameName = getFrameNames(frameNumber);
 		if (getFrameIndex() ~= frameNumber) then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtPrintin'):format(frameName));
@@ -1899,13 +1897,13 @@ function setFrame(frame, chatprint)
 
 	setFilter("printframe", frameNumber);
 
-	if (chatprint == true) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtPrintin'):format(frameName));
 		setKhaosSetKeyValue("printframe", frameNumber);
 	end
 end
 
-function protectWindow(param, chatprint)
+function protectWindow(param, khaosCommand)
 	local mode;
 
 	if (param == 'never' or param == 'off' or param == _AUCT('CmdProtectWindow0') or param == _AUCT('CmdOff') or tonumber(param) == 0) then
@@ -1931,13 +1929,13 @@ function protectWindow(param, chatprint)
 
 	setFilter("protect-window", mode);
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtProtectWindow'):format(_AUCT('CmdProtectWindow' .. mode)));
 		setKhaosSetKeyValue("protect-window", mode);
 	end
 end
 
-function auctionDuration(param, chatprint)
+function auctionDuration(param, khaosCommand)
 	local mode;
 
 	if (param == 'last' or param == _AUCT('CmdAuctionDuration0') or tonumber(param) == 0) then
@@ -1959,13 +1957,13 @@ function auctionDuration(param, chatprint)
 
 	setFilter("auction-duration", mode);
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtAuctionDuration'):format(_AUCT('CmdAuctionDuration' .. mode)));
 		setKhaosSetKeyValue("auction-duration", mode);
 	end
 end
 
-function finish(param, chatprint)
+function finish(param, khaosCommand)
 	local mode;
 
 	if (param == 'off' or param == _AUCT('CmdFinish0') or tonumber(param) == 0) then
@@ -1984,13 +1982,13 @@ function finish(param, chatprint)
 
 	setFilter("finish", mode);
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtFinish'):format(_AUCT('CmdFinish' .. mode)));
 		setKhaosSetKeyValue("finish", mode);
 	end
 end
 
-function genVarSet(variable, param, chatprint)
+function genVarSet(variable, param, khaosCommand)
 	if (type(param) == "string") then
 		param = Auctioneer.Util.DelocalizeFilterVal(param);
 	end
@@ -2001,7 +1999,7 @@ function genVarSet(variable, param, chatprint)
 		param = setFilter(variable, not getFilter(variable));
 	end
 
-	if (chatprint) then
+	if khaosCommand == false then
 		if (getFilter(variable)) then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtActEnable'):format(Auctioneer.Util.LocalizeCommand(variable)));
 			setKhaosSetKeyValue(variable, true)
@@ -2013,12 +2011,12 @@ function genVarSet(variable, param, chatprint)
 end
 
 
-function percentVarSet(variable, param, chatprint)
+function percentVarSet(variable, param, khaosCommand)
 	local paramVal = tonumber(param);
 	if paramVal == nil then
 		-- failed to convert the param to a number
 
-		if chatprint then
+		if khaosCommand == false then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtUnknownArg'):format(param, variable));
 		end
 		return -- invalid argument, don't do anything
@@ -2029,18 +2027,18 @@ function percentVarSet(variable, param, chatprint)
 	--Clear the HSP Cache since the profitability numbers have been updated.
 	Auctioneer_HSPCache = {};
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtActSet'):format(variable, paramVal.."%"));
 		setKhaosSetKeyValue(variable, paramVal);
 	end
 end
 
-function numVarSet(variable, param, chatprint)
+function numVarSet(variable, param, khaosCommand)
 	local paramVal = tonumber(param);
 	if (not paramVal) then
 		-- failed to convert the param to a number
 
-		if chatprint then
+		if khaosCommand == false then
 			Auctioneer.Util.ChatPrint(_AUCT('FrmtUnknownArg'):format(param, variable));
 		end
 		return -- invalid argument, don't do anything
@@ -2048,7 +2046,7 @@ function numVarSet(variable, param, chatprint)
 	-- param is a valid number, save it
 	setFilter(variable, paramVal);
 
-	if (chatprint) then
+	if khaosCommand == false then
 		Auctioneer.Util.ChatPrint(_AUCT('FrmtActSet'):format(variable, paramVal));
 		setKhaosSetKeyValue(variable, paramVal);
 	end
