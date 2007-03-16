@@ -181,11 +181,10 @@ function onOff(state, khaosCommand)
 	--Print the change and alert the GUI if the command came from slash commands. Do nothing if they came from the GUI.
 	if khaosCommand == false then
 		state = Auctioneer.Command.GetFilter('askprice')
-		setKhaosSetKeyValue("askprice", state)
+		setKhaosSetKeyValue("askprice", Auctioneer.Command.GetFilter('askprice'))
 
 		if (state) then
 			Auctioneer.Util.ChatPrint(_AUCT('StatAskPriceOn'));
-
 		else
 			Auctioneer.Util.ChatPrint(_AUCT('StatAskPriceOff'));
 		end
@@ -290,6 +289,27 @@ function sendAskPrice(param, player, text)
 	return eventHandler(askPriceFrame, "CHAT_MSG_WHISPER", text, player, true)
 end
 
+-------------------------------------------------------------------------------
+-- Updates the Khaos settings, if khaos is installed.
+--
+-- called by:
+--    genVarSet()           - if khaos settings should be changed
+--    onOff()               - if khaos settings should be changed
+--    setCustomSmartWords() - if khaos settings should be changed
+--    setTrigger()          - if khaos settings should be changed
+--
+-- calls:
+--    Khaos.getSetKey()          - if khaos is installed
+--    Khaos.setSetKeyParameter() - if the setting is valid
+--
+-- parameters:
+--    key   - (string) the khaos key id (i.e. auctioneer setting id) to be
+--                     changed
+--    value - (boolean) true/false, if the key represents a checkbox to be set
+--                      to the given value
+--            (string) the new value, if the key represents anything else but a
+--                     checkbox
+-------------------------------------------------------------------------------
 function setKhaosSetKeyValue(key, value)
 	if (Auctioneer_Khaos_Registered) then
 		local kKey = Khaos.getSetKey("Auctioneer", key)
@@ -297,14 +317,10 @@ function setKhaosSetKeyValue(key, value)
 		if (not kKey) then
 			EnhTooltip.DebugPrint("setKhaosSetKeyParameter(): key", key, "does not exist")
 			Auctioneer.Util.Debug("AskPrice", AUC_WARNING, "Khaos key doesn't exist", "Khaos key ", key, " does not exist")
-		elseif (kKey.checked) then
-			if (type(value) == "string") then value = (value == "on"); end
+		elseif (type(value) == "boolean") then
 			Khaos.setSetKeyParameter("Auctioneer", key, "checked", value)
-		elseif (kKey.value) then
-			Khaos.setSetKeyParameter("Auctioneer", key, "value", value)
 		else
-			EnhTooltip.DebugPrint("setKhaosSetKeyValue(): don't know how to update key", key)
-			Auctioneer.Util.Debug("AskPrice", AUC_WARNING, "Khaos key not updatable", "Khaos key ", key, " does not support update")
+			Khaos.setSetKeyParameter("Auctioneer", key, "value", value)
 		end
 	end
 end
