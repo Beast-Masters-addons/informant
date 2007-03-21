@@ -1892,7 +1892,7 @@ BtmScan.PerformPurchase = function()
 	
 	if (not there) then
 		for j = 1, pageCount do
-			there = checkItem(i, iLink, iCount, bidType, bidPrice)
+			there = checkItem(j, iLink, iCount, bidType, bidPrice)
 			if (there) then
 				i = j
 				break
