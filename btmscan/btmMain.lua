@@ -239,12 +239,13 @@ BtmScan.OnUpdate = function(...)
 		--BtmScan.processing = true
 		BtmScan.scanStage = 2
 		local page = BtmScan.pageCount-offset or 0
-		if not Auctioneer.ScanManager.IsScanning() then
-			-- Auctioneer is not scanning, so  lets send  off a query
+		if not Auctioneer.ScanManager.IsScanning() and
+		   not Auctioneer.BidScanner.IsScanning() then
+			-- Auctioneer is not scanning, so  let's send  off a query
 			AuctionFrameBrowse.page = page
 			QueryAuctionItems("", "", "", nil, nil, nil, page, nil, nil)
 		else
-			-- If Auctioneer is currently scanning, then we just need to piggyback it's calls.
+			-- If Auctioneer is currently scanning, then we just need to piggyback its calls.
 			BtmScan.timer = 0
 			BtmScan.pageScan = 0.001
 		end
