@@ -346,9 +346,6 @@ function postCanSendAuctionQuery(_, returnValues)
 	elseif (hookCanSendAuctionQuery and Auctioneer.BidScanner.IsScanning()) then
 		debugPrint("Overriding CanSendAuctionQuery() due to bid scan being in progress", nil, "postCanSendAuctionQuery", AUC_NOTICE);
 		return "setreturn", {};
-	elseif (hookCanSendAuctionQuery and Auctioneer.BidManager.ShowingConfirmation()) then
-		debugPrint("Overriding CanSendAuctionQuery() due to the bid confirmation dialog being shown", nil, "postCanSendAuctionQuery", AUC_NOTICE);
-		return "setreturn", {};
 	end
 end
 
