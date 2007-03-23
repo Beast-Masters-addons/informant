@@ -276,25 +276,64 @@ function onBidComplete(event, auction, bid, result)
 end
 
 -------------------------------------------------------------------------------
--- Hook called after Blizzard's CanSendAuctionQuery(). Overrides the return
--- value if a request is in progress. This method returns true
--- under any of the following conditions:
--- 1. Blizzard's CanSendAuctionQuery() returns true;
+-- Hook called after Blizzard's CanSendAuctionQuery().
+-- Overrides the return value to prevent other addons from intervening with our
+-- scan procedure. Under the following conditions we permit sending auction
+-- queries:
+-- 1. Blizzard's CanSendAuctionQuery() returns nil.
 -- 2. There is a query in progress.
 -- 3. There is a bid in progress.
+--
+-- In advance these checks are performed whenever CanSendAuctionQuery() is
+-- called outside of our other provided function
+-- AucQueryManager.CanSendAuctionQuery() which would skip these tests:
 -- 4. The scan manager is performing a scan.
--- 5. The bid scanner is performing a scan.
--- 6. The bid manager is showing the confirmation window.
+-- 5. The bid scanner is performing bidding (which includes a scan)
+--
+-- called by:
+--    function hook - CanSendAuctionQuery() (position: 50)
+--
+-- calls:
+--    isQueryInProgress()                 - everytime
+--    isBidInProgress()                   - if isQueryInProgress() is false
+--    AucScanManager.IsScanning()         - if isBidInProgress() is false and
+--                                          hooking into CanSendAuctionQuery()
+--                                          is enabled
+--    AucBidScanner.IsScanning()          - if AucScanManager.IsScanning() is
+--                                          false and hooking into 
+--                                          CanSendAuctionQuery() is enabled
+--    AucBidManager.ShowingConfirmation() - if AucBidScanner.IsScanning() is
+--                                          false and hooking into 
+--                                          CanSendAuctionQuery() is enabled
+--
+-- parameters:
+--    _     - ignoring the first parameter, which is an empty table, since no
+--            parameters are passed when registering this function with Stubby
+--            (see Stubby.RegisterFunctionHook() for more details)
+--    returnValues - (table) {[1] = 1}, if CanSendAuctionQuery() returned 1,
+--                           {}, otherwise
+--
+-- returns:
+--    first value:
+--       nil, if sending an auction query is fine
+--       "setreturn", otherwise
+--    second value:
+--       nil, if sending an auction query is fine
+--       {}, otherwise
+--
+-- remarks:
+--    See AucQueryManager.CanSendAuctionQuery() for a way to work around
+--    our changed return values, if required.
 -------------------------------------------------------------------------------
 function postCanSendAuctionQuery(_, returnValues)
 	if not returnValues[1] then
-		-- sending a query is already restricted by the origincal
+		-- sending a query is already restricted by the original
 		-- CanSendAuctionQuery() call - so there's no point in checking, if we
 		-- permit it
 		return
 	end
 
-	-- If Blizzard will allow the query, check if should allow it.
+	-- If Blizzard will allow the query, check if we should allow it.
 	if (isQueryInProgress()) then
 		debugPrint("Overriding CanSendAuctionQuery() due to query being in progress", nil, "postCanSendAuctionQuery", AUC_NOTICE);
 		return "setreturn", {};
