@@ -238,7 +238,6 @@ local gtHookSetInboxItem		-- GtHookSetinboxItem(frame,index)
 local gtHookSetInventoryItem	-- GtHookSetInventoryItem(frame,unit,slot,retVal)
 local gtHookSetLootItem			-- GtHookSetLootItem(frame,slot)
 local gtHookSetMerchantItem		-- GtHookSetMerchantItem(frame,slot)
-local gtHookSetOwner			-- GtHookSetOwner(frame,owner,anchor)
 local gtHookSetQuestItem		-- GtHookSetQuestItem(frame,qtype,slot)
 local gtHookSetQuestLogItem		-- GtHookSetQuestLogItem(frame,qtype,slot)
 local gtHookSetTradeSkillItem	-- GtHookSetTradeSkillItem(frame,skill,slot)
@@ -499,11 +498,71 @@ function showTooltip(currentTooltip, skipEmbedRender)
 		requiredWidth = currentWidth
 	end
 
-	local currentTooltipOwner = currentTooltip.owner
-	if (currentTooltipOwner) then
-		local align = currentTooltip.anchor
+	-- Get the frame which the currentTooltip is attached to.
+	-- We are using the first point, only, even if the gameTooltip is attached
+	-- to multiple anchors, to reduce the code complexity.
+	local _, currentTooltipOwner = currentTooltip:GetPoint(1)
+	local align                  = currentTooltip:GetAnchorType()
+
+	-- In case the current tooltip is attached to the cursor, currentTooltipOwner
+	-- is nil and align is "ANCHOR_CURSOR".
+	if not currentTooltipOwner and align == "ANCHOR_CURSOR" then
+		-- If the currentTooltip is set to be anchored to the cursor, we better
+		-- not interfere and simply accept the fact that our tooltip might go
+		-- off screen.
+
+		local _, yCursorPos = GetCursorPosition(UIParent)
+		local yAnchor
+		if (yCursorPos < screenHeight/2) then
+			yAnchor = "TOP"
+		else
+			yAnchor = "BOTTOM"
+		end
+
+		-- anchor our tooltip to the bottom or top, depending on where the
+		-- current tooltip is being displayed
+		EnhancedTooltip:ClearAllPoints()
+		if yAnchor == "TOP" then
+			EnhancedTooltip:SetPoint("BOTTOMLEFT", currentTooltip, "TOPLEFT", 0, 0)
+		else -- yAnchor == "BOTTOM"
+			EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0, 0)
+		end
+	elseif (currentTooltipOwner:GetName() == "UIParent") then
+		-- If currentTooltipOwner is UIParent, the current tooltip is not attached
+		-- to any other frame, so we don't have to bother about correct alignment.
+		-- The only option is to tack the object underneath / shuffle it up if
+		-- there aint enuff room.
+		EnhTTData.showIgnore = true
+		currentTooltip:Show()
+		EnhTTData.showIgnore = false
+
+		local currentToolTipRect = getRect(currentTooltip)
+		if (currentToolTipRect.bottom - requiredHeight < 60) then
+			currentTooltip:ClearAllPoints()
+			currentTooltip:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", currentToolTipRect.left, requiredHeight+60)
+		end
+		EnhancedTooltip:ClearAllPoints()
+		if (currentToolTipRect.xCenter < 6*screenWidth/10) then
+			EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0,0)
+		else
+			EnhancedTooltip:SetPoint("TOPRIGHT", currentTooltip, "BOTTOMRIGHT", 0,0)
+		end
+	else
+		-- The tooltip is anchored to another frame but not to the cursor. So
+		-- we should properly align it.
 
 		local currentTooltipOwnerRect = getRect(currentTooltipOwner)
+
+		local xAnchor
+		if (currentTooltipOwnerRect.left - requiredWidth < screenWidth * 0.2) then
+			xAnchor = "RIGHT"
+		elseif (currentTooltipOwnerRect.right + requiredWidth > screenWidth * 0.8) then
+			xAnchor = "LEFT"
+		elseif (align == "ANCHOR_LEFT") then
+			xAnchor = "LEFT"
+		else -- align == ANCHOR_RIGHT or ANCHOR_NONE or ANCHOR_PRESERVE
+			xAnchor = "RIGHT"
+		end
 		
 		local yAnchor
 		if (currentTooltipOwnerRect.yCenter < screenHeight/2) then
@@ -512,91 +571,43 @@ function showTooltip(currentTooltip, skipEmbedRender)
 			yAnchor = "BOTTOM"
 		end
 
-		-- If the currentTooltip is set to be anchored to the cursor, we better
-		-- not interfere and simply accept the fact that our tooltip might go
-		-- off screen.
-		if align == "ANCHOR_CURSOR" then
-			-- anchor our tooltip to the bottom or top, depending on where the
-			-- current tooltip is being displayed
-			EnhancedTooltip:ClearAllPoints()
-			if yAnchor == "TOP" then
-				EnhancedTooltip:SetPoint("BOTTOMLEFT", currentTooltip, "TOPLEFT", 0, 0)
-			else -- yAnchor == "BOTTOM"
-				EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0, 0)
-			end
-		else
-			-- If the current tooltip is not anchored to the cursor, we can
-			-- relocate it, so everything is displayed on screen, if needed.
-
-			local xAnchor
-			if (currentTooltipOwnerRect.left - requiredWidth < screenWidth * 0.2) then
-				xAnchor = "RIGHT"
-			elseif (currentTooltipOwnerRect.right + requiredWidth > screenWidth * 0.8) then
-				xAnchor = "LEFT"
-			elseif (align == "ANCHOR_RIGHT") then
-				xAnchor = "RIGHT"
-			elseif (align == "ANCHOR_LEFT") then
-				xAnchor = "LEFT"
-			else
-				xAnchor = "RIGHT"
-			end
-
-			-- Handle the situation where there isn't enough room on the choosen side of
-			-- the parent to display the tooltip. In that case we'll just shift tooltip
-			-- enough to the left or right so that it doesn't hang off the screen.
-			local xOffset = 0
-			if (xAnchor == "RIGHT" and currentTooltipOwnerRect.right + requiredWidth > screenWidth - 5) then
-				xOffset = -(currentTooltipOwnerRect.right + requiredWidth - screenWidth + 5)
-			elseif (xAnchor == "LEFT" and currentTooltipOwnerRect.left - requiredWidth < 5) then
-				xOffset = -(currentTooltipOwnerRect.left - requiredWidth - 5)
-			end
-
-			-- Handle the situation where there isn't enough room on the top or bottom of
-			-- the parent to display the tooltip. In that case we'll just shift tooltip
-			-- enough up or down so that it doesn't hang off the screen.
-			local yOffset = 0
-			local totalHeight = requiredHeight + currentTooltip:GetHeight()
-			if (yAnchor == "TOP" and currentTooltipOwnerRect.top + totalHeight > screenHeight - 5) then
-				yOffset = -(currentTooltipOwnerRect.top + totalHeight - screenHeight + 5)
-			elseif (yAnchor == "BOTTOM" and currentTooltipOwnerRect.bottom - totalHeight < 5) then
-				yOffset = -(currentTooltipOwnerRect.bottom - totalHeight - 5)
-			end
-
-			currentTooltip:ClearAllPoints()
-			EnhancedTooltip:ClearAllPoints()
-			local anchor = yAnchor..xAnchor
-		
-			if (anchor == "TOPLEFT") then
-				EnhancedTooltip:SetPoint("BOTTOMRIGHT", currentTooltipOwner, "TOPLEFT", -5 + xOffset, 5 + yOffset)
-				currentTooltip:SetPoint("BOTTOMRIGHT", EnhancedTooltip, "TOPRIGHT", 0,0)
-			elseif (anchor == "TOPRIGHT") then
-				EnhancedTooltip:SetPoint("BOTTOMLEFT", currentTooltipOwner, "TOPRIGHT", 5 + xOffset, 5 + yOffset)
-				currentTooltip:SetPoint("BOTTOMLEFT", EnhancedTooltip, "TOPLEFT", 0,0)
-			elseif (anchor == "BOTTOMLEFT") then
-				currentTooltip:SetPoint("TOPRIGHT", currentTooltipOwner, "BOTTOMLEFT", -5 + xOffset, -5 + yOffset)
-				EnhancedTooltip:SetPoint("TOPRIGHT", currentTooltip, "BOTTOMRIGHT", 0,0)
-			else--if (anchor == "BOTTOMRIGHT") then
-				currentTooltip:SetPoint("TOPLEFT", currentTooltipOwner, "BOTTOMRIGHT", 5 + xOffset, -5 + yOffset)
-				EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0,0)
-			end
+		-- Handle the situation where there isn't enough room on the choosen side of
+		-- the parent to display the tooltip. In that case we'll just shift tooltip
+		-- enough to the left or right so that it doesn't hang off the screen.
+		local xOffset = 0
+		if (xAnchor == "RIGHT" and currentTooltipOwnerRect.right + requiredWidth > screenWidth - 5) then
+			xOffset = -(currentTooltipOwnerRect.right + requiredWidth - screenWidth + 5)
+		elseif (xAnchor == "LEFT" and currentTooltipOwnerRect.left - requiredWidth < 5) then
+			xOffset = -(currentTooltipOwnerRect.left - requiredWidth - 5)
 		end
-	else
-		-- No parent
-		-- The only option is to tack the object underneath / shuffle it up if there aint enuff room
-		EnhTTData.showIgnore = true
-		currentTooltip:Show()
-		EnhTTData.showIgnore = false
-		local currentTooltipTipRect = getRect(currentTooltip)
 
-		if (currentTooltipTipRect.bottom - requiredHeight < 60) then
-			currentTooltip:ClearAllPoints()
-			currentTooltip:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", currentTooltipTipRect.left, requiredHeight+60)
+		-- Handle the situation where there isn't enough room on the top or bottom of
+		-- the parent to display the tooltip. In that case we'll just shift tooltip
+		-- enough up or down so that it doesn't hang off the screen.
+		local yOffset = 0
+		local totalHeight = requiredHeight + currentTooltip:GetHeight()
+		if (yAnchor == "TOP" and currentTooltipOwnerRect.top + totalHeight > screenHeight - 5) then
+			yOffset = -(currentTooltipOwnerRect.top + totalHeight - screenHeight + 5)
+		elseif (yAnchor == "BOTTOM" and currentTooltipOwnerRect.bottom - totalHeight < 5) then
+			yOffset = -(currentTooltipOwnerRect.bottom - totalHeight - 5)
 		end
+
+		currentTooltip:ClearAllPoints()
 		EnhancedTooltip:ClearAllPoints()
-		if (currentTooltipTipRect.xCenter < 6*screenWidth/10) then
-			EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0,0)
-		else
+		local anchor = yAnchor..xAnchor
+
+		if (anchor == "TOPLEFT") then
+			EnhancedTooltip:SetPoint("BOTTOMRIGHT", currentTooltipOwner, "TOPLEFT", -5 + xOffset, 5 + yOffset)
+			currentTooltip:SetPoint("BOTTOMRIGHT", EnhancedTooltip, "TOPRIGHT", 0,0)
+		elseif (anchor == "TOPRIGHT") then
+			EnhancedTooltip:SetPoint("BOTTOMLEFT", currentTooltipOwner, "TOPRIGHT", 5 + xOffset, 5 + yOffset)
+			currentTooltip:SetPoint("BOTTOMLEFT", EnhancedTooltip, "TOPLEFT", 0,0)
+		elseif (anchor == "BOTTOMLEFT") then
+			currentTooltip:SetPoint("TOPRIGHT", currentTooltipOwner, "BOTTOMLEFT", -5 + xOffset, -5 + yOffset)
 			EnhancedTooltip:SetPoint("TOPRIGHT", currentTooltip, "BOTTOMRIGHT", 0,0)
+		else -- if (anchor == "BOTTOMRIGHT") then
+			currentTooltip:SetPoint("TOPLEFT", currentTooltipOwner, "BOTTOMRIGHT", 5 + xOffset, -5 + yOffset)
+			EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0,0)
 		end
 	end
 
@@ -1468,11 +1479,6 @@ function llHookOnEnter()
 	end
 end
 
-function gtHookSetOwner(funcArgs, retVal, frame, owner, anchor)
-	frame.owner = owner
-	frame.anchor = anchor
-end
-
 ------------------------
 -- Operation functions
 ------------------------
@@ -1634,7 +1640,6 @@ function ttInitialize()
 	Stubby.RegisterFunctionHook("GameTooltip.SetAuctionSellItem", 200, gtHookSetAuctionSellItem)
 	Stubby.RegisterFunctionHook("GameTooltip.SetText", 200, gtHookSetText)
 	Stubby.RegisterFunctionHook("GameTooltip.AppendText", 200, gtHookAppendText)
-	Stubby.RegisterFunctionHook("GameTooltip.SetOwner", 200, gtHookSetOwner)
 	Stubby.RegisterFunctionHook("GameTooltip.Show", 200, gtHookShow)
 	Stubby.RegisterFunctionHook("GameTooltip_OnHide", 200, gtHookOnHide)
 
