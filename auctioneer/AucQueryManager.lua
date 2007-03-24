@@ -515,11 +515,6 @@ function removeRequestFromQueue(result)
 			clearPageCache();
 		end
 
-		-- If the query was sent we must fire the AUCTIONEER_QUERY_COMPLETE event.
-		if (request.querySent) then
-			Auctioneer.EventManager.FireEvent("AUCTIONEER_QUERY_COMPLETE", request.parameters, result);
-		end
-
 		-- If a callback function was provided, call it.
 		if (request.callbackFunc) then
 			request.callbackFunc(request.parameters, result);
