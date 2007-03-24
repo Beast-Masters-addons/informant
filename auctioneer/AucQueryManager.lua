@@ -200,7 +200,7 @@ function AucQueryManager_OnUpdate()
 					request.ownerTimeout = true
 					onAuctionItemListUpdate()
 				end
-			elseif (isQueryInProgress()) then
+			else
 				if (silence > request.maxSilence) then
 					--retry or fail 
 					if (request.retriesLeft > 0) then
