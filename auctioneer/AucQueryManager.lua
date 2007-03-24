@@ -443,7 +443,6 @@ function postQueryAuctionItemsHook(_, _, name, minLevel, maxLevel, invTypeIndex,
 		-- Add the request to the queue. We are guaranteed to be the only ones
 		-- in the queue.
 		addRequestToQueue(request, true);
-		Auctioneer.EventManager.FireEvent("AUCTIONEER_QUERY_SENT", request.parameters);
 	end
 end
 
@@ -542,10 +541,8 @@ end
 function sendQuery(request)
 	if (request.querySent) then
 		debugPrint("Resending query...");
-		Auctioneer.EventManager.FireEvent("AUCTIONEER_QUERY_RESENT", request.parameters);
 	else
 		debugPrint("Sending query...");
-		Auctioneer.EventManager.FireEvent("AUCTIONEER_QUERY_SENT", request.parameters);
 	end
 
 	-- Update the query status.
@@ -615,9 +612,6 @@ function onAuctionItemListUpdate()
 		request.lastQueryResponseTime = GetTime();
 		local isFirstResponse = (not request.receivedQueryResponse);
 		request.receivedQueryResponse = true;
-		if (isFirstResponse) then
-			Auctioneer.EventManager.FireEvent("AUCTIONEER_QUERY_RESPONSE_RECEIVED", request.parameters);
-		end
 
 		-- Check if the query is complete. The query is considered
 		-- complete once we have received all the owners. Assume true
