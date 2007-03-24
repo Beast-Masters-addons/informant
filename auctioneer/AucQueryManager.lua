@@ -605,7 +605,6 @@ function onAuctionItemListUpdate()
 
 		-- Update the receive time of the query request.
 		request.lastQueryResponseTime = GetTime();
-		local isFirstResponse = (not request.receivedQueryResponse);
 		request.receivedQueryResponse = true;
 
 		-- Check if the query is complete. The query is considered
