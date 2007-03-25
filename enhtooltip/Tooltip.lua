@@ -506,7 +506,7 @@ function showTooltip(currentTooltip, skipEmbedRender)
 
 	-- In case the current tooltip is attached to the cursor, currentTooltipOwner
 	-- is nil and align is "ANCHOR_CURSOR".
-	if not currentTooltipOwner and align == "ANCHOR_CURSOR" then
+	if align == "ANCHOR_CURSOR" then
 		-- If the currentTooltip is set to be anchored to the cursor, we better
 		-- not interfere and simply accept the fact that our tooltip might go
 		-- off screen.
