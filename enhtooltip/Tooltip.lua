@@ -512,19 +512,15 @@ function showTooltip(currentTooltip, skipEmbedRender)
 		-- off screen.
 
 		local _, yCursorPos = GetCursorPosition(UIParent)
-		local yAnchor
-		if (yCursorPos < screenHeight/2) then
-			yAnchor = "TOP"
-		else
-			yAnchor = "BOTTOM"
-		end
 
 		-- anchor our tooltip to the bottom or top, depending on where the
 		-- current tooltip is being displayed
 		EnhancedTooltip:ClearAllPoints()
-		if yAnchor == "TOP" then
+		if yCursorPos < screenHeight/2 then
+			-- display EnhTooltip above the currentTooltip
 			EnhancedTooltip:SetPoint("BOTTOMLEFT", currentTooltip, "TOPLEFT", 0, 0)
-		else -- yAnchor == "BOTTOM"
+		else
+		   -- display EnhTooltip below the currentTooltip
 			EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0, 0)
 		end
 	elseif not currentTooltipOwner or (currentTooltipOwner:GetName() == "UIParent") then
