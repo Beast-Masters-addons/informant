@@ -503,6 +503,13 @@ function showTooltip(currentTooltip, skipEmbedRender)
 	-- to multiple anchors, to reduce the code complexity.
 	local _, currentTooltipOwner = currentTooltip:GetPoint(1)
 	local align                  = currentTooltip:GetAnchorType()
+	-- If the currentTooltip is already owned by EnhacedTooltip, meaning that we
+	-- already aligned it somewhere, we have to get the EnhancedTooltip owner
+	-- instead to get the correct frame to attach EnhancedTooltip and
+	-- currentTooltip to.
+	if currentTooltipOwner and currentTooltipOwner:GetName() == "EnhancedTooltip" then
+		_, currentTooltipOwner = currentTooltipOwner:GetPoint(1)
+	end
 
 	-- In case the current tooltip is attached to the cursor, currentTooltipOwner
 	-- is nil and align is "ANCHOR_CURSOR".
