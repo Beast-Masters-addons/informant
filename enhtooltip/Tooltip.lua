@@ -523,11 +523,11 @@ function showTooltip(currentTooltip, skipEmbedRender)
 		   -- display EnhTooltip below the currentTooltip
 			EnhancedTooltip:SetPoint("TOPLEFT", currentTooltip, "BOTTOMLEFT", 0, 0)
 		end
-	elseif not currentTooltipOwner or (currentTooltipOwner:GetName() == "UIParent") then
-		-- If currentTooltipOwner is UIParent or nil, the current tooltip is not
-		-- attached to any other frame, so we don't have to bother about correct
-		-- alignment. The only thing todo is put the object underneath / shuffle
-		-- it up if there aint enuff room.
+	elseif not currentTooltipOwner then
+		-- If currentTooltipOwner is nil, the current tooltip is not attached to
+		-- any other frame, so we don't have to bother about correct alignment.
+		-- The only thing todo is put the object underneath / shuffle it up, if
+		-- if there aint enuff room.
 		EnhTTData.showIgnore = true
 		currentTooltip:Show()
 		EnhTTData.showIgnore = false
