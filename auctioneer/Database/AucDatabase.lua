@@ -145,6 +145,10 @@ function loadDatabases(upgrade)
 	-- We are up-to-date!
 	if (upgrade) then
 		AuctionConfig.version = CURRENT_DATABASE_VERSION;
+
+		-- Check number of constants in SV file, after the database was
+		-- loaded/converted.
+		Auctioneer.Util.CheckConstantsLimit()
 	end
 end
 

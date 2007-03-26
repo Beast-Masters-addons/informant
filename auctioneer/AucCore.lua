@@ -213,9 +213,6 @@ function addOnLoaded()
 	--Ready to rock and roll!
 	Auctioneer.Util.ChatPrint(_AUCT('FrmtWelcome'):format(Auctioneer.Version), 0.8, 0.8, 0.2);
 
-	--Check number of constants in SV file
-	Auctioneer.Util.CheckConstantsLimit()
-
  	-- Cleanup after that massive mem spike.
 	collectgarbage("collect");
 end
