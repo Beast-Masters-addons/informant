@@ -1,0 +1,56 @@
+* text=auto !eol
+Installer/GPL.txt -text
+Installer/Header.bmp -text
+Installer/Install.ico -text
+Installer/Licenses/Chinese[!!-~]Simplified[!!-~]GPL.txt -text
+Installer/Licenses/Chinese[!!-~]Traditional[!!-~]GPL.txt -text
+Installer/Licenses/Czech[!!-~]GPL.txt -text
+Installer/Licenses/Danish[!!-~]GPL.txt -text
+Installer/Licenses/Dutch[!!-~]GPL.txt -text
+Installer/Licenses/French[!!-~]GPL.txt -text
+Installer/Licenses/German[!!-~]GPL.txt -text
+Installer/Licenses/Greek[!!-~]GPL.txt -text
+Installer/Licenses/Italian[!!-~]GPL.txt -text
+Installer/Licenses/Korean[!!-~]GPL.txt -text
+Installer/Licenses/Portuguese[!!-~]GPL.txt -text
+Installer/Licenses/Russian[!!-~]GPL.txt -text
+Installer/Licenses/Spanish[!!-~]GPL.txt -text
+Installer/Licenses/Turkish[!!-~]GPL.txt -text
+Installer/UnInstall.ico -text
+Installer/Welcome.bmp -text
+\!auctcache/!AuctCache.toc -text
+\!auctcache/AuxMain.lua -text
+\!nlog/VeraMono.ttf -text
+\!swatter/lgpl.txt -text
+auctioneer/README-FIRST-ALPHA-BETA.txt -text
+auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
+auctioneer/Textures/Clear.tga -text
+auctioneer/Textures/Refresh.tga -text
+auctioneer/Textures/Sort.tga -text
+beancounter/GPL.txt -text
+btmscan/License.txt -text
+btmscan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
+btmscan/Textures/Back.blp -text
+btmscan/Textures/Play.blp -text
+btmscan/Textures/Stop.blp -text
+docs/AucConvert.pdf -text svneol=unset#unset
+docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.doc -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.txt -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.6[!!-~]Change[!!-~]log.doc -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.6[!!-~]Change[!!-~]log.txt -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.6.1[!!-~]Change[!!-~]log.doc -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.6.1[!!-~]Change[!!-~]log.txt -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log[!!-~](Wiki).txt -text
+docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log.doc -text
+docs/conversion_plan.txt -text
+enchantrix/GPL.txt -text
+enchantrix/README-FIRST-ALPHA-BETA.txt -text
+enhtooltip/GPL.txt -text
+informant/GPL.txt -text
+itemizer/Art/CloseButton.tga -text svneol=unset#application/targa
+itemizer/Art/RoundCorner.tga -text svneol=unset#application/targa
+itemizer/Art/RoundedButton.tga -text svneol=unset#application/targa
+itemizer/Art/Slider.tga -text svneol=unset#application/targa
+itemizer/Art/TallRoundCorner.tga -text svneol=unset#application/targa
+itemizer/Art/UpDownButton.tga -text svneol=unset#application/targa
+stubby/GPL.txt -text
