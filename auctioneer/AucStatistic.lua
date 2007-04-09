@@ -702,7 +702,7 @@ function determinePrice(itemKey, ahKey, auctionWithLowestBuyout, lowestAllowedPe
 			-- Use vendor price markup.
 			local baseData;
 			local itemId = Auctioneer.ItemDB.BreakItemKey(itemKey);
-			if (Informant) then baseData = Informant.GetItem(itemId) end;
+			if (Informant) then baseData = Informant.GetItem(itemId, true) end;
 			if (baseData and baseData.sell) then
 				-- use vendor prices if no auction data available
 				local vendorSell = Auctioneer.Util.NullSafe(baseData.sell); -- use vendor prices

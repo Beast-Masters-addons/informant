@@ -54,7 +54,7 @@ local requestAuctionScan;
 -------------------------------------------------------------------------------
 function getVendorBuyPrice(itemId)
 	if (Informant) then
-		local ret = Informant.GetItem(itemId)
+		local ret = Informant.GetItem(itemId, true)
 		if (ret) then
 			return ret.buy
 		end
@@ -72,7 +72,7 @@ end
 -------------------------------------------------------------------------------
 function getVendorSellPrice(itemId)
 	if (Informant) then
-		local ret = Informant.GetItem(itemId)
+		local ret = Informant.GetItem(itemId, true)
 		if (ret) then
 			return ret.sell
 		end

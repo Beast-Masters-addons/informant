@@ -1467,7 +1467,7 @@ end
 BtmScan.GetVendorPrice = function(itemID, count)
 	local vendorValue = BtmScan.VendorPrices[itemID]
 	if (not vendorValue and Informant and Informant.GetItem) then
-		local itemInfo = Informant.GetItem(itemID)
+		local itemInfo = Informant.GetItem(itemID, true)
 		if (itemInfo and itemInfo.sell) then
 			vendorValue = tonumber(itemInfo.sell) or 0
 		end
