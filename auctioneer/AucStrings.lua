@@ -965,8 +965,8 @@ AuctioneerLocalizations = {
 		["FrmtPrintin"]	= "Die Auctioneer-Meldungen werden nun im Chat-Fenster \"%s\" angezeigt";
 		["FrmtProtectWindow"]	= "Schutzmodus des Auktionshaus-Fensters auf \"%s\" gesetzt";
 		["FrmtUnknownArg"]	= "'%s' ist kein gültiges Argument für '%s'";
-		["FrmtUnknownLocale"]	= "Das angegebene Gebietsschema ('%s') ist unbekannt. Gültige Gebietsschemen sind:";
-		["FrmtUnknownRf"]	= "Ungültiger Parameter ('%s'). Der Parameter erfordert das Format: [Realm]-[Fraktion]. Bspw.: Al'Akir-Horde";
+		["FrmtUnknownLocale"]	= "Das angegebene Gebietsschema ('%s') ist unbekannt. Gültige Gebietsschemata sind:";
+		["FrmtUnknownRf"]	= "Ungültiger Parameter ('%s'). Der Parameter erfordert das Format: [Realm]-[Fraktion]. Bspw.: Al'akir-horde";
 
 		-- Section: Command Options
 		["OptAlso"]	= "([Realm]-[Fraktion]|opposite|home|neutral)";
@@ -1450,7 +1450,7 @@ AuctioneerLocalizations = {
 		["FrmtProtectWindow"]	= "Auction House window protection set to: %s";
 		["FrmtUnknownArg"]	= "'%s' is no valid argument for '%s'";
 		["FrmtUnknownLocale"]	= "The locale you specified ('%s') is unknown. Valid locales are:";
-		["FrmtUnknownRf"]	= "Invalid parameter ('%s'). The parameter must be formated like: [realm]-[faction]. For example: Al'Akir-Horde";
+		["FrmtUnknownRf"]	= "Invalid parameter ('%s'). The parameter must be formated like: [realm]-[faction]. For example: Al'akir-horde";
 
 		-- Section: Command Options
 		["OptAlso"]	= "(realm-faction||opposite||home||neutral)";
