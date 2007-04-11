@@ -328,25 +328,57 @@ function getHomeKey()
 	return serverName:lower().."-"..factionGroup:lower();
 end
 
--- function returns true, if the given parameter is a valid option for the also command, false otherwise
+-------------------------------------------------------------------------------
+-- Checks the given string to be a valid string which can be used by the also
+-- command.
+--
+-- called by:
+--    globally - AucUtil.IsValidAlso()
+--
+-- parameters:
+--    also - (string) the string to be validated.
+--
+-- returns:
+--    true, if it is a valid string
+--    false, otherwise
+--
+-- remarks:
+--    The tests performed are case sensitive! Therfore "Horde" is no valid
+--    faction name, while "horde" would be accepted.
+--    The tests are being case sensitive so that validated strings can be
+--    easier compared since you do not have to care about possibe case
+--    sensitivity.
+--
+--    Valid strings are either the following special strings
+--       - opposite
+--       - off
+--       - neutral
+--       - home
+--    or a normal string in the format
+--       [realm]-[faction]
+--    where [faction] is one of the following strings
+--       - horde
+--       - alliance
+--       - neutral
+-------------------------------------------------------------------------------
 function isValidAlso(also)
 	if (type(also) ~= "string") then
 		return false
 	end
 
 	if ((also == 'opposite') or (also == 'off') or (also == 'neutral') or (also == 'home')) then
-		return true		-- allow special keywords
+		return true -- allow special keywords
 	end
 
 	-- check if string matches: "[realm]-[faction]"
 	local realm, faction = also:match("^(.+)-(.+)$")
-	if (not realm) then
-		return false	-- invalid string
+	if not realm then
+		return false -- invalid string
 	end
 
-	-- check if faction = "horde" or "alliance"
-	if (faction == 'horde') or (faction == 'alliance') or (faction == 'neutral') then
-		return true
+	-- check, if faction = "horde", "alliance" or "neutral"
+	if (faction ~= 'horde') and (faction ~= 'alliance') and (faction ~= 'neutral') then
+		return false -- invalid faction
 	end
 
 	return true
