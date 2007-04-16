@@ -283,7 +283,7 @@ function printPendingAuctions()
 			local pendingAuctionsTable = BeanCounterRealmDB.pendingAuctions[item];
 			for index = 1, #pendingAuctionsTable do
 				local pendingAuction = unpackPendingAuction(pendingAuctionsTable[index]);
-				printPendingAuction(chatPrint, nil, pendingAuction);
+				printPendingAuction(chatPrint, nil, item, pendingAuction);
 			end
 		end
 	end
