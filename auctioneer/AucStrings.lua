@@ -3268,6 +3268,8 @@ AuctioneerLocalizations = {
 
 		-- Section: Commands
 		["CmdAlso"]	= "also";
+		["CmdAlsoHome"]	= "아군진영";
+		["CmdAlsoNeutral"]	= "중립진영";
 		["CmdAlsoOpposite"]	= "적진영";
 		["CmdAlt"]	= "Alt";
 		["CmdAskPriceAd"]	= "광고";
@@ -3340,6 +3342,8 @@ AuctioneerLocalizations = {
 		-- Section: Config Text
 		["GuiAlso"]	= "Also 데이타 표시";
 		["GuiAlsoDisplay"]	= "%s에 관한 데이터 표시";
+		["GuiAlsoHome"]	= "Also로 아군진영의 데이터만 표시합니다.";
+		["GuiAlsoNeutral"]	= "Also로 중립경매장의 데이터만 표시합니다.";
 		["GuiAlsoOff"]	= "더이상 다른 서버-진영 데이터를 표시하지 않습니다.";
 		["GuiAlsoOpposite"]	= "Also로 적대 진영에 대한 데이터를 표시합니다.";
 		["GuiAskPrice"]	= "가격요청 활성화";
@@ -5156,6 +5160,8 @@ AuctioneerLocalizations = {
 
 		-- Section: Commands
 		["CmdAlso"]	= "also而且";
+		["CmdAlsoHome"]	= "home";
+		["CmdAlsoNeutral"]	= "neutral";
 		["CmdAlsoOpposite"]	= "opposite对立";
 		["CmdAlt"]	= "Alt";
 		["CmdAskPriceAd"]	= "ad启事";
