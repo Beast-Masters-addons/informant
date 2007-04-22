@@ -53,12 +53,6 @@ local SPLITTING_AND_COMBINING_STACK_STATE = "SplittingAndCombiningStacks";
 local AUCTIONING_STACK_STATE = "AuctioningStack";
 
 -------------------------------------------------------------------------------
--- Function hooks that are used when processing requests
--------------------------------------------------------------------------------
-local Original_PickupContainerItem;
-local Original_SplitContainerItem;
-
--------------------------------------------------------------------------------
 -- Function Prototypes
 -------------------------------------------------------------------------------
 local load;
@@ -127,37 +121,37 @@ end
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function AucPostManager_PickupContainerItem(bag, slot)
-	-- Intentionally empty; don't allow items to be picked up while posting
-	-- auctions.
+	-- Don't allow items to be picked up while posting auctions.
 	debugPrint("Prevented call to PickupContainerItem()");
+	return "abort"
 end
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function AucPostManager_SplitContainerItem(bag, slot, count)
-	-- Intentionally empty; don't allow items to be picked up while posting
-	-- auctions.
+	-- Don't allow items to be picked up while posting auctions.
 	debugPrint("Prevented call to SplitContainerItem()");
+	return "abort"
 end
 
 -------------------------------------------------------------------------------
--- Wrapper around PickupContainerItem() that always calls the Blizzard version.
+-- Our own version of pickupContainerItem() allows us to use this function by
+-- ourselves while not allowing it for others.
 -------------------------------------------------------------------------------
 function pickupContainerItem(bag, slot)
-	if (Original_PickupContainerItem) then
-		return Original_PickupContainerItem(bag, slot);
-	end
-	return PickupContainerItem(bag, slot);
+	Stubby.UnregisterFunctionHook("PickupContainerItem", AucPostManager_PickupContainerItem)
+	PickupContainerItem(bag, slot)
+	Stubby.RegisterFunctionHook("PickupContainerItem", -200, AucPostManager_PickupContainerItem)
 end
 
 -------------------------------------------------------------------------------
--- Wrapper around SplitContainerItem() that always calls the Blizzard version.
+-- Our own version of splitContainerItem() allows us to use this function by
+-- ourselves while not allowing it for others.
 -------------------------------------------------------------------------------
 function splitContainerItem(bag, slot, count)
-	if (Original_SplitContainerItem) then
-		return Original_SplitContainerItem(bag, slot, count);
-	end
-	return SplitContainerItem(bag, slot, count);
+	Stubby.UnregisterFunctionHook("SplitContainerItem", AucPostManager_SplitContainerItem)
+	SplitContainerItem(bag, slot, count)
+	Stubby.RegisterFunctionHook("SplitContainerItem", -200, AucPostManager_SplitContainerItem)
 end
 
 -------------------------------------------------------------------------------
@@ -250,16 +244,8 @@ function beginProcessingRequestQueue()
 
 		-- Hook the functions to disable picking up items. This prevents
 		-- spurious ITEM_LOCK_CHANGED events from confusing us.
--- [[ TODO: FIX THIS ]]
--- [[ Temp disable to fix enchantrix ]]
---		if (not Original_PickupContainerItem) then
---			Original_PickupContainerItem = PickupContainerItem;
---			PickupContainerItem = AucPostManager_PickupContainerItem;
---		end
---		if (not Original_SplitContainerItem) then
---			Original_SplitContainerItem = SplitContainerItem;
---			SplitContainerItem = AucPostManager_SplitContainerItem;
---		end
+		Stubby.RegisterFunctionHook("PickupContainerItem", -200, AucPostManager_PickupContainerItem)
+		Stubby.RegisterFunctionHook("SplitContainerItem", -200, AucPostManager_SplitContainerItem)
 	end
 	return ProcessingRequestQueue;
 end
@@ -270,16 +256,8 @@ end
 function endProcessingRequestQueue()
 	if (ProcessingRequestQueue) then
 		-- Unhook the functions.
--- [[ TODO: FIX THIS ]]
--- [[ Temp disable to fix enchantrix ]]
---		if (Original_PickupContainerItem) then
---			PickupContainerItem = Original_PickupContainerItem;
---			Original_PickupContainerItem = nil;
---		end
---		if (Original_SplitContainerItem) then
---			SplitContainerItem = Original_SplitContainerItem;
---			Original_SplitContainerItem = nil;
---		end
+		Stubby.UnregisterFunctionHook("PickupContainerItem", AucPostManager_PickupContainerItem)
+		Stubby.UnregisterFunctionHook("SplitContainerItem", AucPostManager_SplitContainerItem)
 
 		debugPrint("End processing the post queue");
 		ProcessingRequestQueue = false;
