@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	nLog - A debugging console for World of Warcraft.
 	$Id$
 	Copyright (C) 2006 Norganna
@@ -80,7 +80,7 @@ function nLog.IsEnabled()
 	return nLogData.enabled
 end
 
-function dump(...)
+local function dump(...)
 	local out = "";
 	local n = select("#", ...)
 	for i = 1, n do
