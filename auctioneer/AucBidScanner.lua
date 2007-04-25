@@ -83,11 +83,6 @@ local BidRequestQueue = {};
 -- Flag that indicates if scanning has begun.
 local Scanning = false;
 
--- The original OnEvent and Update methods for AuctionFrameBrowse. These are
--- overridden when a scan is in progress so that the UI doesn't update.
-local Original_AuctionFrameBrowse_OnEvent = nil;
-local Original_AuctionFrameBrowse_Update = nil;
-
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function load()
