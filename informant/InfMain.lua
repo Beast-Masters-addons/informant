@@ -24,7 +24,7 @@
 		This AddOn's source code is specifically designed to work with
 		World of Warcraft's interpreted AddOn system.
 		You have an implicit licence to use this AddOn with these facilities
-		since that is it's designated purpose as per:
+		since that is its designated purpose as per:
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 Informant_RegisterRevision("$URL$", "$Rev$")
@@ -33,14 +33,6 @@ INFORMANT_VERSION = "<%version%>"
 if (INFORMANT_VERSION == "<".."%version%>") then
 	INFORMANT_VERSION = "3.9.DEV"
 end
-
--- GLOBAL FUNCTION PROTOTYPES:
-
-local getItem--(itemID);     itemID is the first value in a blizzard hyperlink id
---                           this pattern would extract the id you need:
---                             "item:(%d+):%d+:%d+:%d+"
-
-
 
 -- LOCAL FUNCTION PROTOTYPES:
 local addLine				-- addLine(text, color)
@@ -219,7 +211,6 @@ function getItem(itemID, static)
 		dataItem.usageText = nil
 	end
 
-
 	local reqSkill = 0
 	local reqLevel = 0
 	local skillName = ""
@@ -287,7 +278,11 @@ function getItem(itemID, static)
 		dataItem.rewardFrom = (static and emptyTable or {})
 	end
 
-	staticDataID=itemID
+	-- we adjusted the static table, if called with static = true
+	-- so save the itemID for future calls
+	if static then
+		staticDataID = itemID
+	end
 	return dataItem
 end
 
