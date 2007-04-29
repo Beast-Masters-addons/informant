@@ -641,7 +641,7 @@ function findEmptySlot()
 			_, _, _, _, _, _, strBagType = GetItemInfo(strBagName)
 		end
 		-- strBagType is nil for bag 0, for all other bags, it should be "Bag"
-		if not strBagType or (strBagType == _AUCT("SubTypeBag")) then
+		if not strBagType or (strBagType == _AUCT("SubTypeBag", GetLocale())) then
 			for slot = 1, GetContainerNumSlots(bag) do
 				if not (GetContainerItemInfo(bag, slot)) then
 					return bag, slot;
