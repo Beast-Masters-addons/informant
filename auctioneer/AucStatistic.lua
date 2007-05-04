@@ -156,6 +156,7 @@ function createCacheForAHKey(ahKey)
 		historicalMedians = {};
 		lowestBuyoutAuctionId = {};
 		hspInfo = {};
+		hspSettings = {}
 	}
 end
 
@@ -602,7 +603,7 @@ end
 
 -------------------------------------------------------------------------------
 -- Returns market information relating to the HighestSellablePrice for one of
--- the given items. If HSP cannot be calculated thsi method will return
+-- the given items. If HSP cannot be calculated this method will return
 -- 0 for the HSP.
 -------------------------------------------------------------------------------
 function getHSP(itemKey, ahKey)
@@ -610,11 +611,38 @@ function getHSP(itemKey, ahKey)
 	if (not ahKey) then ahKey = Auctioneer.Util.GetAuctionKey() end
 	if (not itemKey) then
 		debugPrint("ERROR: Calling Auctioneer.Statistic.GetHSP(itemKey, ahKey) - Function requires valid itemKey.");
-		return nil;
+		return nil
+	end
+
+	-- If any of the settings was changed, the cache is invalid and must be
+	-- cleared.
+	local cache = getCacheForAHKey(ahKey, true);
+
+	local pctMaxless  = tonumber(Auctioneer.Command.GetFilterVal('pct-maxless'))
+	local pctUnderlow = tonumber(Auctioneer.Command.GetFilterVal('pct-underlow'))
+	local pctUndermkt = tonumber(Auctioneer.Command.GetFilterVal('pct-undermkt'))
+	local pctNocomp   = tonumber(Auctioneer.Command.GetFilterVal('pct-nocomp'))
+	local pctMarkup   = tonumber(Auctioneer.Command.GetFilterVal('pct-markup'))
+	if (cache.hspSettings.pctMaxless  ~= pctMaxless) or
+	   (cache.hspSettings.pctUnderlow ~= pctUnderlow) or
+	   (cache.hspSettings.pctUndermkt ~= pctUndermkt) or
+	   (cache.hspSettings.pctNocomp   ~= pctNocomp) or
+	   (cache.hspSettings.pctMarkup   ~= pctMarkup) then
+
+		-- since we changed the settings, it's unlikely that any new calculated
+		-- hsp is the same as the one before - therefore we do not bother about
+		-- reusing old table entries, and simply create a new clean hsp cache
+		cache.hspInfo = {}
+		cache.hspSettings = {
+			pctMaxless  = pctMaxless,
+			pctUnderlow = pctUnderlow,
+			pctUndermkt = pctUndermkt,
+			pctNocomp   = pctNocomp,
+			pctMarkup   = pctMarkup
+		}
 	end
 
 	-- Check the cache first.
-	local cache = getCacheForAHKey(ahKey, true);
 	local packedInfo = cache.hspInfo[itemKey];
 	if (packedInfo) then
 		-- Use the cached info.
@@ -623,7 +651,7 @@ function getHSP(itemKey, ahKey)
 		return info.hsp, info.count, info.market, info.warn;
 	end
 
-	-- Its not in the cache, so calculate it.
+	-- It's not in the cache, so calculate it.
 	--debugprofilestart();
 	--debugPrint("getHSP: Cache miss - "..itemKey);
 	local _, seenCount = getUsableMedian(itemKey, ahKey);
@@ -632,12 +660,11 @@ function getHSP(itemKey, ahKey)
 		itemKey,
 		ahKey,
 		getAuctionWithLowestBuyout(itemKey, ahKey),
-		tonumber(Auctioneer.Command.GetFilterVal('pct-maxless')),
-		tonumber(Auctioneer.Command.GetFilterVal('pct-underlow')),
-		tonumber(Auctioneer.Command.GetFilterVal('pct-undermkt')),
-		tonumber(Auctioneer.Command.GetFilterVal('pct-nocomp')),
-		tonumber(Auctioneer.Command.GetFilterVal('pct-markup'))
-	);
+		pctMaxless,
+		pctUnderlow,
+		pctUndermkt,
+		pctNocomp,
+		pctMarkup)
 
 	-- Cache our calculations
 	local info = {};
@@ -672,6 +699,7 @@ function determinePrice(itemKey, ahKey, auctionWithLowestBuyout, lowestAllowedPe
 			if (auctionWithLowestBuyout.owner == UnitName("player")) then
 				highestSellablePrice = lowestBuyout; -- If I am the lowest seller use same low price
 				warn = _AUCT('FrmtWarnMyprice');
+			-- Is there currently an item on the market which has a lower BO than the BO we allow?
 			elseif (lowestBuyout < lowestBuyoutPriceAllowed) then
 				highestSellablePrice = subtractPercent(marketPrice, discountMarketPercent);
 				warn = _AUCT('FrmtWarnToolow');
