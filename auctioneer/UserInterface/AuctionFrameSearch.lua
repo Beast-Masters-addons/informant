@@ -488,7 +488,6 @@ function load()
 		},
 	};
 
-
 	-- Initialize the list to show nothing at first.
 	ListTemplate_Initialize(frame.resultsList, frame.results, frame.results);
 	frame:SelectResultByIndex(nil);
@@ -1498,9 +1497,20 @@ function AuctionFrameSearchBid_SearchButton_OnClick(button)
 	local bidPercentEdit = getglobal(frameName.."MinBidPctEdit");
 	local timeLeftDropDown = getglobal(frameName.."TimeLeftDropDown");
 
-	local minProfit = MoneyInputFrame_GetCopper(profitMoneyFrame);
-	local minPercentLess = percentLessEdit:GetNumber();
-	local minBidPercent = bidPercentEdit:GetNumber();
+	-- get the entered minPercentLess value or nil, if nothing or no valid
+	-- numbers were entered
+	local minProfit
+	if tonumber(getglobal(profitMoneyFrame:GetName().."Copper"):GetText()) or
+	   tonumber(getglobal(profitMoneyFrame:GetName().."Silver"):GetText()) or
+	   tonumber(getglobal(profitMoneyFrame:GetName().."Gold"):GetText()) then
+		minProfit = MoneyInputFrame_GetCopper(profitMoneyFrame)
+	end
+	-- get the entered minPercentLess value or nil, if nothing or no valid
+	-- number was entered
+	local minPercentLess = tonumber(percentLessEdit:GetText())
+	-- get the entered minBidPercent value or nil, if nothing or no valid number
+	-- was entered
+	local minBidPercent = tonumber(bidPercentEdit:GetText())
 	local catID = (UIDropDownMenu_GetSelectedID(getglobal(frameName.."CategoryDropDown")) or 1) - 1;
 	local minQuality = (UIDropDownMenu_GetSelectedID(getglobal(frameName.."MinQualityDropDown")) or 1) - 1;
 	local itemName = getglobal(frameName.."SearchEdit"):GetText();
@@ -1519,9 +1529,20 @@ function AuctionFrameSearchBuyout_SearchButton_OnClick(button)
 	local percentLessEdit = getglobal(frameName.."MinPercentLessEdit");
 	local bidPercentEdit = getglobal(frameName.."MinBidPctEdit");
 
-	local minProfit = MoneyInputFrame_GetCopper(profitMoneyFrame);
-	local minPercentLess = percentLessEdit:GetNumber();
-	local minBidPercent = bidPercentEdit:GetNumber();
+	-- get the entered minPercentLess value or nil, if nothing or no valid
+	-- numbers were entered
+	local minProfit
+	if tonumber(getglobal(profitMoneyFrame:GetName().."Copper"):GetText()) or
+	   tonumber(getglobal(profitMoneyFrame:GetName().."Silver"):GetText()) or
+	   tonumber(getglobal(profitMoneyFrame:GetName().."Gold"):GetText()) then
+		minProfit = MoneyInputFrame_GetCopper(profitMoneyFrame)
+	end
+	-- get the entered minPercentLess value or nil, if nothing or no valid
+	-- number was entered
+	local minPercentLess = tonumber(percentLessEdit:GetText())
+	-- get the entered minBidPercent value or nil, if nothing or no valid number
+	-- was entered
+	local minBidPercent = tonumber(bidPercentEdit:GetText())
 	local catID = (UIDropDownMenu_GetSelectedID(getglobal(frameName.."CategoryDropDown")) or 1) - 1
 	local minQuality = (UIDropDownMenu_GetSelectedID(getglobal(frameName.."MinQualityDropDown")) or 1) - 1;
 	local itemName = getglobal(frameName.."SearchEdit"):GetText();
