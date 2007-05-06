@@ -970,7 +970,7 @@ end
 -------------------------------------------------------------------------------
 function getAuctionByIndex(listType, index)
 	local auction;
-	local lastIndexOnPage, totalAuctions = GetNumAuctionItems("list");
+	local lastIndexOnPage, totalAuctions = GetNumAuctionItems(listType);
 	if (index >= 0 and index <= lastIndexOnPage) then
 		auction = {
 			ahKey = Auctioneer.Util.GetAuctionKey();
