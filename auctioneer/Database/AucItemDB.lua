@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Auctioneer Addon for World of Warcraft(tm).
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
@@ -63,6 +63,7 @@ local getItemLink;
 local getItemString;
 local getItemCategory;
 local getItemQuality;
+local getLongItemString
 local isPlayerMade;
 local packItemInfo;
 local unpackItemInfo;
