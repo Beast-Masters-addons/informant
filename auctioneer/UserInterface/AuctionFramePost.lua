@@ -582,7 +582,9 @@ end
 function AuctionFramePost_SetStartPrice(frame, price)
 	frame.ignoreStartPriceChange = true;
 	MoneyInputFrame_SetCopper(getglobal(frame:GetName().."StartPrice"), price);
-	return frame:ValidateAuction();
+	local ret = frame:ValidateAuction();
+	frame.ignoreStartPriceChange = false
+	return ret
 end
 
 -------------------------------------------------------------------------------
@@ -598,7 +600,9 @@ end
 function AuctionFramePost_SetBuyoutPrice(frame, price)
 	frame.ignoreBuyoutPriceChange = true;
 	MoneyInputFrame_SetCopper(getglobal(frame:GetName().."BuyoutPrice"), price);
-	return frame:ValidateAuction();
+	local ret = frame:ValidateAuction()
+	frame.ignoreBuyoutPriceChange = false
+	return ret
 end
 
 -------------------------------------------------------------------------------
