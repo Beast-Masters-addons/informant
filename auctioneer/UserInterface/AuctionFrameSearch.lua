@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Auctioneer Addon for World of Warcraft(tm).
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
@@ -1375,7 +1375,7 @@ function AuctionFrameSearch_ListItem_OnEnter(row)
 			local itemLink = Auctioneer.ItemDB.GetItemLink(result.itemKey);
 			if (itemLink) then
 				GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-				GameTooltip:SetHyperlink(Auctioneer.ItemDB.GetItemString(result.itemKey));
+				GameTooltip:SetHyperlink(Auctioneer.ItemDB.GetLongItemString(result.itemKey));
 				GameTooltip:Show();
 				return EnhTooltip.TooltipCall(
 					GameTooltip,
