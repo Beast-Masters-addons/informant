@@ -489,7 +489,7 @@ function sendWhisper(message, player)
 	SendChatMessage(message, "WHISPER", Auctioneer.AskPrice.Language, player)
 end
 
-function onEventHook() --%ToDo% Change the prototype once Blizzard changes their functions to use paramenters instead of globals.
+function onEventHook(_, _, event)
 	if (event == "CHAT_MSG_WHISPER_INFORM") then
 		if (whisperList[arg1]) then
 			whisperList[arg1] = nil
