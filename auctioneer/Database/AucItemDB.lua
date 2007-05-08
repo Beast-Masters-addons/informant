@@ -63,6 +63,7 @@ local getItemLink;
 local getItemString;
 local getItemCategory;
 local getItemQuality;
+local GetLongItemLink
 local getLongItemString
 local isPlayerMade;
 local packItemInfo;
@@ -338,6 +339,20 @@ function getItemLink(itemKey)
 end
 
 -------------------------------------------------------------------------------
+-- Gets the itemLink including the uniqueId for the specified item.
+-- Returns nil if the item cannot be found (not in Blizzard's cache or
+-- Auctioneer's item database).
+-------------------------------------------------------------------------------
+function getLongItemLink(itemKey)
+	local itemInfo = getItemInfo(itemKey);
+	if (itemInfo) then
+		local _, _, _, hexColor = GetItemQualityColor(itemInfo.quality);
+		local itemId, suffixId, enchantId, uniqueId = breakItemKey(itemKey);
+		return ("%s|Hitem:%s:%s:0:0:0:0:%s:%s|h[%s]|h|r"):format(hexColor, itemId, enchantId, suffixId, uniqueId, itemInfo.name);
+	end
+end
+
+-------------------------------------------------------------------------------
 -- Gets the itemString (item:itemId:enchantId:suffixId:0) for the specified
 -- item.
 -------------------------------------------------------------------------------
@@ -553,6 +568,7 @@ Auctioneer.ItemDB = {
 	GetItemInfo = getItemInfo;
 	GetItemName = getItemName;
 	GetItemLink = getItemLink;
+	GetLongItemLink = getLongItemLink,
 	GetItemString = getItemString;
 	GetLongItemString = getLongItemString;
 	GetItemCategory = getItemCategory;

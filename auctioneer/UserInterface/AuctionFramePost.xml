@@ -288,11 +288,11 @@
 					</OnClick>
 					<OnEnter>
 						local parent = self:GetParent()
-						local itemKey = parent:GetItemKey();
-						if (itemKey) then
-							local itemLink = Auctioneer.ItemDB.GetItemLink(itemKey);
+						local longItemKey = parent:GetLongItemKey();
+						if (longItemKey) then
+							local itemLink = Auctioneer.ItemDB.GetLongItemLink(longItemKey);
+							local itemKey = parent:GetItemKey();
 							if (itemLink) then
-								local longItemKey = parent:GetLongItemKey();
 								GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 								GameTooltip:SetHyperlink(Auctioneer.ItemDB.GetLongItemString(longItemKey));
 								GameTooltip:Show();
