@@ -467,10 +467,6 @@ function showTooltip(currentTooltip, skipEmbedRender)
 	-- width/height it requires, if there are any embeded lines to be displayed.
 	if (next(EnhTTData.embedLines) and (not skipEmbedRender)) then
 		embedRender(currentTooltip, EnhTTData.embedLines)
-		-- update the tooltip without calling showTooltip recursivly
-		EnhTTData.showIgnore = true
-		currentTooltip:Show()
-		EnhTTData.showIgnore = false
 	end
 
 	-- if there is no data for the enhanced tooltip frame, we've got nothing todo
@@ -486,6 +482,12 @@ function showTooltip(currentTooltip, skipEmbedRender)
 	if (headerCount > 0) then
 		EnhancedTooltipText1:SetPoint("TOPLEFT", "EnhancedTooltipHeader"..EnhancedTooltip.headerCount, "BOTTOMLEFT", 0, -1)
 	end
+
+	-- update the tooltip without calling showTooltip so we get the correct
+	-- tooltip width
+	EnhTTData.showIgnore = true
+	currentTooltip:Show()
+	EnhTTData.showIgnore = false
 
 	local requiredWidth, requiredHeight = getTooltipWidth(EnhancedTooltip), getTooltipHeight(EnhancedTooltip)
 	local screenWidth, screenHeight = GetScreenWidth(), GetScreenHeight()
