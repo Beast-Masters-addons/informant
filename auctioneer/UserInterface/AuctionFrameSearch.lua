@@ -1267,13 +1267,11 @@ function AuctionFrameSearch_UpdateAuction(frame, snapshotAuction)
 			auction.buyoutPercentLess = percentLess;
 		end
 
-		-- Update the status, unless the auction is still in bidding progress
-		if not BidManager.IsBidInProgress(auction.auctionId) then
-			if (snapshotAuction.highBidder) then
-				auction.status = AUCTION_STATUS_HIGH_BIDDER;
-			else
-				auction.status = AUCTION_STATUS_NORMAL;
-			end
+		-- Update the status
+		if (snapshotAuction.highBidder) then
+			auction.status = AUCTION_STATUS_HIGH_BIDDER;
+		else
+			auction.status = AUCTION_STATUS_NORMAL;
 		end
 
 		-- Force a list update.
