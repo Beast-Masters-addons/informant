@@ -1268,7 +1268,7 @@ function AuctionFrameSearch_UpdateAuction(frame, snapshotAuction)
 		end
 
 		-- Update the status, unless the auction is still in bidding progress
-		if not IsBidInProgress(auction.auctionId) then
+		if not BidManager.IsBidInProgress(auction.auctionId) then
 			if (snapshotAuction.highBidder) then
 				auction.status = AUCTION_STATUS_HIGH_BIDDER;
 			else
