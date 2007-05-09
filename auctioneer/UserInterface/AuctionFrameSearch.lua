@@ -1635,12 +1635,13 @@ end
 -- parameters:
 --    auctionId = (number) the auctionId of the auction which was processed
 --    result    = (string) the result of the bid request - one of BidResultCodes
---                nil - highBidder, bidAccepted or itemNotFound
+--                nil - bidAccepted or itemNotFound
 -------------------------------------------------------------------------------
 function bidCallback(auctionId, result)
 	-- We did not bid on that item, so reenable it to allow rebidding
 	if result == BidResultCodes.BidCanceled or
-	   result == BidResultCodes.NotEnoughMoney then
+	   result == BidResultCodes.NotEnoughMoney or
+	   result == BidResultCodes.AlreadyHigherBid then
 		AuctionFrameSearch.resultsByAuctionId[auctionId].status = AUCTION_STATUS_NORMAL
 	end
 

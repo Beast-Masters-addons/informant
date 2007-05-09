@@ -180,6 +180,7 @@ function placeBidByAuction(auctionInSnapshot, bidAmount, callbackFunc)
 						chatPrint(ERR_AUCTION_HIGHER_BID);
 						debugPrint(ERR_AUCTION_HIGHER_BID);
 						Auctioneer.Util.Debug("AucBidScanner", AUC_NOTICE, "Found higher bid", "Matching auction now has a higher bid ", auction.buyoutPrice, " than your bid of ", bidAmount, " in placeBidByAuction")
+						request.result = BidResultCodes.AlreadyHigherBid
 						return FilterResult.Abort;
 					end
 
@@ -189,6 +190,7 @@ function placeBidByAuction(auctionInSnapshot, bidAmount, callbackFunc)
 						chatPrint("Already the high bidder");
 						debugPrint("Already the high bidder");
 						Auctioneer.Util.Debug("AucBidScanner", AUC_NOTICE, "Found player's bid", "Matching auction has a player's bid already in placeBidByAuction")
+						request.result = BidResultCodes.AlreadyHighBidder
 						return FilterResult.Abort;
 					end
 				end
