@@ -49,6 +49,7 @@ local debugPrint;
 local emptyHookFunction;
 local getBidRequestCount
 local isScanning;
+local isAuctionInProgress
 local killOrig;
 local load;
 local placeBid;
@@ -479,6 +480,24 @@ function isScanning()
 end
 
 -------------------------------------------------------------------------------
+-- Checks, if the specified auction is currently in progress of being bid on.
+--
+-- parameters:
+--    auctionId - (number) the auction id of the auction to be checked
+--
+-- returns:
+--    true, if there is a bid in progress for the specified auction,
+--    false, otherwise
+-------------------------------------------------------------------------------
+function isAuctionInProgress(auctionId)
+	for _, request in ipairs(BidRequestQueue) do
+		if request.auctionId == auctionId then
+			return true
+		end
+	end
+	return false
+end
+
 -------------------------------------------------------------------------------
 function debugPrint(...)
 	if debug then EnhTooltip.DebugPrint("[Auc.BidScanner]", ...); end
@@ -493,6 +512,7 @@ Auctioneer.BidScanner =
 	GetBidRequestCount = getBidRequestCount;
 	BidByAuctionId = bidByAuctionId;
 	BuyoutByAuctionId = buyoutByAuctionId;
-	IsScanning = isScanning;
+	IsScanning = isScanning,
+	IsAuctionInProgress = isAuctionInProgress
 }
 
