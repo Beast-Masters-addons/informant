@@ -54,6 +54,7 @@ local onAuctionUpdated;
 local onAuctionRemoved;
 local onBidScanQueued;
 local onBidScanComplete;
+local bidCallback
 local initializeSavedSearchDropDown
 local debugPrint;
 
@@ -816,7 +817,7 @@ function AuctionFrameSearch_BidButton_OnClick(button)
 	local result = frame.selectedResult;
 	if (result and result.auctionId and result.bid) then
 		result.status = AUCTION_STATUS_BIDDING;
-		Auctioneer.BidScanner.BidByAuctionId(result.auctionId);
+		Auctioneer.BidScanner.BidByAuctionId(result.auctionId, bidCallback);
 		AuctionFrameSearch_UpdateButtons(frame);
 		AuctionFrameSearch_UpdateStatusWithPendingBids(frame);
 		return ListTemplateScrollFrame_Update(getglobal(frame.resultsList:GetName().."ScrollFrame"));
@@ -831,7 +832,7 @@ function AuctionFrameSearch_BuyoutButton_OnClick(button)
 	local result = frame.selectedResult;
 	if (result and result.name and result.count and result.buyout) then
 		result.status = AUCTION_STATUS_BIDDING;
-		Auctioneer.BidScanner.BuyoutByAuctionId(result.auctionId);
+		Auctioneer.BidScanner.BuyoutByAuctionId(result.auctionId, bidCallback);
 		AuctionFrameSearch_UpdateButtons(frame);
 		AuctionFrameSearch_UpdateStatusWithPendingBids(frame);
 		return ListTemplateScrollFrame_Update(getglobal(frame.resultsList:GetName().."ScrollFrame"));
@@ -1627,6 +1628,28 @@ function onBidScanComplete()
 end
 
 -------------------------------------------------------------------------------
+-- Called when a bid request has been processed.
+--
+-- parameters:
+--    auctionId = (number) the auctionId of the auction which was processed
+--    result    = (string) the result of the bid request - one of BidResultCodes
+--                nil - highBidder, bidAccepted or itemNotFound
+-------------------------------------------------------------------------------
+function bidCallback(auctionId, result)
+	-- We did not bid on that item, so reenable it to allow rebidding
+	if result == BidResultCodes.BidCanceled or
+	   result == BidResultCodes.NotEnoughMoney then
+		AuctionFrameSearch.resultsByAuctionId[auctionId].status = AUCTION_STATUS_NORMAL
+	end
+
+	-- update the buttons, if we just finished bidding on the selected item
+	if auctionId == AuctionFrameSearch.selectedResult.auctionId then
+		AuctionFrameSearch_UpdateButtons(AuctionFrameSearch)
+	end
+
+	-- Force a list update.
+	return ListTemplateScrollFrame_Update(getglobal(AuctionFrameSearch.resultsList:GetName().."ScrollFrame"));
+end
 -------------------------------------------------------------------------------
 function debugPrint(...)
 	if debug then EnhTooltip.DebugPrint("[Auc.SearchTab]", ...); end

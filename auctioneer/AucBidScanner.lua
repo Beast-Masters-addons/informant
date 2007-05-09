@@ -77,6 +77,12 @@ local FilterResult = {
 	Done = "Done";
 };
 
+-- This describes the request table.
+-- request = {
+--	auctionId, -- (number) the auction, which the user tries to bid on or bo
+--	result     -- (BidResultCodes) the result of the bid/bo - nil, while bid/bo is in progress
+-- }
+
 -- Queue of bid requests.
 local BidRequestQueue = {};
 
@@ -209,6 +215,7 @@ function placeBidByAuction(auctionInSnapshot, bidAmount, callbackFunc)
 			currentBid = Auctioneer.SnapshotDB.GetCurrentBid(auctionInSnapshot);
 			filterFunc = filterFunc;
 			callbackFunc = callbackFunc;
+			auctionId = auctionInSnapshot.auctionId,
 			maxBidAttempts = 1;
 		};
 		addRequestToQueue(request);
@@ -254,7 +261,7 @@ function removeRequestFromQueue()
 
 		-- If a callback function was provided, call it!
 		if (request.callbackFunc) then
-			request.callbackFunc(request.auctionId);
+			request.callbackFunc(request.auctionId, request.result);
 		end
 	end
 end
@@ -367,6 +374,9 @@ end
 -------------------------------------------------------------------------------
 function bidCompleteCallback(auction, result)
 	local request = BidRequestQueue[1];
+	-- we got a result, so save it
+	request.result = result
+
 	if (request and request.state == RequestState.WaitingForBidResult) then
 		-- Check if the bid succeeded.
 		if (result == BidResultCodes.BidAccepted) then
