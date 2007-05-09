@@ -54,6 +54,7 @@ local addPendingBid;
 local removePendingBid;
 local isPendingBidForAuction;
 local debugPrint;
+local onAHClosed
 
 -------------------------------------------------------------------------------
 -- Data Members
@@ -114,11 +115,17 @@ function load()
 
 			--Update money field
 			MoneyFrame_Update(this:GetName().."MoneyFrame", Auctioneer.BidManager.GetBidAmmount());
+
+			-- Autoclose, if the AH is closed
+			Stubby.RegisterEventHook("AUCTION_HOUSE_CLOSED", "Auctioneer_BidManager", onAHClosed);
 		end,
 
 		OnHide = function()
 			--Restore CanSendAuctionQuery()'s return value
 			Auctioneer.BidManager.ShowingConfirmation(false)
+
+			-- Remove autoclose hook
+			Stubby.UnregisterEventHook("AUCTION_HOUSE_CLOSED", "Auctioneer_BidManager")
 		end,
 
 		hasMoneyFrame = 1,
@@ -153,6 +160,22 @@ function onEventHook(_, event, message)
 			removePendingBid(BidResultCodes.MaxItemCount);
 		end
 	end
+end
+
+-------------------------------------------------------------------------------
+-- Called when the AH closes, while the bid/bo confirmation window is still
+-- active, this function closes the confirmation window and cancels the bid.
+--
+-- parameters:
+--    _ - ignoreing the first parameter, which is an empty table, since no
+--        parameters are passed when registering this function with Stubby
+--        (see Stubby.RegisterEventHook() for more details)
+--    _ - ignoring the second parameter, which is the string representing the
+--        event (in this case it's always "AUCTION_HOUSE_CLOSED").
+-------------------------------------------------------------------------------
+function onAHClosed(_, _)
+	StaticPopup_Hide("AUCTIONEER_BIDORBUYOUT_AUCTION")
+	Auctioneer.BidManager.BidCanceled()
 end
 
 -------------------------------------------------------------------------------
