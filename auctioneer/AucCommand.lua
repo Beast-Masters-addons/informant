@@ -1587,7 +1587,7 @@ function chatPrintHelp()
 	Auctioneer.Util.ChatPrint(lineFormat:format(_AUCT('CmdProtectWindow'),		_AUCT('OptProtectWindow'), 		_AUCT('CmdProtectWindow'..Auctioneer.Command.GetFilterVal('protect-window')),		_AUCT('HelpProtectWindow')));
 	Auctioneer.Util.ChatPrint(lineFormat:format(_AUCT('CmdAuctionDuration'),	_AUCT('OptAuctionDuration'),	_AUCT('CmdAuctionDuration'..Auctioneer.Command.GetFilterVal('auction-duration')),	_AUCT('HelpAuctionDuration')));
 
-	Auctioneer.Util.ChatPrint(lineFormat:format(_AUCT('CmdLocale'),				_AUCT('OptLocale'),				Auctioneer.Util.GetLocalizedFilterVal("locale"),									_AUCT('HelpLocale')));
+	Auctioneer.Util.ChatPrint(lineFormat:format(_AUCT('CmdLocale'),				_AUCT('OptLocale'),				Auctioneer.Util.LocalizeFilterVal(Auctioneer.Command.GetLocale()),					_AUCT('HelpLocale')));
 	Auctioneer.Util.ChatPrint(lineFormat:format(_AUCT('CmdPrintin'),			_AUCT('OptPrintin'),			frameName, _AUCT('HelpPrintin')));
 	Auctioneer.Util.ChatPrint(lineFormat:format(_AUCT('CmdFinish'),				_AUCT('OptFinish'),				_AUCT('CmdFinish'..Auctioneer.Command.GetFilterVal('finish')),						_AUCT('HelpFinish')));
 
@@ -2110,11 +2110,11 @@ function filterSetFilter(checkbox, filter)
 end
 
 function getLocale()
-	local locale = Auctioneer.Command.GetFilterVal('locale');
-	if (locale == 'on') or (locale == 'off') or (locale == 'default') then
-		return GetLocale();
+	local ret = strsplit(",", Babylonian.GetOrder(), 1)
+	if ret == "" then
+		ret = "default"
 	end
-	return locale;
+	return ret
 end
 
 -------------------------------------------------------------------------------

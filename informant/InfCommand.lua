@@ -175,7 +175,7 @@ function cmdHelp()
 	chatPrint(lineFormat:format(_INFM('CmdEmbed'), getLocalizedFilterVal('embed'), _INFM('HelpEmbed')))
 
 	lineFormat = "  |cffffffff/informant %s %s|r |cffff4020[%s]|r - %s"
-	chatPrint(lineFormat:format(_INFM('CmdLocale'), _INFM('OptLocale'), getLocalizedFilterVal('locale'), _INFM('HelpLocale')))
+	chatPrint(lineFormat:format(_INFM('CmdLocale'), _INFM('OptLocale'), localizeFilterVal(Informant.GetLocale()), _INFM('HelpLocale')))
 
 	lineFormat = "  |cffffffff/informant %s %s|r - %s"
 	chatPrint(lineFormat:format(_INFM('CmdDefault'), "", _INFM('HelpDefault')))

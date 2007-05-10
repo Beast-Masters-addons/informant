@@ -125,7 +125,6 @@ local filterDefaults = { --Auctioneer_FilterDefaults
 	["finish"]                = 0,
 	["finish-sound"]          = "on",
 	["last-auction-duration"] = 1440,
-	["locale"]                = "default",
 	["printframe"]            = 1,
 	["protect-window"]        = 1,
 	["show-average"]          = "on",

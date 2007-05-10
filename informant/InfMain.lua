@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Informant
 	An addon for World of Warcraft that shows pertinent information about
 	an item in a tooltip when you hover over the item in the game.
@@ -90,7 +90,6 @@ CLASS_TO_CATEGORY_MAP = {
 local filterDefaults = {
 	['all'] = 'on',
 	['embed'] = 'off',
-	['locale'] = 'default',
 	['show-vendor'] = 'on',
 	['show-vendor-buy'] = 'on',
 	['show-vendor-sell'] = 'on',
@@ -382,12 +381,16 @@ function getFilter(filter)
 	return true
 end
 
+-------------------------------------------------------------------------------
+-- Returns the current locale setting, or "default", if the default language is
+-- used.
+-------------------------------------------------------------------------------
 function getLocale()
-	local locale = Informant.GetFilterVal('locale');
-	if (locale ~= 'on') and (locale ~= 'off') and (locale ~= 'default') then
-		return locale;
+	local ret = strsplit(",", Babylonian.GetOrder(), 1)
+	if ret == "" then
+		ret = "default"
 	end
-	return GetLocale();
+	return ret
 end
 
 local categories = {GetAuctionItemClasses()};
@@ -606,6 +609,9 @@ function onVariablesLoaded()
 		InformantConfig = {}
 	end
 	setFilterDefaults()
+
+	-- The locale entry is no longer needed.
+	InformantConfig.filters["locale"] = nil
 
 	InformantFrameTitle:SetText(_INFM('FrameTitle'))
 

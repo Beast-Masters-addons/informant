@@ -51,13 +51,14 @@ local packNumericList;
 local unpackNumericList;
 local doesNameMatch;
 local debugPrint;
+local upgradeTo40002
 
 -------------------------------------------------------------------------------
 -- Constants
 -------------------------------------------------------------------------------
 local NIL_VALUE = "<nil>";
 local DATABASE_VERSION_40 = 40000;
-local CURRENT_DATABASE_VERSION = 40001;
+local CURRENT_DATABASE_VERSION = 40002;
 
 -------------------------------------------------------------------------------
 -- Called when the Auctioneer addon loads. This method should check the
@@ -144,6 +145,8 @@ function loadDatabases(upgrade)
 
 	-- We are up-to-date!
 	if (upgrade) then
+		upgradeTo40002()
+
 		AuctionConfig.version = CURRENT_DATABASE_VERSION;
 
 		-- Check number of constants in SV file, after the database was
@@ -320,6 +323,12 @@ function doesNameMatch(name1, name2, exact)
 end
 
 -------------------------------------------------------------------------------
+-- Upgrades the database to 40002.
+-------------------------------------------------------------------------------
+function upgradeTo40002()
+	-- The locale setting is no longer used.
+	AuctionConfig.filters["locale"] = nil
+end
 -------------------------------------------------------------------------------
 function debugPrint(...)
 	if debug then EnhTooltip.DebugPrint("[Auc.Database]", ...); end
