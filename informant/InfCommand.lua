@@ -34,6 +34,8 @@ Informant_RegisterRevision("$URL$", "$Rev$")
 -- function prototypes
 local commandHandler, cmdHelp, onOff, genVarSet, chatPrint, registerKhaos, restoreDefault, cmdLocale, setLocale, isValidLocale
 local setKhaosSetKeyValue
+local convertKhaos
+local fixLocaleDefault
 
 -- Localization function prototypes
 local delocalizeFilterVal, localizeFilterVal, getLocalizedFilterVal, delocalizeCommand, localizeCommand, buildCommandMap
@@ -288,6 +290,9 @@ local function getKhaosLocaleList()
 end
 
 function registerKhaos()
+	-- Update the khaos settings to correct any invalid entries
+	convertKhaos();
+
 	local optionSet = {
 		id="Informant";
 		text="Informant";
@@ -768,7 +773,7 @@ function setLocale(param, chatprint)
 	if (chatprint) then
 		if (validLocale) then
 			chatPrint(_INFM('FrmtActSet'):format(_INFM('CmdLocale'), param))
-			setKhaosSetKeyValue('locale', param)
+			setKhaosSetKeyValue('locale', Informant.GetLocale())
 
 		else
 			chatPrint(_INFM("FrmtUnknownLocale"):format(param))
@@ -851,6 +856,34 @@ function localizeCommand(cmd)
 	end
 
 	return commandMapRev[cmd] or cmd
+end
+
+-------------------------------------------------------------------------------
+-- This function performs any necessary upgrades to the khaossettings.
+-------------------------------------------------------------------------------
+function convertKhaos()
+	-- nothing to do, if there are no khaos settings present
+	if not Khaos_Configurations then
+		return
+	end
+
+	fixLocaleDefault()
+end
+
+-------------------------------------------------------------------------------
+-- Before 4.0.2 the locale setting was set to '' instead of 'default' which
+-- lead to the inapropriate setting in khaos (no selection for locale).
+-- The following fix corrects that.
+-------------------------------------------------------------------------------
+function fixLocaleDefault()
+	for _, setting in ipairs(Khaos_Configurations) do
+		if setting.configuration and
+		   setting.configuration.Informant and
+		   setting.configuration.Informant.locale and
+		   setting.configuration.Informant.locale.value == "" then
+			setting.configuration.Informant.locale.value = "default"
+		end
+	end
 end
 
 -- Globally accessible functions

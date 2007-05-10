@@ -72,6 +72,7 @@ local findFilterClass
 local setFilter
 local getLocale
 local debugPrint
+local fixLocaleDefault
 
 function register()
 	if (Khaos) then
@@ -171,6 +172,8 @@ function convertKhaos()
 			end
 		end
 	end
+
+	fixLocaleDefault()
 end
 
 function getKhaosDefault(filter)
@@ -2115,6 +2118,22 @@ function getLocale()
 		ret = "default"
 	end
 	return ret
+end
+
+-------------------------------------------------------------------------------
+-- Before 4.0.2 the locale setting was set to '' instead of 'default' which
+-- lead to the inapropriate setting in khaos (no selection for locale).
+-- The following fix corrects that.
+-------------------------------------------------------------------------------
+function fixLocaleDefault()
+	for _, setting in ipairs(Khaos_Configurations) do
+		if setting.configuration and
+		   setting.configuration.Auctioneer and
+		   setting.configuration.Auctioneer.locale and
+		   setting.configuration.Auctioneer.locale.value == "" then
+			setting.configuration.Auctioneer.locale.value = "default"
+		end
+	end
 end
 
 -------------------------------------------------------------------------------
