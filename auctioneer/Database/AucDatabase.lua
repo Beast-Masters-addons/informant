@@ -68,7 +68,9 @@ function load()
 	-- Load/Upgrade AuctionConfig
 	if (not AuctionConfig) then
 		-- start with a new one, if AuctionConfig does not exist
-		AuctionConfig = {};
+		AuctionConfig = {
+			version = CURRENT_DATABASE_VERSION
+		};
 	end
 	if (not AuctionConfig.version) then
 		-- version number is missing, therefore that's a <=3.0 database or an
