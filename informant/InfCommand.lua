@@ -36,6 +36,7 @@ local commandHandler, cmdHelp, onOff, genVarSet, chatPrint, registerKhaos, resto
 local setKhaosSetKeyValue
 local convertKhaos
 local fixLocaleDefault
+local onBabylonianSetOrder
 
 -- Localization function prototypes
 local delocalizeFilterVal, localizeFilterVal, getLocalizedFilterVal, delocalizeCommand, localizeCommand, buildCommandMap
@@ -744,7 +745,25 @@ function registerKhaos()
 	Informant_Khaos_Registered = true
 	Khaos.refresh()
 
+	-- hook into Babylonian.SetOrder() to change the local setting in Khaos
+	Stubby.RegisterFunctionHook("Babylonian.SetOrder", 200, onBabylonianSetOrder)
+
 	return true
+end
+
+-------------------------------------------------------------------------------
+-- Called when Babylonian.SetOrder() is called to update Khaos' locale setting.
+--
+-- parameters:
+--    _ - ignoring the first parameter, which is an empty table, since no
+--        parameters are passed when registering this function with Stubby
+--        (see Stubby.RegisterFunctionHook() for more details)
+--    _ - ignoring the second parameter, which is an empty table, since the
+--        the original function was not yet called
+--        (see Stubby.RegisterFunctionHook() for more details)
+-------------------------------------------------------------------------------
+function onBabylonianSetOrder(_, _)
+	setKhaosSetKeyValue("locale", Informant.GetLocale())
 end
 
 function isValidLocale(param)
@@ -773,8 +792,6 @@ function setLocale(param, chatprint)
 	if (chatprint) then
 		if (validLocale) then
 			chatPrint(_INFM('FrmtActSet'):format(_INFM('CmdLocale'), param))
-			setKhaosSetKeyValue('locale', Informant.GetLocale())
-
 		else
 			chatPrint(_INFM("FrmtUnknownLocale"):format(param))
 			local locales = "    "
