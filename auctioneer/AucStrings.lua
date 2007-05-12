@@ -602,13 +602,13 @@ AuctioneerLocalizations = {
 		["CmdLocale"]	= "lokal";
 		["CmdOff"]	= "sluk";
 		["CmdOn"]	= "tænd";
-		["CmdPctBidmarkdown"]	= "pct-bidmarkdown ";
-		["CmdPctMarkup"]	= "pct-markup ";
-		["CmdPctMaxless"]	= "pct-maxless ";
-		["CmdPctNocomp"]	= "pct-nocomp ";
-		["CmdPctUnderlow"]	= "pct-underlow ";
-		["CmdPctUndermkt"]	= "pct-undermkt ";
-		["CmdPercentless"]	= "percentless ";
+		["CmdPctBidmarkdown"]	= "pct-bidmarkdown";
+		["CmdPctMarkup"]	= "pct-markup";
+		["CmdPctMaxless"]	= "pct-maxless";
+		["CmdPctNocomp"]	= "pct-nocomp";
+		["CmdPctUnderlow"]	= "pct-underlow";
+		["CmdPctUndermkt"]	= "pct-undermkt";
+		["CmdPercentless"]	= "percentless";
 		["CmdPercentlessShort"]	= "pl";
 		["CmdPrintin"]	= "print-til";
 		["CmdProtectWindow"]	= "beskyt-vindue";
@@ -1112,7 +1112,7 @@ AuctioneerLocalizations = {
 		["GuiLoad_Always"]	= "immer";
 		["GuiLoad_AuctionHouse"]	= "im Auktionshaus";
 		["GuiLoad_Never"]	= "nie";
-		["GuiLocale"]	= "Setze das Gebietsschema auf";
+		["GuiLocale"]	= "Setze die Sprache auf";
 		["GuiMainEnable"]	= "Auctioneer aktivieren";
 		["GuiMainHelp"]	= "Einstellungen für Auctioneer.\nEinem AddOn, das zusätzliche Informationen zu Gegenständen anzeigt und Auktionsdaten analysiert.\nDrücke den \"Scannen\"-Knopf im Auktionshaus, um Auktionsdaten zu sammeln.";
 		["GuiMarkup"]	= "Händlerpreis um x% erhöhen";
@@ -1178,7 +1178,7 @@ AuctioneerLocalizations = {
 		["TextUsage"]	= "Syntax:";
 
 		-- Section: Help Text
-		["HelpAlso"]	= "Zeigt ebenfalls die Werte anderer Server im Tooltip an. Setze den Namen des Realms für Realm und den Namen der Fraktion oder \"neutral\" für Fraktion ein. Zum Beispiel: \"/auctioneer also Kil'jaeden-alliance\". Das spezielle Schlüsselwort \"opposite\" bezeichnet die gegnerische Fraktion, \"home\" die eigene Fraktion, \"neutral\" das neutrale Auktionshaus und \"aus\" deaktiviert die Funktionalität.\n\nBeachte, dass die Schreibweise für das Realm zwischen Gross- und Kleinschreibung unterscheidet. Wenn du die genaue Schreibweise fuer dein Realm nicht kennst, versuche es mit einem Grossbuchstaben am Anfang und schreibe alle weitere Buchstaben klein.";
+		["HelpAlso"]	= "Zeigt ebenfalls die Werte anderer Server im Tooltip an. Format: [Realm]-[Faction]|neutral|opposite|home|off\nBeispiel: /auctioneer also Kil'jaeden-alliance";
 		["HelpAskPrice"]	= "Preisnachfrage ein-/ausschalten.";
 		["HelpAskPriceAd"]	= "Anzeige der neuen Preisnachfrage-Eigenschaften ein-/ausschalten.";
 		["HelpAskPriceGuild"]	= "Auf Gildenchat-Anfragen reagieren.";
@@ -1206,7 +1206,7 @@ AuctioneerLocalizations = {
 		["HelpFinishSound"]	= "Legt fest, ob nach Beenden eines Scans ein Ton abgespielt werden soll.";
 		["HelpLink"]	= "Schaltet die Anzeige der Link-ID im Tooltip ein/aus.";
 		["HelpLoad"]	= "Ladeverhalten von Auctioneer für diesen Charakter ändern";
-		["HelpLocale"]	= "Ändern des Gebietsschemas das zur Anzeige \nvon Auctioneer-Meldungen verwendet wird";
+		["HelpLocale"]	= "Ändert die Sprache für alle Auctioneer addons.";
 		["HelpMedian"]	= "Schaltet die Anzeige des Median-Sofortkaufpreises ein/aus";
 		["HelpOnoff"]	= "Schaltet die Anzeige der Auktionsdaten ein/aus";
 		["HelpPctBidmarkdown"]	= "Legt den Prozentsatz fest, um den das Mindestgebot niedriger als der Sofortkaufpreis ist.";
@@ -1266,7 +1266,7 @@ AuctioneerLocalizations = {
 		["AuctionScanRedo"]	= "Das Erfassen der aktuelle Seite benötigte mehr als %d Sekunden, erneuter Versuch.";
 		["AuctionScanStart"]	= "Auctioneer: %s\nScanne Seite 1...";
 		["AuctionTotalAucts"]	= "Insgesamt gescannte Auktionen: %s";
-		["AuctionUpdatedAucts"]	= "Upgedatete/Geänderte Auktionen: %s";
+		["AuctionUpdatedAucts"]	= "Aktualisierte/Geänderte Auktionen: %s";
 
 		-- Section: Tooltip Messages
 		["FrmtInfoAlsoseen"]	= "%d mal für %s gesehen";
@@ -1662,7 +1662,7 @@ AuctioneerLocalizations = {
 		["TextUsage"]	= "Usage:";
 
 		-- Section: Help Text
-		["HelpAlso"]	= "Also display another server's values in the tooltip. For realm, insert the realmname and for faction the faction's name or \"neutral\" if you mean the neutral auction house. For example: \"/auctioneer also al'akir-horde\". The special keyword \"opposite\" means the opposite faction \"home\" the home factions auctionhouse, \"neutral\" the neutral auction houses and \"off\" disables the functionality.\n\nBe aware that the realm is case sensitive. If you are unsure whether or not your server uses capitals, try using lower case characters only, first.";
+		["HelpAlso"]	= "Also display another server's values in the tooltip.\nFormat: [realm]-[faction]|opposite|neutral|home\nExample: /auctioneer also al'akir-horde";
 		["HelpAskPrice"]	= "Enable or disable AskPrice.";
 		["HelpAskPriceAd"]	= "Enable or disable new AskPrice features ad.";
 		["HelpAskPriceGuild"]	= "Respond to queries made in guild chat.";
@@ -1690,7 +1690,7 @@ AuctioneerLocalizations = {
 		["HelpFinishSound"]	= "Set whether to play a sound at the end of an Auction House scan.";
 		["HelpLink"]	= "Select whether to show the link id in the tooltip";
 		["HelpLoad"]	= "Change Auctioneer's load settings for this toon";
-		["HelpLocale"]	= "Change the locale that is used to display Auctioneer messages";
+		["HelpLocale"]	= "Changes the locale that is used to display Auctioneer messages. Note that this effects the locale setting for all Auctioneer addons.";
 		["HelpMedian"]	= "Select whether to show item's median buyout price";
 		["HelpOnoff"]	= "Turns the auction data display on and off";
 		["HelpPctBidmarkdown"]	= "Set the percentage that Auctioneer will mark down bids from the buyout price";
@@ -1935,6 +1935,8 @@ AuctioneerLocalizations = {
 
 		-- Section: Commands
 		["CmdAlso"]	= "tambien";
+		["CmdAlsoHome"]	= "hogar";
+		["CmdAlsoNeutral"]	= "neutral";
 		["CmdAlsoOpposite"]	= "opuesta";
 		["CmdAlt"]	= "Alt";
 		["CmdAskPriceAd"]	= "anuncio";
@@ -2005,11 +2007,13 @@ AuctioneerLocalizations = {
 		["ShowVerbose"]	= "ver-literal";
 
 		-- Section: Config Text
-		["GuiAlso"]	= "También mostrar valores para";
+		["GuiAlso"]	= "También mostrar datos para";
 		["GuiAlsoDisplay"]	= "Mostrando información para %s";
+		["GuiAlsoHome"]	= "Ahora mostrando también datos para la facción propia";
+		["GuiAlsoNeutral"]	= "Ahora mostrando también datos para la casa de subastas neutral";
 		["GuiAlsoOff"]	= "Dejar de mostrar información para otro(s) reino(s)-facción(es)";
 		["GuiAlsoOpposite"]	= "Mostrando información para la facción opuesta.";
-		["GuiAskPrice"]	= "Encender AskPrice";
+		["GuiAskPrice"]	= "Activar AskPrice";
 		["GuiAskPriceAd"]	= "Enviar anuncio";
 		["GuiAskPriceGuild"]	= "Responder a las peticiones del chat de hermandad";
 		["GuiAskPriceHeader"]	= "Opciones de AskPrice";
@@ -2388,6 +2392,8 @@ AuctioneerLocalizations = {
 
 		-- Section: Commands
 		["CmdAlso"]	= "aussi";
+		["CmdAlsoHome"]	= "chez soi";
+		["CmdAlsoNeutral"]	= "neutre";
 		["CmdAlsoOpposite"]	= "oppose";
 		["CmdAlt"]	= "alt";
 		["CmdAskPriceAd"]	= "annonce";
@@ -2460,6 +2466,8 @@ AuctioneerLocalizations = {
 		-- Section: Config Text
 		["GuiAlso"]	= "Afficher aussi les données pour";
 		["GuiAlsoDisplay"]	= "Affichage des données pour %s";
+		["GuiAlsoHome"]	= "Afficher maintenant les données de la propre faction.";
+		["GuiAlsoNeutral"]	= "Afficher maintenant les données de l'hôtel des ventes neutre.";
 		["GuiAlsoOff"]	= "Ne plus afficher les données provenant d'autres royaumes/factions.";
 		["GuiAlsoOpposite"]	= "Afficher maintenant les données de la faction opposée.";
 		["GuiAskPrice"]	= "Activer DemandePrix";
