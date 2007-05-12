@@ -1767,6 +1767,7 @@ function setLocale(param, khaosCommand)
 			for locale, data in pairs(AuctioneerLocalizations) do
 				locales = locales .. " '" .. locale .. "' ";
 			end
+			locales = locales.."'".._AUCT('CmdDefault').."'"
 			Auctioneer.Util.ChatPrint(locales);
 		end
 	end

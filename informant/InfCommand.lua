@@ -798,6 +798,7 @@ function setLocale(param, chatprint)
 			for locale, data in pairs(InformantLocalizations) do
 				locales = locales .. " '" .. locale .. "' "
 			end
+			locales = locales.."'".._INFM('CmdDefault').."'"
 			chatPrint(locales)
 		end
 	end
