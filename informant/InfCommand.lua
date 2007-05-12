@@ -66,7 +66,7 @@ function setKhaosSetKeyValue(key, value)
 
 		if (not kKey) then
 			EnhTooltip.DebugPrint("setKhaosSetKeyParameter(): key " .. key .. " does not exist")
-		elseif (kKey.checked) then
+		elseif (kKey.checked ~= nil) then
 			if (type(value) == "string") then value = (value == "on") end
 			Khaos.setSetKeyParameter("Informant", key, "checked", value)
 		elseif (kKey.value) then
@@ -332,8 +332,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('all')};
+				disabled={checked=Informant.GetFilter('all')};
 				difficulty=1;
 			};
 			{
@@ -396,8 +396,8 @@ function registerKhaos()
 				end;
 				check=true;
 				default={checked=true};
-				disabled={checked=false};
-				dependencies={enabled={checked=true}};
+				disabled={checked=Informant.GetFilter('show-icon')};
+				dependencies={enabled={checked=Informant.GetFilter('show-icon')}};
 				difficulty=1;
 			};
 			{
@@ -420,8 +420,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-ilevel')};
+				disabled={checked=Informant.GetFilter('show-ilevel')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -445,8 +445,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-link')};
+				disabled={checked=Informant.GetFilter('show-link')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -470,8 +470,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-stack')};
+				disabled={checked=Informant.GetFilter('show-stack')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -495,8 +495,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-usage')};
+				disabled={checked=Informant.GetFilter('show-usage')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -520,8 +520,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-quest')};
+				disabled={checked=Informant.GetFilter('show-quest')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -545,8 +545,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-merchant')};
+				disabled={checked=Informant.GetFilter('show-merchant')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -581,8 +581,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-vendor')};
+				disabled={checked=Informant.GetFilter('show-vendor')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
@@ -606,8 +606,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-vendor-buy')};
+				disabled={checked=Informant.GetFilter('show-vendor-buy')};
 				dependencies={["show-vendor"]={checked=true}; enabled={checked=true}};
 				difficulty=2;
 			};
@@ -631,8 +631,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=true};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('show-vendor-sell')};
+				disabled={checked=Informant.GetFilter('show-vendor-sell')};
 				dependencies={["show-vendor"]={checked=true}; enabled={checked=true}};
 				difficulty=2;
 			};
@@ -668,8 +668,8 @@ function registerKhaos()
 					end
 				end;
 				check=true;
-				default={checked=false};
-				disabled={checked=false};
+				default={checked=Informant.GetFilter('embed')};
+				disabled={checked=Informant.GetFilter('embed')};
 				dependencies={enabled={checked=true}};
 				difficulty=1;
 			};
