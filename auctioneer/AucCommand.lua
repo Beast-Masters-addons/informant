@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Auctioneer Addon for World of Warcraft(tm).
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
@@ -1353,7 +1353,7 @@ function registerKhaos()
 
 	-- This setting is not actually stored in the Khaos option set and
 	-- requires special treatment to be updated
-	return setKhaosSetKeyValue("LoadSettings", Stubby.GetConfig("Auctioneer", "LoadType") or "auctionhouse")
+	setKhaosSetKeyValue("LoadSettings", Stubby.GetConfig("Auctioneer", "LoadType") or "auctionhouse")
 
 	-- hook into Babylonian.SetOrder() to change the local setting in Khaos
 	Stubby.RegisterFunctionHook("Babylonian.SetOrder", 200, onBabylonianSetOrder)
