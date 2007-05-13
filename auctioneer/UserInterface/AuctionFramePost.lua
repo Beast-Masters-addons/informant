@@ -44,6 +44,8 @@ local onAuctionRemoved;
 local onSnapshotUpdate;
 local debugPrint;
 
+local debugTrace = 0
+
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function load()
@@ -1043,11 +1045,24 @@ end
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 function AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, index)
+	if debugTrace + 5 > GetTime() then
+		Auctioneer.Util.ChatPrint("Called at: "..GetTime().." again")
+	end
 	local frame = dropdown:GetParent();
 	local frameName = frame:GetName()
 	frame.updating = true;
 	if (index) then
 		local price = frame.prices[index]
+		-- Debug message for testers, to track down what causes #1548
+		if price == nil then
+			Auctioneer.Util.ChatPrint("Warning, price is nil, failed to set the dropdown box entry! - Please report the following debug info to http://www.auctioneeraddon.com/scm/ticket/1548.")
+			Auctioneer.Util.ChatPrint("frame = "..frameName)
+			Auctioneer.Util.ChatPrint("index = "..index)
+			Auctioneer.Util.ChatPrint("prices = "..#prices)
+			debugTrace = GetTime()
+			frame.updating = false
+			return
+		end
 		if (price.note) then
 			frame:SetNoteText(price.note, (price.text == _AUCT('UiPriceModelAuctioneer')));
 		end
