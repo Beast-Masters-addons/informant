@@ -489,7 +489,7 @@ function onEventHook(_, _, event)
 		if (whisperList[arg1]) then
 			whisperList[arg1] = nil
 			if (Auctioneer.Command.GetFilter('askprice-whispers')==false) then
-				return "killorig"
+				return "abort"
 			end
 		end
 	end
