@@ -267,7 +267,7 @@ function hookTooltip(funcVars, retVal, frame, name, link, quality, count)
 					if (count > 1) then
 						-- OUTPUT: "Suggested price for your [count] stack: [bidPrice] min/[buyPrice] BO ([buyPriceForOne]/[bidPriceForOne] ea)"
 						local bidPriceForOne, buyPriceForOne = Auctioneer.Statistic.GetSuggestedResale(itemKey, also, 1)
-						EnhTooltip.AddLine(
+						EnhTooltip.AddLine(">> "..
 							_AUCT('FrmtInfoSgststx'):format(
 								count,
 								EnhTooltip.GetTextGSC(bidPrice, true),
