@@ -970,7 +970,7 @@ function reconcileBidList(item, pendingBids, completedBids, discrepenciesAllowed
 
 		-- Reconcile the lists if all bids match or discrepencies are
 		-- allowed!
-		if (discrepencesAllowed or unmatchedPendingBidCount == 0 or unmatchedCompletedBidCount == 0) then
+		if (discrepenciesAllowed or unmatchedPendingBidCount == 0 or unmatchedCompletedBidCount == 0) then
 			-- Time to log some purchases! We iterate through the pending
 			-- list in reverse since we will be deleting items from
 			-- it.

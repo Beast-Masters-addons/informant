@@ -983,7 +983,7 @@ function reconcileAuctionList(item, pendingAuctions, completedAuctions, discrepe
 
 		-- Reconcile the lists if all auctions match or discrepencies are
 		-- allowed!
-		if (discrepencesAllowed or unmatchedPendingAuctionCount == 0 or unmatchedCompletedAuctionCount == 0) then
+		if (discrepenciesAllowed or unmatchedPendingAuctionCount == 0 or unmatchedCompletedAuctionCount == 0) then
 			-- Time to log some sales! We iterate through the pending
 			-- list in reverse since we will be deleting items from
 			-- it.
