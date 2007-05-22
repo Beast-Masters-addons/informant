@@ -496,7 +496,7 @@ function protectAuctionFrame(enable)
 			--If the frame is the current doublewide frame, then clear the doublewide
 
 			if ( GetUIPanel("doublewide") == AuctionFrame ) then
-				SetUIPanel("doublewide", nil)
+				UIParent.doublewide = nil
 			end
 			--Remove the frame from the UI frame handling system
 			UIPanelWindows.AuctionFrame = nil
