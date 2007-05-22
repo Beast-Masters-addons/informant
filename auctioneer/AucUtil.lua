@@ -495,8 +495,8 @@ function protectAuctionFrame(enable)
 			ahFrameProtected = true;
 			--If the frame is the current doublewide frame, then clear the doublewide
 
-			if ( GetDoublewideFrame() == AuctionFrame ) then
-				SetDoublewideFrame(nil)
+			if ( GetUIPanel("doublewide") == AuctionFrame ) then
+				SetUIPanel("doublewide", nil)
 			end
 			--Remove the frame from the UI frame handling system
 			UIPanelWindows.AuctionFrame = nil
@@ -542,7 +542,7 @@ function protectAuctionFrame(enable)
 				UIPanelWindows.AuctionFrame = { area = "doublewide", pushable = 0 };
 
 				if ( AuctionFrame:IsVisible() ) then
-					SetDoublewideFrame(AuctionFrame)
+					SetUIPanel("doublewide", AuctionFrame)
 				end
 			end
 		end
