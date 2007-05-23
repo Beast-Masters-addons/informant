@@ -413,7 +413,7 @@ end
 local extGetAuctionItemSubClasses = GetAuctionItemSubClasses
 function GetAuctionItemSubClasses(index, ...)
 	if (index == 5) then 
-		return "Trade Goods", "Parts", "Explosives", "Devices", "Gems"; 
+		return "Trade Goods", "Parts", "Explosives", "Devices";
 	else
 		return extGetAuctionItemSubClasses(index, ...); 
 	end 
