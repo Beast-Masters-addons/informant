@@ -395,14 +395,14 @@ local classLookup = {}
 for index, class in ipairs(classes) do
 	classLookup[class.name] = { id = class.id }
 	for subindex, subclass in ipairs(class) do
-		classLookup[subclass.name] = subclass.id
+		classLookup[class.name][subclass.name] = subclass.id
 	end
 end
 
 Auctioneer.ClassExt = {}
 function Auctioneer.ClassExt.GetClassId(class, subClass)
 	if (subClass and classLookup[class] and classLookup[class][subClass]) then
-		return classLookup[class].id, classLookup[class][subClass].id
+		return classLookup[class].id, classLookup[class][subClass]
 	elseif (classLookup[class]) then
 		return classLookup[class].id
 	end
