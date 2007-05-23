@@ -488,8 +488,16 @@ local originalToggleWorldMap
 function protectAuctionFrame(enable)
 	--Make sure we have an AuctionFrame before doing anything
 	if (AuctionFrame) then
-		--Handle enabling of protection
+		-- helper functions necessary to allow the dressing room feature to
+		-- work correctly
+		function enableAuctionFrame()
+			UIPanelWindows.AuctionFrame = AuctionFrame
+		end
+		function disableAuctionFrame()
+			UIPanelWindows.AuctionFrame = nil
+		end
 
+		-- Handle enabling of protection
 		if (enable and not ahFrameProtected and AuctionFrame:IsShown()) then
 			--Remember that we are now protecting the frame
 			ahFrameProtected = true;
@@ -500,6 +508,11 @@ function protectAuctionFrame(enable)
 			end
 			--Remove the frame from the UI frame handling system
 			UIPanelWindows.AuctionFrame = nil
+			Stubby.RegisterFunctionHook("AuctionDressUpFrame_OnShow", -200, enableAuctionFrame)
+			Stubby.RegisterFunctionHook("AuctionDressUpFrame_OnShow", 200, disableAuctionFrame)
+			Stubby.RegisterFunctionHook("AuctionDressUpFrame_OnHide", -200, enableAuctionFrame)
+			Stubby.RegisterFunctionHook("AuctionDressUpFrame_OnHide", 200, disableAuctionFrame)
+
 			--If mobile frames is around, then remove AuctionFrame from Mobile Frames handling system
 
 			if (MobileFrames_UIPanelWindowBackup) then
@@ -545,6 +558,14 @@ function protectAuctionFrame(enable)
 					SetUIPanel("doublewide", AuctionFrame)
 				end
 			end
+
+			-- remove the hooks to bypass the dressing feature needing to alter
+			-- the AH width
+			Stubby.UnregisterFunctionHook("AuctionDressUpFrame_OnShow", enableAuctionFrame)
+			Stubby.UnregisterFunctionHook("AuctionDressUpFrame_OnShow", disableAuctionFrame)
+			Stubby.UnregisterFunctionHook("AuctionDressUpFrame_OnHide", enableAuctionFrame)
+			Stubby.UnregisterFunctionHook("AuctionDressUpFrame_OnHide", disableAuctionFrame)
+
 		end
 	end
 end
