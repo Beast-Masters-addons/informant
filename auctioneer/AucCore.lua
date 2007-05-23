@@ -155,6 +155,7 @@ local filterDefaults = { --Auctioneer_FilterDefaults
 	["scan-class8"]           = "on",
 	["scan-class9"]           = "on",
 	["scan-class10"]          = "on",
+	["scan-class11"]          = "on",
 
 	-- AskPrice related commands
 	["askprice"]              = "on",
