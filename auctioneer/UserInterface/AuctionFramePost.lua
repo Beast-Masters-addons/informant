@@ -1058,7 +1058,7 @@ function AuctionFramePost_PriceModelDropDownItem_SetSelectedID(dropdown, index)
 			Auctioneer.Util.ChatPrint("Warning, price is nil, failed to set the dropdown box entry! - Please report the following debug info to http://www.auctioneeraddon.com/scm/ticket/1548.")
 			Auctioneer.Util.ChatPrint("frame = "..frameName)
 			Auctioneer.Util.ChatPrint("index = "..index)
-			Auctioneer.Util.ChatPrint("prices = "..#prices)
+			Auctioneer.Util.ChatPrint("prices = "..#frame.prices)
 			debugTrace = GetTime()
 			frame.updating = false
 			return
