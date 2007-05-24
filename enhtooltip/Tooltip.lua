@@ -1114,8 +1114,8 @@ function tooltipCall(frame, name, link, quality, count, price, forcePopup, hyper
 
 	local itemSig = frame:GetName()
 	if (link) then itemSig = itemSig..link end
-	if (count) then itemSig = itemSig..count end
-	if (price) then itemSig = itemSig..price end
+	itemSig = itemSig..count
+	itemSig = itemSig..price
 
 	if (EnhTTData.currentItem == itemSig) then
 		-- We are already showing this... No point doing it again.
@@ -1231,7 +1231,7 @@ function afHookOnEnter(funcArgs, retVal, type, index)
 		local name = nameFromLink(link)
 		if (name) then
 			local aiName, aiTexture, aiCount, aiQuality, aiCanUse, aiLevel, aiMinBid, aiMinIncrement, aiBuyoutPrice, aiBidAmount, aiHighBidder, aiOwner = GetAuctionItemInfo(type, index)
-			return tooltipCall(GameTooltip, name, link, aiQuality, aiCount)
+			return tooltipCall(GameTooltip, name, link, aiQuality, aiCount, 0)
 		end
 	end
 end
@@ -1242,7 +1242,7 @@ function gtHookSetLootItem(funcArgs, retVal, frame, slot)
 	if (name) then
 		local texture, item, quantity, quality = GetLootSlotInfo(slot)
 		quality = quality or qualityFromLink(link)
-		return tooltipCall(GameTooltip, name, link, quality, quantity)
+		return tooltipCall(GameTooltip, name, link, quality, quantity, 0)
 	end
 end
 
@@ -1250,7 +1250,7 @@ function gtHookSetQuestItem(funcArgs, retVal, frame, qtype, slot)
 	local link = GetQuestItemLink(qtype, slot)
 	if (link) then
 		local name, texture, quantity, quality, usable = GetQuestItemInfo(qtype, slot)
-		return tooltipCall(GameTooltip, name, link, quality, quantity)
+		return tooltipCall(GameTooltip, name, link, quality, quantity, 0)
 	end
 end
 
@@ -1261,7 +1261,7 @@ function gtHookSetQuestLogItem(funcArgs, retVal, frame, qtype, slot)
 		name = name or nameFromLink(link)
 		quality = qualityFromLink(link) -- I don't trust the quality returned from the above function.
 
-		return tooltipCall(GameTooltip, name, link, quality, quantity)
+		return tooltipCall(GameTooltip, name, link, quality, quantity, 0)
 	end
 end
 
@@ -1273,7 +1273,7 @@ function gtHookSetBagItem(funcArgs, retVal, frame, frameID, buttonID)
 		local texture, itemCount, locked, quality, readable = GetContainerItemInfo(frameID, buttonID)
 		quality = (quality ~= -1 and quality) or qualityFromLink(link)
 
-		return tooltipCall(GameTooltip, name, link, quality, itemCount)
+		return tooltipCall(GameTooltip, name, link, quality, itemCount, 0)
 	end
 end
 
@@ -1284,7 +1284,7 @@ function gtHookSetInboxItem(funcArgs, retVal, frame, index)
 	for itemID = 1, 30000 do
 		itemName, itemLink, itemQuality = GetItemInfo(itemID)
 		if (itemName and itemName == inboxItemName) then
-			return tooltipCall(GameTooltip, inboxItemName, itemLink, inboxItemQuality, inboxItemCount)
+			return tooltipCall(GameTooltip, inboxItemName, itemLink, inboxItemQuality, inboxItemCount, 0)
 		end
 	end
 end
@@ -1307,7 +1307,7 @@ function gtHookSetInventoryItem(funcArgs, retVal, frame, unit, slot)
 		local quality = GetInventoryItemQuality(unit, slot)
 		quality = quality or qualityFromLink(link)
 
-		return tooltipCall(GameTooltip, name, link, quality, quantity)
+		return tooltipCall(GameTooltip, name, link, quality, quantity, 0)
 	end
 end
 
@@ -1343,7 +1343,7 @@ function gtHookSetCraftSpell(funcArgs, retVal, frame, slot)
 	local name = GetCraftInfo(slot)
 	local link = GetCraftItemLink(slot)
 	if name and link then
-		return tooltipCall(GameTooltip, name, link)
+		return tooltipCall(GameTooltip, name, link, -1, 1, 0)
 	end
 end
 
