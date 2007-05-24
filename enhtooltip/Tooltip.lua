@@ -1114,8 +1114,8 @@ function tooltipCall(frame, name, link, quality, count, price, forcePopup, hyper
 
 	local itemSig = frame:GetName()
 	if (link) then itemSig = itemSig..link end
-	itemSig = itemSig..count
-	itemSig = itemSig..price
+	itemSig = itemSig.."|"..count
+	itemSig = itemSig.."|"..price
 
 	if (EnhTTData.currentItem == itemSig) then
 		-- We are already showing this... No point doing it again.
