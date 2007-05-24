@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Auctioneer Addon for World of Warcraft(tm).
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
@@ -27,7 +27,12 @@
 		since that is it's designated purpose as per:
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 --]]
+
 Auctioneer_RegisterRevision("$URL$", "$Rev$")
+
+-- deprecation warnings - set to false to completely disable the warning, true
+-- will display the warning once each WoW session
+local GetClassIdWarning  = true
 
 local classes = {
 	{
@@ -401,6 +406,12 @@ end
 
 Auctioneer.ClassExt = {}
 function Auctioneer.ClassExt.GetClassId(class, subClass)
+	-- display a warning message that this function will be removed
+	if GetClassIdWarning then
+		getglobal("ChatFrame1"):AddMessage("Auctioneer.ClassExt.GetClassId() is deprecated and will be removed in version 4.2. This warning won't be displayed again in the current WoW session.", 1.0, 0.3, 0.3)
+		GetClassIdWarning = false
+	end
+
 	if (subClass and classLookup[class] and classLookup[class][subClass]) then
 		return classLookup[class].id, classLookup[class][subClass]
 	elseif (classLookup[class]) then
