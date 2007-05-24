@@ -805,6 +805,7 @@ function getSuggestedResale(itemKey, ahKey, count)
 		end
 	end
 	local discountBidPercent = tonumber(Auctioneer.Command.GetFilterVal('pct-bidmarkdown'));
+	count = count or 1;		-- handle cases where count comes in nil
 	local buyPrice = Auctioneer.Statistic.RoundDownTo95(hsp * count);
 	local bidPrice = Auctioneer.Statistic.RoundDownTo95(Auctioneer.Statistic.SubtractPercent(buyPrice, discountBidPercent));
 	return bidPrice, buyPrice, (marketPrice*count), warn;
