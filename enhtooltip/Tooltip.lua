@@ -1114,8 +1114,12 @@ function tooltipCall(frame, name, link, quality, count, price, forcePopup, hyper
 
 	local itemSig = frame:GetName()
 	if (link) then itemSig = itemSig..link end
-	itemSig = itemSig.."|"..count
-	itemSig = itemSig.."|"..price
+	-- we have to force the separators in order to prevent aliasing of prices and counts (1 12 version 11 2)
+	-- but count and price can both be nil
+	itemSig = itemSig.."|";
+	if (count) then itemSig = itemSig..count end
+	itemSig = itemSig.."|";
+	if (price) then itemSig = itemSig..price end
 
 	if (EnhTTData.currentItem == itemSig) then
 		-- We are already showing this... No point doing it again.
