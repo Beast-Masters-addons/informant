@@ -301,7 +301,8 @@
 									parent:GetItemName(),
 									itemLink,
 									Auctioneer.ItemDB.GetItemQuality(itemKey),
-									parent:GetStackSize()
+									parent:GetStackSize(),
+									0
 								);
 							end
 						end

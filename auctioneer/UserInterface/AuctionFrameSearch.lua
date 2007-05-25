@@ -1385,7 +1385,8 @@ function AuctionFrameSearch_ListItem_OnEnter(row)
 					result.name,
 					itemLink,
 					Auctioneer.ItemDB.GetItemQuality(result.itemKey),
-					result.count
+					result.count,
+					0
 				);
 			end
 		end
