@@ -623,8 +623,7 @@ BtmScan.PageScan = function(resume)
 								bidPrice = iBid
 							end
 							profit = value - price
-							local profitPercent = math.floor( (100 * profit / price) + 0.5 );
-							message = tr("%1 %2 at %3 [%4 at %5 = %6 profit / %7%]", bidText, buying, BtmScan.GSC(price), whyBuy, BtmScan.GSC(value), BtmScan.GSC(profit), profitPercent)
+							message = tr("%1 %2 at %3 [%4 at %5 = %6 profit]", bidText, buying, BtmScan.GSC(price), whyBuy, BtmScan.GSC(value), BtmScan.GSC(profit))
 							
 							if bidPrice
 							and GetMoney()-bidPrice >= data.reserve
@@ -1832,9 +1831,6 @@ BtmScan.PromptPurchase = function(i, bidSig, whyBuy, bidPrice, bidType, noSafety
 	BtmScan.Prompt.profit    = profit
 	BtmScan.Prompt.message   = message
 
-	-- format the profit percentage as an integer (can still be huge)
-	local profitPercent = math.floor( (100 * profit / bidPrice) + 0.5 );
-	
 	local bidText = bidType
 	if (bidText == tr("bought")) then bidText = tr("buyout") end
 	
@@ -1842,7 +1838,7 @@ BtmScan.PromptPurchase = function(i, bidSig, whyBuy, bidPrice, bidType, noSafety
 	BtmScan.Prompt.Lines[2]:SetText("  "..iLink.."x"..iCount)
 	BtmScan.Prompt.Lines[3]:SetText("  "..tr("%1 price: %2", bidText, BtmScan.GSC(bidPrice)))
 	BtmScan.Prompt.Lines[4]:SetText("  "..tr("Purchasing for: %1", whyBuy))
-	BtmScan.Prompt.Lines[5]:SetText("  "..tr("Valued at %1 (%2 profit / %3%)", BtmScan.GSC(value), BtmScan.GSC(profit), profitPercent))
+	BtmScan.Prompt.Lines[5]:SetText("  "..tr("Valued at %1 (%2 profit)", BtmScan.GSC(value), BtmScan.GSC(profit)))
 	BtmScan.Prompt.Item:GetNormalTexture():SetTexture(iTex)
 	BtmScan.Prompt.Item:GetNormalTexture():SetTexCoord(0,1,0,1)
 	PlaySoundFile("Interface\\AddOns\\btmScan\\Sounds\\DoorBell.mp3")
