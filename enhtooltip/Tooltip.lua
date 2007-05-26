@@ -476,9 +476,9 @@ function showTooltip(currentTooltip, skipEmbedRender)
 		-- update the tooltip without calling our own showTooltip
 		-- this will repaint the game tooltip and update its width and height so
 		-- that our just added text is now displayed inside the tooltip
-		private.showIgnore = true
+		EnhTTData.showIgnore = true
 		currentTooltip:Show()
-		private.showIgnore = false
+		EnhTTData.showIgnore = false
 		bTooltipRepainted  = true
 	end
 
@@ -486,9 +486,9 @@ function showTooltip(currentTooltip, skipEmbedRender)
 	-- correct width/height including all the new lines other addons might add
 	-- after our own call
 	if not bTooltipRepainted then
-		private.showIgnore = true
+		EnhTTData.showIgnore = true
 		currentTooltip:Show()
-		private.showIgnore = false
+		EnhTTData.showIgnore = false
 	end
 
 	-- if there is no data for the enhanced tooltip frame, we've got nothing todo
