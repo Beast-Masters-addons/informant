@@ -1171,6 +1171,10 @@ AuctioneerLocalizations = {
 		["UIScanFailed"]	= "Auctioneer: Auktionenscan fehlgeschlagen";
 
 		-- Section: Generic Strings
+		["SubClassDevices"]	= "Geräte";
+		["SubClassExplosives"]	= "Sprengstoff";
+		["SubClassParts"]	= "Teile";
+		["SubClassTradeGoods"]	= "Handwerkswaren";
 		["TextCombat"]	= "Kampflog";
 		["TextGeneral"]	= "Allgemein";
 		["TextNone"]	= "nichts";
@@ -1178,7 +1182,7 @@ AuctioneerLocalizations = {
 		["TextUsage"]	= "Syntax:";
 
 		-- Section: Help Text
-		["HelpAlso"]	= "Zeigt ebenfalls die Werte anderer Server im Tooltip an. Format: [Realm]-[Faction]|neutral|opposite|home|off\nBeispiel: /auctioneer also Kil'jaeden-alliance";
+		["HelpAlso"]	= "Zeigt ebenfalls die Werte anderer Server im Tooltip an.\nFormat: [Realm]-[Faction]|neutral|opposite|home|off\nBeispiel: /auctioneer also Kil'jaeden-alliance";
 		["HelpAskPrice"]	= "Preisnachfrage ein-/ausschalten.";
 		["HelpAskPriceAd"]	= "Anzeige der neuen Preisnachfrage-Eigenschaften ein-/ausschalten.";
 		["HelpAskPriceGuild"]	= "Auf Gildenchat-Anfragen reagieren.";
@@ -1655,6 +1659,10 @@ AuctioneerLocalizations = {
 		["UIScanFailed"]	= "Auctioneer: Auction scanning failed";
 
 		-- Section: Generic Strings
+		["SubClassDevices"]	= "Devices";
+		["SubClassExplosives"]	= "Explosives";
+		["SubClassParts"]	= "Parts";
+		["SubClassTradeGoods"]	= "Trade Goods";
 		["TextCombat"]	= "Combat";
 		["TextGeneral"]	= "General";
 		["TextNone"]	= "none";
