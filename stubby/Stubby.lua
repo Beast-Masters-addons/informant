@@ -97,6 +97,30 @@ RegisterFunctionHook allows you to hook into a function.
 	or nil if none.
 	- hook1..hookN are the original parameters of the hooked
 	function in the original order.
+  The passed function can return one of the following three special commands:
+    - "abort" will abort the function call imidiatly and any hook positioned
+              after the function won't be called (this includes the original
+              function, if position of the function retunring "abort" is < 0)
+    - "killorig" causes the original function tonot being called. All other
+                 hooked functions will still be called. If position of the
+                 functions returning "killorig" is > 0, this has no affect
+                 (since the original function was already called before)
+    - "setreturn" sets the return value according to the second return value
+                  which must be a table. All function hooks which are called
+                  after the function hook which set the return value, will
+                  receive this new return value as their second parameter. Note
+                  that the original function still resets the return value. So
+                  in case you want the complete function hook to return
+                  something different than the original function's return value,
+                  make sure to set the position > 0.
+                  Also note, that any hooked function called after this one can
+                  change the return value again.
+                  Examples:
+                     return "setreturn", {1} sets the return value to 1
+                     return "setreturn", {} sets the return value to nil
+                     return "setreturn", {{[1] = "foo", [2] = "bar"}}
+                        sets the return value to the table:
+                        {[1] = "foo", [2] = "bar"}
 
 RegisterAddOnHook is very much like the register function hook
 call except that there is no positioning (you may get notified in
@@ -168,7 +192,7 @@ end
 		This AddOn's source code is specifically designed to work with
 		World of Warcraft's interpreted AddOn system.
 		You have an implicit licence to use this AddOn with these facilities
-		since that is it's designated purpose as per:
+		since that is its designated purpose as per:
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 
@@ -192,6 +216,7 @@ local config = {
 	loads = {},
 	events = {},
 }
+local addonName = "Stubby"
 
 StubbyConfig = {}
 
@@ -199,14 +224,14 @@ StubbyConfig = {}
 local tempTable = {}
 
 -- Function prototypes
-local assert                     -- assert(bTest, strMessage)
+local assert                     -- assert(test, message)
 local chatPrint                  -- chatPrint(...)
 local checkAddOns                -- checkAddOns()
 local clearConfig                -- clearConfig(ownerAddOn, variable)
 local createAddOnLoadBootCode    -- createAddOnLoadBootCode(ownerAddOn, triggerAddOn)
 local createEventLoadBootCode    -- createEventLoadBootCode(ownerAddOn, triggerEvent)
 local createFunctionLoadBootCode -- createFunctionLoadBootCode(ownerAddOn, triggerFunction)
-local debugPrint                 -- debugPrint(strMessage, iCode, type, priority)
+local debugPrint                 -- debugPrint(message, category, title, errorCode, level)
 local errorHandler               -- errorHandler(stackLevel, ...)
 local eventWatcher               -- eventWatcher(event)
 local events                     -- events(event, param)
@@ -491,8 +516,9 @@ end
 function registerFunctionHook(triggerFunction, position, hookFunc, ...)
 	if (not (triggerFunction and hookFunc)) then
 		return debugPrint("Invalid function call. No trigger function and/or hook function specified. Usage Stubby.RegisterFunctionHook(triggerFunction, position, hookFunction,...).",
-								4, "Error")
+								4, DebugLib.Level.Error)
 	end
+
 	local insertPos = tonumber(position) or 200
 	local funcObj
 	local hookFuncName = strsplit("\n", debugstack(2,1,0), 2)
@@ -529,7 +555,7 @@ function registerFunctionHook(triggerFunction, position, hookFunc, ...)
 	config.calls.callList = rebuildNotifications(config.calls.functions)
 	local iErrorCode, strErrorMessage = hookInto(triggerFunction)
 	if iErrorCode > 0 then
-		return debugPrint(strErrorMessage, iErrorCode, "Error")
+		return debugPrint(strErrorMessage, iErrorCode, DebugLib.Level.Error)
 	else
 		return 0
 	end
@@ -567,7 +593,7 @@ end
 function unregisterFunctionHook(triggerFunction, hookFunc)
 	if not (config.calls and config.calls.functions and config.calls.functions[triggerFunction]) then
 		return 0, debugPrint("Failed to unregister function hook for "..triggerFunction.." since it is not hooked at all",
-		                     1, "Error")
+		                     1, DebugLib.Level.Error)
 	end
 
 	local iHooked  = 0
@@ -595,7 +621,7 @@ function unregisterFunctionHook(triggerFunction, hookFunc)
 
 	if iRemoved == 0 then
 		return 0, debugPrint("Failed to unregister function hook for "..triggerFunction..". The given function is not hooked in this trigger function.",
-		                     1, "Error")
+		                     1, DebugLib.Level.Error)
 	end
 
 	-- rebuild the call list, so that the removed functions are also removed from
@@ -677,6 +703,17 @@ end
 function unregisterEventHook(triggerEvent, ownerAddOn)
 	if (config.events and config.events[triggerEvent] and config.events[triggerEvent][ownerAddOn]) then
 		config.events[triggerEvent][ownerAddOn] = nil
+
+		-- events is indexed using the addons name as the key value,
+		-- so we have to use next() to check, if the table is empty
+		-- Debugged by ccox and Cera
+		if ( not next( config.events[triggerEvent] ) ) then
+			config.events[triggerEvent] = nil
+			-- Never unregister ADDON_LOADED, because this is used by RegisterAddOnHook()
+			if (triggerEvent ~= "ADDON_LOADED") then
+				StubbyFrame:UnregisterEvent(triggerEvent)
+			end
+		end
 	end
 end
 
@@ -979,85 +1016,51 @@ end
 -------------------------------------------------------------------------------
 -- Prints the specified message to nLog.
 --
+-- syntax:
+--    errorCode, message = debugPrint([message][, category][, title][, errorCode][, level])
+--
 -- parameters:
---    strMessage - (string) the error message
---    iCode      - (number) the error code (optional)
---    type       - (string) type of debug message (optional - defaulting to
---                          "Debug")
---    priority   - nLog message level (optional - see remarks on which default
---                 value is used)
+--    message   - (string) the error message
+--                nil, no error message specified
+--    category  - (string) the category of the debug message
+--                nil, no category specified
+--    title     - (string) the title for the debug message
+--                nil, no title specified
+--    errorCode - (number) the error code
+--                nil, no error code specified
+--    level     - (string) nLog message level
+--                         Any nLog.levels string is valid.
+--                nil, no level specified
 --
 -- returns:
---    first value:
---       "unspecified", if no iCode is specified
---       iCode, otherwise
---    second value:
---       strMessage
---
--- remarks:
---    If priority is not specified, a default value will be assigned. This
---    default value depends on the specified type parameter. If type is set to a
---    valid nLog level, the appropriate priority will be used (i.e. 1 for
---    "Critical", 2 for "Error", etc.). See nLog.levels for a complete list.
---    If there is no counterpart to the specified type, priority defaults to
---    N_DEBUG.
+--    errorCode - (number) errorCode, if one is specified
+--                nil, otherwise
+--    message   - (string) message, if one is specified
+--                nil, otherwise
 -------------------------------------------------------------------------------
-function debugPrint(strMessage, iCode, type, priority)
-	if not iCode then
-		iCode = "unspecified"
-	end
-
-	if nLog then
-		if not type then
-			type = "Debug"
-		end
-		if not priority then
-			-- search the list of error levels to find the correct priority
-			for iLevel, strLevel in pairs(nLog.levels) do
-				if strLevel == type then
-					priority = iLevel
-					break
-				end
-			end
-			priority = priority or N_DEBUG
-		end
-		nLog.AddMessage("Stubby", type, priority, "Errorcode: "..iCode, strMessage)
-	end
-
-	return iCode, strMessage
+function debugPrint(message, category, title, errorCode, level)
+	return DebugLib.DebugPrint(addonName, message, category, title, errorCode, level)
 end
 
 -------------------------------------------------------------------------------
 -- Used to make sure that conditions are met within functions.
--- If bTest is false, the error message will be written to nLog and the user's
+-- If test is false, the error message will be written to nLog and the user's
 -- default chat channel.
 --
--- called by:
---    TODO
+-- syntax:
+--    assertion = assert(test, message)
 --
 -- parameters:
---    bTest      - (boolean) true, if the assertion was met
---                           false, otherwise
---    strMessage - (string) the message which will be output to the user
+--    test    - (any)     false/nil, if the assertion failed
+--                        anything else, otherwise
+--    message - (string)  the message which will be output to the user
 --
--- remark:
---    If nLog is present, the message will not only be written to the user's
---    channel, but also to nLog with the priority set to N_CRITICAL, since it
---    is assumed that assert() is only used in critical parts of functions and
---    that bTest is expected to never fail. This is especially useful to track
---    down bugs which might randomly occure. Therefore this log message is given
---    the highest priority.
+-- returns:
+--    assertion - (boolean) true, if the test passed
+--                          false, otherwise
 -------------------------------------------------------------------------------
-function assert(bTest, strMessage)
-	if bTest then
-		return -- test passed, nothing to worry about
-	end
-
-	getglobal("ChatFrame1"):AddMessage(strMessage, 1.0, 0.3, 0.3)
-
-	if nLog then
-		nLog.AddMessage("Stubby", "Assertion", N_CRITICAL, "assertion failed", strMessage)
-	end
+function assert(test, message)
+	return DebugLib.Assert(addonName, test, message)
 end
 
 -------------------------------------------------------------------------------
