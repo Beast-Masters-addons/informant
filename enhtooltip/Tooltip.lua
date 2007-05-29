@@ -1304,15 +1304,10 @@ function gtHookSetBagItem(funcArgs, retVal, frame, frameID, buttonID)
 end
 
 function gtHookSetInboxItem(funcArgs, retVal, frame, index)
-	local inboxItemName, itemTexture, inboxItemCount, inboxItemQuality = GetInboxItem(index)
-	local itemName, itemLink, itemQuality
-
-	for itemID = 1, 30000 do
-		itemName, itemLink, itemQuality = GetItemInfo(itemID)
-		if (itemName and itemName == inboxItemName) then
-			return tooltipCall(GameTooltip, inboxItemName, itemLink, inboxItemQuality, inboxItemCount, 0)
-		end
-	end
+	local name, _, count, quality = GetInboxItem(index)
+	local itemString = GetInboxItemLink(index)
+	local _, itemLink = GetItemInfo(itemString)
+	return tooltipCall(GameTooltip, name, itemLink, quality, count)
 end
 
 function gtHookSetInventoryItem(funcArgs, retVal, frame, unit, slot)
