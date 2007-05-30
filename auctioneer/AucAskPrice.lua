@@ -471,7 +471,7 @@ function getItems(str)
 	if (not str) then return nil end
 	local itemList = {};
 
-	for number, color, item, name in str:gmatch("(%d*)|c(%x+)|Hitem:([^|]+)|h%[(.-)%]|h|r") do
+	for number, color, item, name in str:gmatch("(%d*)%s*|c(%x+)|Hitem:([^|]+)|h%[(.-)%]|h|r") do
 		table.insert(itemList, {link = "|c"..color.."|Hitem:"..item.."|h["..name.."]|h|r", count = tonumber(number) or 1})
 	end
 	return itemList;
