@@ -339,12 +339,20 @@ BtmScan.PageScan = function(resume)
 						-- Get disenchant value if available
 						local disenchantValue = 0
 						if (Enchantrix and Enchantrix.Storage) then
-							-- function added for Enchantrix 4.0.2
-							local hspValue, medianValue, baselineValue, auc5Value = Enchantrix.Storage.GetItemDisenchantTotals(itemLink);
-							if (AucAdvanced and auc5Value and auc5Value > 0) then
-								disenchantValue = auc5Value;
+							if (Enchantrix.Storage.GetItemDisenchantTotals) then
+								-- function added for Enchantrix 4.0.2
+								local hspValue, medianValue, baselineValue, auc5Value = Enchantrix.Storage.GetItemDisenchantTotals(itemLink);
+								if (auc5Value and auc5Value > 0) then
+									disenchantValue = auc5Value;
+								else
+									disenchantValue = hspValue or 0;
+								end
 							else
-								disenchantValue = hspValue or 0;
+								-- for older versions of enchantrix that don't have a totals function
+								local disenchantTo = Enchantrix.Storage.GetItemDisenchants(Enchantrix.Util.GetSigFromLink(itemLink), itemName, true)
+								if (disenchantTo and disenchantTo.totals and disenchantTo.totals.hspValue and iQual > 1 and iCount <= 1) then
+									disenchantValue = disenchantTo.totals.hspValue * disenchantTo.totals.conf
+								end
 							end
 						end
 
