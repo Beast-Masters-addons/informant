@@ -34,15 +34,6 @@ btmscan/Textures/Back.blp -text
 btmscan/Textures/Play.blp -text
 btmscan/Textures/Stop.blp -text
 docs/AucConvert.pdf -text svneol=unset#unset
-docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.doc -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.4[!!-~]Change[!!-~]log.txt -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.6[!!-~]Change[!!-~]log.doc -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.6[!!-~]Change[!!-~]log.txt -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.6.1[!!-~]Change[!!-~]log.doc -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.6.1[!!-~]Change[!!-~]log.txt -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log[!!-~](Wiki).txt -text
-docs/Auctioneer[!!-~]AddOns[!!-~]3.8[!!-~]Change[!!-~]log.doc -text
-docs/conversion_plan.txt -text
 enhtooltip/GPL.txt -text
 informant/GPL.txt -text
 stubby/GPL.txt -text
