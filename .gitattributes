@@ -1,0 +1,22 @@
+* text=auto !eol
+Auc-Advanced/Modules/Auc-Util-Example/Readme.txt -text
+Auc-Advanced/Modules/luae.exe -text
+Auc-Advanced/Textures/AucAdvIcon.blp -text
+Auc-Advanced/Textures/NavButtons.blp -text
+Auc-Advanced/includes -text
+Auc-ScanData/StringRope.lua -text
+Babylonian/Babylonian.toc -text
+BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
+BtmScan/Textures/Back.blp -text
+BtmScan/Textures/BtmScanIcon.blp -text
+BtmScan/Textures/Play.blp -text
+BtmScan/Textures/Stop.blp -text
+BtmScan/includes -text
+DebugLib/DebugLib.toc -text
+DebugLib/Load.xml -text
+Enchantrix-Barker/includes -text
+Enchantrix/Skin/EnxOrb.blp -text
+Enchantrix/includes -text
+Informant/includes -text
+Stubby/includes -text
+\!nLog/VeraMono.ttf -text
