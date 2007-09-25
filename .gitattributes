@@ -4,6 +4,8 @@ Auc-Advanced/Modules/luae.exe -text
 Auc-Advanced/Textures/AucAdvIcon.blp -text
 Auc-Advanced/Textures/NavButtons.blp -text
 Auc-Advanced/includes -text
+Auc-Filter-Outlier/Auc-Filter-Outlier.toc -text
+Auc-Filter-Outlier/OutlierFilter.lua -text
 Auc-ScanData/StringRope.lua -text
 Babylonian/Babylonian.toc -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
