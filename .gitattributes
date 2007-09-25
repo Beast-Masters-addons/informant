@@ -4,9 +4,16 @@ Auc-Advanced/Modules/luae.exe -text
 Auc-Advanced/Textures/AucAdvIcon.blp -text
 Auc-Advanced/Textures/NavButtons.blp -text
 Auc-Advanced/includes -text
+Auc-Db/Auc-Db.toc -text
+Auc-Db/DbCore.lua -text
+Auc-Db/DbData.lua -text
+Auc-Db/StringRope.lua -text
+Auc-Db/gpl-3.0.txt -text
 Auc-Filter-Outlier/Auc-Filter-Outlier.toc -text
 Auc-Filter-Outlier/OutlierFilter.lua -text
 Auc-ScanData/StringRope.lua -text
+Auc-Stat-Debug/Auc-Stat-Debug.toc -text
+Auc-Stat-Debug/StatDebug.lua -text
 Babylonian/Babylonian.toc -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
 BtmScan/Textures/Back.blp -text
