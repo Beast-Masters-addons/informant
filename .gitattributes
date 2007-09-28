@@ -29,5 +29,8 @@ Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/includes -text
 EnhTooltip/includes -text
 Informant/includes -text
+LibTooltip/EnhTooltip.lua -text
+LibTooltip/EnhancedTooltip.toc -text
+LibTooltip/tooltip.lua -text
 Stubby/includes -text
 \!nLog/VeraMono.ttf -text
