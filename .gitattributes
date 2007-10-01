@@ -15,10 +15,9 @@ Auc-Filter-Outlier/OutlierFilter.lua -text
 Auc-ScanData/StringRope.lua -text
 Auc-Stat-Debug/Auc-Stat-Debug.toc -text
 Auc-Stat-Debug/StatDebug.lua -text
-Auc-Util-ScanFinish/Auc-Util-ScanFinish.toc -text
-Auc-Util-ScanFinish/Embed.xml -text
-Auc-Util-ScanFinish/ScanComplete.mp3 -text
-Auc-Util-ScanFinish/ScanFinish.lua -text
+Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
+Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
+Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
 Babylonian/Babylonian.toc -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
 BtmScan/Textures/Back.blp -text
