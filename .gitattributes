@@ -19,7 +19,15 @@ Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
+Auctioneer/README-FIRST-ALPHA-BETA.txt -text
+Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
+Auctioneer/Textures/Clear.tga -text
+Auctioneer/Textures/Refresh.tga -text
+Auctioneer/Textures/Sort.tga -text
 Babylonian/Babylonian.toc -text
+BeanCounter/GPL.txt -text
+BeanCounter/UserInterface/ListTemplate.lua -text
+BeanCounter/UserInterface/ListTemplate.xml -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
 BtmScan/Textures/Back.blp -text
 BtmScan/Textures/BtmScanIcon.blp -text
