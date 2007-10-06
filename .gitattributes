@@ -24,10 +24,12 @@ Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auctioneer/Textures/Clear.tga -text
 Auctioneer/Textures/Refresh.tga -text
 Auctioneer/Textures/Sort.tga -text
+Auctioneer/includes -text
 Babylonian/Babylonian.toc -text
 BeanCounter/GPL.txt -text
 BeanCounter/UserInterface/ListTemplate.lua -text
 BeanCounter/UserInterface/ListTemplate.xml -text
+BeanCounter/includes -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
 BtmScan/Textures/Back.blp -text
 BtmScan/Textures/BtmScanIcon.blp -text
