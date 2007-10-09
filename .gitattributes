@@ -29,10 +29,6 @@ BeanCounter/GPL.txt -text
 BeanCounter/UserInterface/ListTemplate.lua -text
 BeanCounter/UserInterface/ListTemplate.xml -text
 BeanCounter/includes -text
-BtmScan/EvalSnatch.lua -text
-BtmScan/FilterItemPrice.lua -text
-BtmScan/FilterItemType.lua -text
-BtmScan/FilterTimeLeft.lua -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
 BtmScan/Textures/Back.blp -text
 BtmScan/Textures/BtmScanIcon.blp -text
