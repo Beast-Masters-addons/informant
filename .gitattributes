@@ -15,15 +15,6 @@ Auc-Filter-Outlier/OutlierFilter.lua -text
 Auc-Stat-Debug/Auc-Stat-Debug.toc -text
 Auc-Stat-Debug/StatDebug.lua -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
-Auc-Util-BeanCounter/Auc-Util-BeanCounter.toc -text
-Auc-Util-BeanCounter/BeanCounter.lua -text
-Auc-Util-BeanCounter/BeanCounterFrames.lua -text
-Auc-Util-BeanCounter/BeanCounterLocale.lua -text
-Auc-Util-BeanCounter/BeanCounterMail.lua -text
-Auc-Util-BeanCounter/BeanCounterStrings.lua -text
-Auc-Util-BeanCounter/BidMonitor.lua -text
-Auc-Util-BeanCounter/Embed.xml -text
-Auc-Util-BeanCounter/PostMonitor.lua -text
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
