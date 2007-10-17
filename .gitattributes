@@ -24,7 +24,6 @@ Auctioneer/Textures/Clear.tga -text
 Auctioneer/Textures/Refresh.tga -text
 Auctioneer/Textures/Sort.tga -text
 Auctioneer/includes -text
-Babylonian/Babylonian.toc -text
 BeanCounter/GPL.txt -text
 BeanCounter/UserInterface/ListTemplate.lua -text
 BeanCounter/UserInterface/ListTemplate.xml -text
@@ -35,16 +34,9 @@ BtmScan/Textures/BtmScanIcon.blp -text
 BtmScan/Textures/Play.blp -text
 BtmScan/Textures/Stop.blp -text
 BtmScan/includes -text
-DebugLib/DebugLib.toc -text
-DebugLib/Load.xml -text
 Enchantrix-Barker/includes -text
 Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/includes -text
 EnhTooltip/includes -text
 Informant/includes -text
-LibTooltip/EnhTooltip.lua -text
-LibTooltip/EnhancedTooltip.toc -text
-LibTooltip/tooltip.lua -text
-Stubby/includes -text
-\!nLog/VeraMono.ttf -text
 /build.conf -text
