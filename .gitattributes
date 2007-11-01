@@ -38,4 +38,8 @@ Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/includes -text
 EnhTooltip/includes -text
 Informant/includes -text
+MarketMatch/Auc-Util-MarketMatch.toc -text
+MarketMatch/Embed.xml -text
+MarketMatch/MarketMatch.lua -text
+MarketMatch/Readme.txt -text
 /build.conf -text
