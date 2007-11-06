@@ -9,6 +9,7 @@ Auc-Db/DbCore.lua -text
 Auc-Db/DbData.lua -text
 Auc-Db/StringRope.lua -text
 Auc-Db/gpl-3.0.txt -text
+Auc-Filter-Basic/BasicFilter.xml svneol=native#text/xml
 Auc-Filter-Outlier/Auc-Filter-Outlier.toc -text
 Auc-Filter-Outlier/Embed.xml -text
 Auc-Filter-Outlier/OutlierFilter.lua -text
