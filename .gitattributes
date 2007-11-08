@@ -19,10 +19,6 @@ Auc-Match-Undercut/Undercut.lua -text
 Auc-Stat-Debug/Auc-Stat-Debug.toc -text
 Auc-Stat-Debug/StatDebug.lua -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
-Auc-Util-MarketMatch/Auc-Util-MarketMatch.toc -text
-Auc-Util-MarketMatch/Embed.xml -text
-Auc-Util-MarketMatch/MarketMatch.lua -text
-Auc-Util-MarketMatch/Readme.txt -text
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
