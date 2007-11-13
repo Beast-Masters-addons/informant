@@ -22,12 +22,6 @@ Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
-Auctioneer/README-FIRST-ALPHA-BETA.txt -text
-Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
-Auctioneer/Textures/Clear.tga -text
-Auctioneer/Textures/Refresh.tga -text
-Auctioneer/Textures/Sort.tga -text
-Auctioneer/includes -text
 BeanCounter/GPL.txt -text
 BeanCounter/Textures/BeanCounterIcon.blp -text
 BtmScan/EvalAppraiser.lua -text
