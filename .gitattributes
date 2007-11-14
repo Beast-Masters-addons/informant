@@ -35,6 +35,7 @@ Auctioneer/Textures/Sort.tga -text
 Auctioneer/includes -text
 BeanCounter/GPL.txt -text
 BeanCounter/Textures/BeanCounterIcon.blp -text
+BeanCounter/includes -text
 BtmScan/EvalAppraiser.lua -text
 BtmScan/EvalEnchantMats.lua -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
