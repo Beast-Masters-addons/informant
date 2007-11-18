@@ -11,22 +11,10 @@ Auc-Db/DbData.lua -text
 Auc-Db/StringRope.lua -text
 Auc-Db/gpl-3.0.txt -text
 Auc-Filter-Basic/BasicFilter.xml svneol=native#text/xml
-Auc-Filter-Outlier/Auc-Filter-Outlier.toc -text
-Auc-Filter-Outlier/Embed.xml -text
-Auc-Filter-Outlier/OutlierFilter.lua -text
-Auc-Match-Undercut/Auc-Match-Undercut.toc -text
-Auc-Match-Undercut/Embed.xml -text
-Auc-Match-Undercut/Undercut.lua -text
-Auc-Stat-Debug/Auc-Stat-Debug.toc -text
-Auc-Stat-Debug/StatDebug.lua -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
-Auc-Util-SearchUI/Auc-Util-SearchUI.toc -text
-Auc-Util-SearchUI/Embed.xml -text
-Auc-Util-SearchUI/SearchMain.lua -text
-Auc-Util-SearchUI/SearcherGeneral.lua -text
 Auc-Util-SearchUI/Textures/SearchUIIcon.blp -text
 Auctioneer/README-FIRST-ALPHA-BETA.txt -text
 Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
