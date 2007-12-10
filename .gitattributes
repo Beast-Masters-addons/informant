@@ -31,6 +31,7 @@ BeanCounter/Textures/BC-TopRight.blp -text
 BeanCounter/Textures/BeanCounterIcon.blp -text
 BeanCounter/includes -text
 BtmScan/EvalAppraiser.lua -text
+BtmScan/EvalComparable.lua -text
 BtmScan/EvalEnchantMats.lua -text
 BtmScan/FilterItemQuality.lua -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
