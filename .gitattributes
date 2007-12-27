@@ -11,6 +11,7 @@ Auc-Db/DbData.lua -text
 Auc-Db/StringRope.lua -text
 Auc-Db/gpl-3.0.txt -text
 Auc-Filter-Basic/BasicFilter.xml svneol=native#text/xml
+/Auc-Match-BeanCount.toc -text
 Auc-Stat-Classic/Auc-Stat-Classic.toc -text
 Auc-Stat-Classic/StatClassic.lua -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
@@ -24,6 +25,7 @@ Auctioneer/Textures/Clear.tga -text
 Auctioneer/Textures/Refresh.tga -text
 Auctioneer/Textures/Sort.tga -text
 Auctioneer/includes -text
+/BeanCount.lua -text
 BeanCounter/GPL.txt -text
 BeanCounter/Textures/BC-Top.blp -text
 BeanCounter/Textures/BC-TopLeft.blp -text
@@ -40,6 +42,7 @@ BtmScan/Textures/BtmScanIcon.blp -text
 BtmScan/Textures/Play.blp -text
 BtmScan/Textures/Stop.blp -text
 BtmScan/includes -text
+/Embed.xml -text
 Enchantrix-Barker/includes -text
 Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/includes -text
