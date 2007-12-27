@@ -11,6 +11,9 @@ Auc-Db/DbData.lua -text
 Auc-Db/StringRope.lua -text
 Auc-Db/gpl-3.0.txt -text
 Auc-Filter-Basic/BasicFilter.xml svneol=native#text/xml
+Auc-Match-BeanCount/Auc-Match-BeanCount.toc -text
+Auc-Match-BeanCount/BeanCount.lua -text
+Auc-Match-BeanCount/Embed.xml -text
 Auc-Stat-Classic/Auc-Stat-Classic.toc -text
 Auc-Stat-Classic/StatClassic.lua -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
