@@ -36,6 +36,7 @@ BeanCounter/includes -text
 BtmScan/EvalAppraiser.lua -text
 BtmScan/EvalComparable.lua -text
 BtmScan/EvalEnchantMats.lua -text
+BtmScan/EvalMatConvert.lua -text
 BtmScan/FilterItemQuality.lua -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
 BtmScan/Textures/Back.blp -text
