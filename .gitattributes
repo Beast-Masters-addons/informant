@@ -16,6 +16,9 @@ Auc-Match-BeanCount/BeanCount.lua -text
 Auc-Match-BeanCount/Embed.xml -text
 Auc-Stat-Classic/Auc-Stat-Classic.toc -text
 Auc-Stat-Classic/StatClassic.lua -text
+Auc-Stat-Sales/Auc-Stat-Sales.toc -text
+Auc-Stat-Sales/BeanCount.lua -text
+Auc-Stat-Sales/Embed.xml -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-AutoMagic/Auc-Util-AutoMagic.lua svneol=native#text/lua
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
