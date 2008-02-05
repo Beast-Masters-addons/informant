@@ -21,6 +21,7 @@ Auc-Stat-Sales/BeanCount.lua svneol=native#text/lua
 Auc-Stat-Sales/Embed.xml svneol=native#text/xml
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-AutoMagic/Auc-Util-AutoMagic.lua svneol=native#text/lua
+Auc-Util-AutoMagic/Images/slidebar.tga -text
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
