@@ -36,6 +36,7 @@ Auctioneer/Textures/Refresh.tga -text
 Auctioneer/Textures/Sort.tga -text
 Auctioneer/includes -text
 BeanCounter/GPL.txt -text
+BeanCounter/MatchBeanCount.lua -text
 BeanCounter/Textures/BC-Top.blp -text
 BeanCounter/Textures/BC-TopLeft.blp -text
 BeanCounter/Textures/BC-TopRight.blp -text
