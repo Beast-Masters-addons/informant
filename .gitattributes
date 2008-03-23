@@ -40,7 +40,6 @@ BeanCounter/Textures/BC-TopRight.blp -text
 BeanCounter/Textures/BeanCounterIcon.blp -text
 BeanCounter/includes -text
 BtmScan/EvalAppraiser.lua -text
-BtmScan/EvalComparable.lua svneol=native#text/lua
 BtmScan/EvalEnchantMats.lua -text
 BtmScan/EvalMatConvert.lua svneol=native#text/lua
 BtmScan/FilterItemQuality.lua -text
