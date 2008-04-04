@@ -1,4 +1,5 @@
 * text=auto !eol
+Auc-Advanced/CoreBuy.lua -text
 Auc-Advanced/CoreManifest.lua svneol=native#text/lua
 Auc-Advanced/Modules/Auc-Util-Example/Readme.txt -text
 Auc-Advanced/Modules/luae.exe -text
