@@ -27,6 +27,7 @@ Auc-Util-AutoMagic/Images/amagicIconE.tga -text
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
+Auc-Util-SearchUI/SearcherResale.lua -text
 Auc-Util-SearchUI/Textures/SearchUIIcon.blp -text
 Auctioneer/README-FIRST-ALPHA-BETA.txt -text
 Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
