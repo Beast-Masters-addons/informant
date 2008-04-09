@@ -7,7 +7,7 @@ Auc-Advanced/Support/LibGroupStore.lua -text
 Auc-Advanced/Support/LibTickTock.lua -text
 Auc-Advanced/Support/Load.xml -text
 Auc-Advanced/Textures/AucAdvIcon.blp -text
-Auc-Advanced/Textures/NavButtons.blp -text
+Auc-Advanced/Textures/NavButtons.tga -text
 Auc-Advanced/includes -text
 Auc-Db/Auc-Db.toc -text
 Auc-Db/DbCore.lua -text
