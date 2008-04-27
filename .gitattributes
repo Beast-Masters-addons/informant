@@ -30,6 +30,7 @@ Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherConverter.lua -text
 Auc-Util-SearchUI/SearcherDisenchant.lua -text
 Auc-Util-SearchUI/SearcherResale.lua -text
+Auc-Util-SearchUI/SearcherVendor.lua -text
 Auc-Util-SearchUI/Textures/SearchUIIcon.blp -text
 Auctioneer/README-FIRST-ALPHA-BETA.txt -text
 Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
