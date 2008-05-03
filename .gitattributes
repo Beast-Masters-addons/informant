@@ -22,11 +22,11 @@ Auc-Stat-Sales/BeanCount.lua svneol=native#text/lua
 Auc-Stat-Sales/Embed.xml svneol=native#text/xml
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-AutoMagic/Auc-Util-AutoMagic.lua svneol=native#text/lua
-Auc-Util-AutoMagic/Core.lua -text
+Auc-Util-AutoMagic/Core.lua svneol=native#text/lua
 Auc-Util-AutoMagic/Images/amagicIcon.blp -text
 Auc-Util-AutoMagic/Images/amagicIconE.tga -text
-Auc-Util-AutoMagic/ItemAI.lua -text
-Auc-Util-AutoMagic/Mail-GUI.lua -text
+Auc-Util-AutoMagic/ItemAI.lua svneol=native#text/lua
+Auc-Util-AutoMagic/Mail-GUI.lua svneol=native#text/lua
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
