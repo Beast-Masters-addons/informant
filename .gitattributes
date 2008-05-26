@@ -26,6 +26,9 @@ Auc-Util-AutoMagic/Core.lua svneol=native#text/lua
 Auc-Util-AutoMagic/Images/amagicIcon.blp -text
 Auc-Util-AutoMagic/Images/amagicIconE.tga -text
 Auc-Util-AutoMagic/Mail-GUI.lua svneol=native#text/lua
+Auc-Util-EasyBuyout/Auc-Util-EasyBuyout.toc -text
+Auc-Util-EasyBuyout/EasyBuyout.lua -text
+Auc-Util-EasyBuyout/Embed.xml -text
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.lua svneol=native#text/lua
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.toc svneol=native#text/lua
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
