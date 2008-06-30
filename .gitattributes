@@ -37,6 +37,9 @@ Auc-Util-EasyBuyout/EasyBuyout.lua -text
 Auc-Util-EasyBuyout/Embed.xml -text
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.lua svneol=native#text/lua
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.toc svneol=native#text/lua
+Auc-Util-ProtectWindow/Auc-Util-ProtectWindow.toc -text
+Auc-Util-ProtectWindow/Embed.xml -text
+Auc-Util-ProtectWindow/ProtectWindow.lua -text
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
