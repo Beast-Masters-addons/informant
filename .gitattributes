@@ -43,12 +43,15 @@ Auc-Util-ProtectWindow/ProtectWindow.lua -text
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
+Auc-Util-SearchUI/DoorBell.mp3 -text
 Auc-Util-SearchUI/SearchMain.lua svneol=native#text/lua
+Auc-Util-SearchUI/SearchRealTime.lua -text
 Auc-Util-SearchUI/SearcherConverter.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherDisenchant.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherGeneral.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherResale.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherVendor.lua svneol=native#text/lua
+Auc-Util-SearchUI/Textures/SearchButton.tga -text
 Auc-Util-SearchUI/Textures/SearchUIIcon.blp -text
 Auctioneer/README-FIRST-ALPHA-BETA.txt -text
 Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
