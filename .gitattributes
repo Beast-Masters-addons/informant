@@ -44,6 +44,10 @@ Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
 Auc-Util-SearchUI/DoorBell.mp3 -text
+Auc-Util-SearchUI/FilterItemLevel.lua -text
+Auc-Util-SearchUI/FilterItemPrice.lua -text
+Auc-Util-SearchUI/FilterItemQuality.lua -text
+Auc-Util-SearchUI/FilterTimeLeft.lua -text
 Auc-Util-SearchUI/SearchMain.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearchRealTime.lua -text
 Auc-Util-SearchUI/SearcherConverter.lua svneol=native#text/lua
