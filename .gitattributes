@@ -81,8 +81,9 @@ BtmScan/includes -text
 Enchantrix-Barker/includes -text
 Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/includes -text
-EnhTooltip/AucModule.lua -text
 EnhTooltip/Command.lua -text
+EnhTooltip/ConfigUI.lua -text
+EnhTooltip/Skin/EnhOrb.blp -text
 EnhTooltip/includes -text
 Informant/includes -text
 /build.conf -text
