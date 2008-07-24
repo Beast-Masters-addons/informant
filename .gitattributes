@@ -83,8 +83,8 @@ BtmScan/includes -text
 Enchantrix-Barker/includes -text
 Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/includes -text
-EnhTooltip/Command.lua -text
-EnhTooltip/ConfigUI.lua -text
+EnhTooltip/Command.lua svneol=native#text/lua
+EnhTooltip/ConfigUI.lua svneol=native#text/lua
 EnhTooltip/Skin/EnhOrb.blp -text
 EnhTooltip/includes -text
 Informant/includes -text
