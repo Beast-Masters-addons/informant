@@ -21,6 +21,9 @@ Auc-Stat-Histogram/StatHistogram.lua svneol=native#text/lua
 Auc-Stat-Sales/Auc-Stat-Sales.toc svneol=native#text/toc
 Auc-Stat-Sales/BeanCount.lua svneol=native#text/lua
 Auc-Stat-Sales/Embed.xml svneol=native#text/xml
+Auc-Util-AHWindowControl/Auc-Util-AHWindowControl.lua -text
+Auc-Util-AHWindowControl/Auc-Util-AHWindowControl.toc -text
+Auc-Util-AHWindowControl/Embed.xml -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-AskPrice/ChatThrottleLib/ChatThrottleLib.lua svneol=native#text/lua
 Auc-Util-AskPrice/ChatThrottleLib/ChatThrottleLib.toc svneol=native#text/plain
