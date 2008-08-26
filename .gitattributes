@@ -93,5 +93,6 @@ EnhTooltip/Command.lua svneol=native#text/lua
 EnhTooltip/ConfigUI.lua svneol=native#text/lua
 EnhTooltip/Skin/EnhOrb.blp -text
 EnhTooltip/includes -text
+Informant/InfSettings.lua -text
 Informant/includes -text
 /build.conf -text
