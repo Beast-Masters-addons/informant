@@ -54,6 +54,7 @@ Auc-Util-SearchUI/SearchRealTime.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherArbitrage.lua -text
 Auc-Util-SearchUI/SearcherConverter.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherDisenchant.lua svneol=native#text/lua
+Auc-Util-SearchUI/SearcherEnchantMats.lua -text
 Auc-Util-SearchUI/SearcherGeneral.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherProspect.lua -text
 Auc-Util-SearchUI/SearcherResale.lua svneol=native#text/lua
