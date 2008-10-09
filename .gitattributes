@@ -62,12 +62,6 @@ Auc-Util-SearchUI/SearcherSnatch.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherVendor.lua svneol=native#text/lua
 Auc-Util-SearchUI/Textures/SearchButton.tga -text
 Auc-Util-SearchUI/Textures/SearchUIIcon.blp -text
-Auctioneer/README-FIRST-ALPHA-BETA.txt -text
-Auctioneer/Sounds/ScanComplete.mp3 -text svneol=unset#audio/mpeg
-Auctioneer/Textures/Clear.tga -text
-Auctioneer/Textures/Refresh.tga -text
-Auctioneer/Textures/Sort.tga -text
-Auctioneer/includes -text
 BeanCounter/BeanCounter.lua svneol=native#text/lua
 BeanCounter/BeanCounterConfig.lua svneol=native#text/lua
 BeanCounter/BeanCounterMail.lua svneol=native#text/lua
