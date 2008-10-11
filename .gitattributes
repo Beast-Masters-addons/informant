@@ -82,6 +82,8 @@ BtmScan/EvalEnchantMats.lua -text
 BtmScan/EvalMatConvert.lua svneol=native#text/lua
 BtmScan/FilterItemQuality.lua -text
 BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
+BtmScan/Support/LibRevision.lua -text
+BtmScan/Support/Load.xml -text
 BtmScan/Textures/Back.blp -text
 BtmScan/Textures/BtmScanIcon.blp -text
 BtmScan/Textures/Play.blp -text
