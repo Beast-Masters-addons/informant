@@ -3,6 +3,7 @@
 	for BottomScanner.
 	File generated at: 2007-08-03 20:41:15 Z
 ]]
+LibStub("LibRevision"):Set("$URL$","$Rev$","5.1.DEV.", 'auctioneer', 'libs')
 
 BtmScan.VendorPrices = {
 	[25] = 7, -- Worn Shortsword
