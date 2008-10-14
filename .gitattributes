@@ -24,6 +24,8 @@ Auc-Stat-Histogram/StatHistogram.lua svneol=native#text/lua
 Auc-Stat-Sales/Auc-Stat-Sales.toc svneol=native#text/toc
 Auc-Stat-Sales/BeanCount.lua svneol=native#text/lua
 Auc-Stat-Sales/Embed.xml svneol=native#text/xml
+Auc-Stat-iLevel/Auc-Stat-iLevel.toc -text
+Auc-Stat-iLevel/iLevel.lua -text
 Auc-Util-AHWindowControl/Auc-Util-AHWindowControl.lua svneol=native#text/lua
 Auc-Util-AHWindowControl/Auc-Util-AHWindowControl.toc svneol=native#text/toc
 Auc-Util-AHWindowControl/Embed.xml svneol=native#text/xml
