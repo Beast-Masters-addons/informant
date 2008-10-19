@@ -62,6 +62,7 @@ Auc-Util-SearchUI/SearcherConverter.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherDisenchant.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherEnchantMats.lua -text
 Auc-Util-SearchUI/SearcherGeneral.lua svneol=native#text/lua
+Auc-Util-SearchUI/SearcherMilling.lua -text
 Auc-Util-SearchUI/SearcherProspect.lua -text
 Auc-Util-SearchUI/SearcherResale.lua svneol=native#text/lua
 Auc-Util-SearchUI/SearcherSnatch.lua svneol=native#text/lua
