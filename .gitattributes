@@ -116,12 +116,6 @@ Enchantrix/Skin/EnxOrb.blp -text
 Enchantrix/Support/LibRevision.lua -text
 Enchantrix/Support/Load.xml -text
 Enchantrix/includes -text
-EnhTooltip/Command.lua svneol=native#text/lua
-EnhTooltip/ConfigUI.lua svneol=native#text/lua
-EnhTooltip/Skin/EnhOrb.blp -text
-EnhTooltip/Support/LibRevision.lua -text
-EnhTooltip/Support/Load.xml -text
-EnhTooltip/includes -text
 Informant/InfSettings.lua -text
 Informant/Support/LibRevision.lua -text
 Informant/Support/Load.xml -text
