@@ -626,8 +626,7 @@ function private.processTooltip(tip, itemLink, quantity)
 
 	private.tooltip:SetFrame(tip)
 	local reason, Time, bid, player = lib.API.getBidReason(itemLink, quantity)
-	if player and player == private.playerName then player = "" end
-	
+		
 	debugPrint("Add to Tooltip", itemLink, reason)
 	if reason then
 		if reason == "" then reason = "Unknown" end
