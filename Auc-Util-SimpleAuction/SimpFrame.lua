@@ -36,9 +36,15 @@ local private = lib.Private
 local const = AucAdvanced.Const
 local print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill = AucAdvanced.GetModuleLocals()
 local Const = const
+local pricecache
+
 
 local frame
 local TAB_NAME = "Post"
+
+function private.clearcache()
+	pricecache = nil
+end
 
 function private.postPickupContainerItemHook(_,_,bag, slot)
 	if (CursorHasItem()) then
@@ -123,10 +129,16 @@ end
 function private.GetItems(link)
 	local name = GetItemInfo(link)
 	local itype, id, suffix, factor, enchant, seed = AucAdvanced.DecodeLink(link)
-	local matching = AucAdvanced.API.QueryImage({ itemId = id })
 	local aSeen, lBid, lBuy, uBid, uBuy, aBuy, aveBuy = 0
 	local player = UnitName("player")
 	local items = {}
+	local sig = AucAdvanced.API.GetSigFromLink(link)
+	if pricecache and pricecache[sig] then
+		uBid, uBuy, lBid, lBuy, aSeen, aveBuy = strsplit(":", pricecache[sig][1])
+		uBid, uBuy, lBid, lBuy, aSeen, aveBuy = tonumber(uBid), tonumber(uBuy), tonumber(lBid), tonumber(lBuy), tonumber(aSeen), tonumber(aveBuy)
+		return #pricecache[sig][2], pricecache[sig][2], uBid, uBuy, lBid, lBuy, aSeen, aveBuy
+	end
+	local matching = AucAdvanced.API.QueryImage({ itemId = id })
 
 	local live = false
 	if AuctionFrame and AuctionFrame:IsVisible() then
@@ -168,6 +180,10 @@ function private.GetItems(link)
 		end
 	end
 	aveBuy = (aBuy or 0)/(aSeen or 1)
+	if not pricecache then pricecache = {} end
+	pricecache[sig] = {}
+	pricecache[sig][1] = strjoin(":", tostring(uBid), tostring(uBuy), tostring(lBid), tostring(lBuy), tostring(aSeen), tostring(aveBuy))
+	pricecache[sig][2] = replicate(items)
 	return #items, items, uBid, uBuy, lBid, lBuy, aSeen, aveBuy
 end
 

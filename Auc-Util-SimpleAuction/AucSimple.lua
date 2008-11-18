@@ -51,7 +51,9 @@ function lib.Processor(callbackType, ...)
 		private.UpdateConfig(...)
 	elseif (callbackType == "inventory") then
 	elseif (callbackType == "scanstats") then
+		private.clearcache()
 	elseif (callbackType == "postresult") then
+		private.clearcache()
 	end
 end
 
