@@ -67,6 +67,13 @@ local VISION = 11137
 local SOUL = 11083
 local STRANGE = 10940
 
+local DREAM_SHARD = 34052
+local SDREAM_SHARD = 34053
+local INFINITE = 34054
+local GCOSMIC = 34055
+local LCOSMIC = 34056
+local ABYSS = 34057
+
 -- a table we can check for item ids
 local validReagents =
 	{
@@ -100,12 +107,18 @@ local validReagents =
 	[VISION] = true,
 	[SOUL] = true,
 	[STRANGE] = true,
+	[DREAM_SHARD] = true,
+	[SDREAM_SHARD] = true,
+	[INFINITE] = true,
+	[GCOSMIC] = true,
+	[LCOSMIC] = true,
+	[ABYSS] = true,
 	}
 
 -- Set our defaults
 default("enchantmats.level.custom", false)
 default("enchantmats.level.min", 0)
-default("enchantmats.level.max", 375)
+default("enchantmats.level.max", 450)
 default("enchantmats.allow.bid", true)
 default("enchantmats.allow.buy", true)
 
@@ -140,6 +153,12 @@ default("enchantmats.PriceAdjust."..SGLOWING, 100)
 default("enchantmats.PriceAdjust."..SGLIMMERING, 100)
 default("enchantmats.PriceAdjust."..VOID, 100)
 default("enchantmats.PriceAdjust."..NEXUS, 100)
+default("enchantmats.PriceAdjust."..DREAM_SHARD, 100)
+default("enchantmats.PriceAdjust."..SDREAM_SHARD, 100)
+default("enchantmats.PriceAdjust."..INFINITE, 100)
+default("enchantmats.PriceAdjust."..GCOSMIC, 100)
+default("enchantmats.PriceAdjust."..LCOSMIC, 100)
+default("enchantmats.PriceAdjust."..ABYSS, 100)
 
 -- This function is automatically called when we need to create our search parameters
 function lib:MakeGuiConfig(gui)
@@ -168,12 +187,13 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "Checkbox",          0.56, 1, "enchantmats.allow.buy", "Allow Buyouts")
 
 	gui:AddControl(id, "Checkbox",         0, 1, "enchantmats.level.custom", "Use custom enchanting skill levels")
-	gui:AddControl(id, "Slider",           0, 2, "enchantmats.level.min", 0, 375, 25, "Minimum skill: %s")
-	gui:AddControl(id, "Slider",           0, 2, "enchantmats.level.max", 25, 375, 25, "Maximum skill: %s")
+	gui:AddControl(id, "Slider",           0, 2, "enchantmats.level.min", 0, 450, 25, "Minimum skill: %s")
+	gui:AddControl(id, "Slider",           0, 2, "enchantmats.level.max", 25, 450, 25, "Maximum skill: %s")
 
 	-- aka "what percentage of market value am I willing to pay for this reagent"?
 	gui:AddControl(id, "Subhead",          0,    "Reageant Price Modification")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..GCOSMIC, 0, 200, 1, "Greater Cosmic Essence %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..GPLANAR, 0, 200, 1, "Greater Planar Essence %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..GETERNAL, 0, 200, 1, "Greater Eternal Essence %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..GNETHER, 0, 200, 1, "Greater Nether Essence %s%%")
@@ -181,6 +201,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..GASTRAL, 0, 200, 1, "Greater Astral Essence %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..GMAGIC, 0, 200, 1, "Greater Magic Essence %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LCOSMIC, 0, 200, 1, "Lesser Cosmic Essence %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LPLANAR, 0, 200, 1, "Lesser Planar Essence %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LETERNAL, 0, 200, 1, "Lesser Eternal Essence %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LNETHER, 0, 200, 1, "Lesser Nether Essence %s%%")
@@ -188,6 +209,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LASTRAL, 0, 200, 1, "Lesser Astral Essence %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LMAGIC, 0, 200, 1, "Lesser Magic Essence %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..INFINITE, 0, 200, 1, "Infinite Dust %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..ARCANE, 0, 200, 1, "Arcane Dust %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..ILLUSION, 0, 200, 1, "Illusion Dust %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..DREAM, 0, 200, 1, "Dream Dust %s%%")
@@ -195,18 +217,21 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SOUL, 0, 200, 1, "Soul Dust %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..STRANGE, 0, 200, 1, "Strange Dust %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..DREAM_SHARD, 0, 200, 1, "Dream Shard %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LPRISMATIC, 0, 200, 1, "Large Prismatic Shard %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LBRILLIANT, 0, 200, 1, "Large Brilliant Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LRADIANT, 0, 200, 1, "Large Radiant Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LGLOWING, 0, 200, 1, "Large Glowing Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LGLIMMERING, 0, 200, 1, "Large Glimmering Shard %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SDREAM_SHARD, 0, 200, 1, "Small Dream Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SPRISMATIC, 0, 200, 1, "Small Prismatic Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SBRILLIANT, 0, 200, 1, "Small Brilliant Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SRADIANT, 0, 200, 1, "Small Radiant Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SGLOWING, 0, 200, 1, "Small Glowing Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SGLIMMERING, 0, 200, 1, "Small Glimmering Shard %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..ABYSS, 0, 200, 1, "Abyss Crystal %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..VOID, 0, 200, 1, "Void Crystal %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..NEXUS, 0, 200, 1, "Nexus Crystal %s%%")
 end
@@ -218,16 +243,21 @@ function lib.Search(item)
 	if not (Enchantrix and Enchantrix.Storage) then
 		return false, "Enchantrix not detected"
 	end
+	
+	local itemLink = item[Const.LINK]
+	if (not itemLink) then
+		return false, "No item link"
+	end
 
 	-- first, is this an enchanting reagent itself?
 	-- if so, just use the value of the reagent
-	if validReagents[ Enchantrix.Util.GetItemIdFromLink(item[Const.LINK]) ] then
-		market, _, _, seen, curModel = AucAdvanced.Modules.Util.Appraiser.GetPrice(item[Const.LINK])
+	if validReagents[ Enchantrix.Util.GetItemIdFromLink(itemLink) ] then
+		market, _, _, seen, curModel = AucAdvanced.Modules.Util.Appraiser.GetPrice(itemLink)
 		if not market then
 			return false, "No appraiser price"
 		end
 		-- be safe and handle nil results
-		local adjustment = get("enchantmats.PriceAdjust."..Enchantrix.Util.GetItemIdFromLink(item[Const.LINK])) or 0
+		local adjustment = get("enchantmats.PriceAdjust."..Enchantrix.Util.GetItemIdFromLink(itemLink)) or 0
 
 		market = (market * item[Const.COUNT]) * adjustment / 100
 	end
@@ -242,7 +272,7 @@ function lib.Search(item)
 		end
 
 		local minskill = 0
-		local maxskill = 375
+		local maxskill = 450
 		if get("enchantmats.level.custom") then
 			minskill = get("enchantmats.level.min")
 			maxskill = get("enchantmats.level.max")
@@ -250,14 +280,14 @@ function lib.Search(item)
 			maxskill = Enchantrix.Util.GetUserEnchantingSkill()
 		end
 
-		local skillneeded = Enchantrix.Util.DisenchantSkillRequiredForItem(item[Const.LINK])
+		local skillneeded = Enchantrix.Util.DisenchantSkillRequiredForItem(itemLink)
 		if (skillneeded < minskill) or (skillneeded > maxskill) then
 			return false, "Skill not high enough to Disenchant"
 		end
 
 
 		-- Give up if it doesn't disenchant to anything
-		local data = Enchantrix.Storage.GetItemDisenchants(item.link)
+		local data = Enchantrix.Storage.GetItemDisenchants(itemLink)
 		if not data then
 			return false, "Item not Disenchantable"
 		end
@@ -265,6 +295,7 @@ function lib.Search(item)
 		local total = data.total
 
 		if (total and total[1] > 0) then
+			market = 0
 			local totalNumber, totalQuantity = unpack(total)
 			for result, resData in pairs(data) do
 				if (result ~= "total") then
