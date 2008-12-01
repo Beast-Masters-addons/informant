@@ -49,6 +49,7 @@ function lib.Processor(callbackType, ...)
 	elseif (callbackType == "config") then lib.SetupConfigGui(...) --Called when you should build your Configator tab.
 	elseif (callbackType == "listupdate") then --Called when the AH Browse screen receives an update.
 	elseif (callbackType == "configchanged") then --Called when your config options (if Configator) have been changed.
+		resultcache = nil
 	elseif (callbackType == "scanstats") then
 		resultcache = nil
 	end
@@ -63,16 +64,23 @@ end
 
 function lib.OnLoad()
 	print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
+	-- Check for invalid setting from older versions of ItemSuggest (<=r3872)
+	local validate, deplength = {[12]=true,[24]=true,[48]=true}, get("util.itemsuggest.deplength")
+	if not validate[deplength] then
+		deplength = tonumber(deplength)
+		deplength = validate[deplength] and deplength or 48
+		set ("util.itemsuggest.deplength", deplength)
+	end
 end
 
 local ahdeplength = {
-	{'12', "12 hour"},
-	{'24', "24 hour"},
-	{'48', "48 hour"},
+	{12, "12 hour"},
+	{24, "24 hour"},
+	{48, "48 hour"},
 }
 default("util.itemsuggest.enablett", 1) --Enables Item Suggest from Item AI to be displayed in tooltip
-default("util.itemsuggest.enchantskill", 375) -- Used for item AI
-default("util.itemsuggest.jewelcraftskill", 375)-- Used for item AI
+default("util.itemsuggest.enchantskill", 450) -- Used for item AI
+default("util.itemsuggest.jewelcraftskill", 450)-- Used for item AI
 default("util.itemsuggest.vendorweight", 100)-- Used for item AI
 default("util.itemsuggest.auctionweight", 100)-- Used for item AI
 default("util.itemsuggest.prospectweight", 100)-- Used for item AI
@@ -80,7 +88,7 @@ default("util.itemsuggest.disenchantweight", 100)-- Used for item AI
 default("util.itemsuggest.relisttimes", 1)-- Used for item AI
 default("util.itemsuggest.includebrokerage", 1)-- Used for item AI
 default("util.itemsuggest.includedeposit", 1)-- Used for item AI
-default("util.itemsuggest.deplength", "48")
+default("util.itemsuggest.deplength", 48)
 
 function lib.SetupConfigGui(gui)
 	local id = gui:AddTab(libName)
@@ -95,9 +103,9 @@ function lib.SetupConfigGui(gui)
 	gui:AddTip(id,  "If enabled, will show ItemSuggest tooltip information.")
 
     gui:AddControl(id, "Header",     0,    "Set skill usage limits if desired")
-	gui:AddControl(id, "WideSlider",           0, 2, "util.itemsuggest.enchantskill", 0, 375, 25, "Max Enchanting Skill On Realm. %s")
+	gui:AddControl(id, "WideSlider",           0, 2, "util.itemsuggest.enchantskill", 0, 450, 5, "Max Enchanting Skill On Realm. %s")
 	gui:AddTip(id, "Set ItemSuggest limits based upon Enchanting skill for your characters on this realm.")
-	gui:AddControl(id, "WideSlider",           0, 2, "util.itemsuggest.jewelcraftskill", 0, 375, 25, "Max JewelCrafting Skill On Realm. %s")
+	gui:AddControl(id, "WideSlider",           0, 2, "util.itemsuggest.jewelcraftskill", 0, 450, 5, "Max JewelCrafting Skill On Realm. %s")
 	gui:AddTip(id, "Set ItemSuggest limits based upon Jewelcrafting skill for your characters on this realm.")
 
 	gui:AddControl(id, "Header",     0,    "ItemSuggest Recommendation Bias")
@@ -186,13 +194,13 @@ function lib.GetAppraiserValue(hyperlink, quantity)
 	AppraiserValue = GetAprPrice(hyperlink, nil, true) or 0
 	AppraiserValue = AppraiserValue * quantity
 	local brokerRate, depositRate = 0.05, 0.05
-	if (get("util.itemsuggest.includedeposit")) then
-		local aadvdepcost = GetDepositCost(hyperlink, 24, nil, quantity) or 0
-		local depcost = aadvdepcost * get("util.itemsuggest.relisttimes")
-		AppraiserValue = AppraiserValue - depcost
-	end
 	if (get("util.itemsuggest.includebrokerage")) then
 		AppraiserValue = AppraiserValue - AppraiserValue * brokerRate
+	end
+	if (get("util.itemsuggest.includedeposit")) then
+		local aadvdepcost = GetDepositCost(hyperlink, get("util.itemsuggest.deplength"), nil, quantity) or 0
+		local depcost = aadvdepcost * get("util.itemsuggest.relisttimes")
+		AppraiserValue = AppraiserValue - depcost
 	end
 
 return AppraiserValue end
@@ -261,7 +269,7 @@ function lib.GetProspectValue(hyperlink, quantity)
 				if (get("util.itemsuggest.includedeposit")) then
 					local _, itemid, itemsuffix, _, itemenchant, itemseed = decode(hyperlink)  -- lType, id, suffix, factor, enchant, seed
 					local itemsig = (":"):join(itemid, itemsuffix, itemenchant)
-					local aadvdepcost = GetDepositCost(hyperlink, 24, nil, nil) or 0
+					local aadvdepcost = GetDepositCost(hyperlink, get("util.itemsuggest.deplength"), nil, nil) or 0
 					depositTotal = depositTotal + aadvdepcost * get("util.itemsuggest.relisttimes") * yield
 				end
 				if (get("util.itemsuggest.includebrokerage")) then
