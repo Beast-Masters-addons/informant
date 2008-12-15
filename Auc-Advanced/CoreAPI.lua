@@ -291,7 +291,7 @@ end
 function lib.IsValidAlgorithm(algorithm, itemLink)
 	local saneLink = AucAdvanced.SanitizeLink(itemLink)
 	local modules = AucAdvanced.GetAllModules()
-	for pos, engineLib in ipairs(modules) do
+	for engine, engineLib in ipairs(modules) do
 		if engine == algorithm and (engineLib.GetPrice or engineLib.GetPriceArray) then
 			if engineLib.IsValidAlgorithm then
 				return engineLib.IsValidAlgorithm(saneLink)
@@ -305,10 +305,16 @@ end
 private.algorithmstack = {}
 function lib.GetAlgorithmValue(algorithm, itemLink, serverKey, reserved)
 	if (not algorithm) then
-		error("No pricing algorithm supplied")
+        if nLog then nLog.AddMessage("Auctioneer", "API", N_ERROR, "Incorrect Usage", "No pricing algorithm supplied to GetAlgorithmValue") end
+		return
+	end
+	if type(itemLink) == "number" then
+		local _
+		_, itemLink = GetItemInfo(itemLink)
 	end
 	if (not itemLink) then
-		error("No itemLink supplied")
+		if nLog then nLog.AddMessage("Auctioneer", "API", N_ERROR, "Incorrect Usage", "No itemLink supplied to GetAlgorithmValue") end
+		return
 	end
 
     if reserved then
