@@ -97,18 +97,6 @@ BeanCounter/Textures/BC-TopLeft.blp -text
 BeanCounter/Textures/BC-TopRight.blp -text
 BeanCounter/Textures/BeanCounterIcon.blp -text
 BeanCounter/includes -text
-BtmScan/EvalAppraiser.lua -text
-BtmScan/EvalEnchantMats.lua -text
-BtmScan/EvalMatConvert.lua svneol=native#text/lua
-BtmScan/FilterItemQuality.lua -text
-BtmScan/Sounds/DoorBell.mp3 -text svneol=unset#audio/mpeg
-BtmScan/Support/LibRevision.lua -text
-BtmScan/Support/Load.xml -text
-BtmScan/Textures/Back.blp -text
-BtmScan/Textures/BtmScanIcon.blp -text
-BtmScan/Textures/Play.blp -text
-BtmScan/Textures/Stop.blp -text
-BtmScan/includes -text
 Enchantrix-Barker/Support/LibRevision.lua -text
 Enchantrix-Barker/Support/Load.xml -text
 Enchantrix-Barker/includes -text
