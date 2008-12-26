@@ -39,10 +39,11 @@ if not lib then return end
 local print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill, _TRANS = AucAdvanced.GetModuleLocals()
 local iTypes = AucAdvanced.Const.InvTypes
 
-local KEEP_NUM_POINTS = 500
+local KEEP_NUM_POINTS = 250
 
 local data
 local pricecache
+local unpacked, updated = {}, {}
 local ZValues = {.063, .126, .189, .253, .319, .385, .454, .525, .598, .675, .756, .842, .935, 1.037, 1.151, 1.282, 1.441, 1.646, 1.962, 20, 20000}
 
 function lib.CommandHandler(command, ...)
@@ -70,6 +71,7 @@ function lib.Processor(callbackType, ...)
 		lib.OnLoad(...)
 	elseif (callbackType == "scanstats") then
 		pricecache = nil
+		private.RepackStats()
 	end
 end
 
@@ -100,13 +102,11 @@ function lib.ScanProcessors.create(operation, itemData, oldData)
 
 	local faction = AucAdvanced.GetFaction()
 	if not data[faction] then data[faction] = {} end
-	local stats = private.UnpackStats(data[faction][itemSig])
+	local stats = private.UnpackStats(data[faction], itemSig)
 	if not stats[iLevel] then stats[iLevel] = {} end
-	if #stats[iLevel] >= KEEP_NUM_POINTS then
-		table.remove(stats[iLevel], 1)
-	end
-	table.insert(stats[iLevel], buyout)
-	data[faction][itemSig] = private.PackStats(stats)
+    local sz = #stats[iLevel]
+	stats[iLevel][sz+1] = buyout
+	updated[stats] = true
 end
 
 local BellCurve = AucAdvanced.API.GenerateBellCurve();
@@ -156,12 +156,8 @@ end
 function lib.GetPrice(hyperlink, faction)
 	if not AucAdvanced.Settings.GetSetting("stat.ilevel.enable") then return end
 
-	local linkType,itemId,property,factor = AucAdvanced.DecodeLink(hyperlink)
-	if (linkType ~= "item") then return end
-
-	local _,_, quality, iLevel, _,_,_,_, equipPos = GetItemInfo(hyperlink)
-	if not equipPos then return end
-	equipPos = tonumber(iTypes[equipPos]) or -1
+	local linkType, itemId, property, factor, quality, iLevel, equipPos = private.GetItemDetail(hyperlink)
+	if not linkType then return end
 	if quality < 1 then return end
 	if not equipPos then return end
 	if equipPos < 1 then return end
@@ -239,7 +235,7 @@ function lib.GetPrice(hyperlink, faction)
 end
 
 function lib.GetPriceColumns()
-	return "Average", "Mean", false, "Std Deviation", "Variance", "Count"
+	return "Average", "Mean", false, "Std Deviation", "Variance", "Count", "Confidence"
 end
 
 local array = {}
@@ -253,13 +249,14 @@ function lib.GetPriceArray(hyperlink, faction, realm)
 
 	-- These 3 are the ones that most algorithms will look for
 	array.price = average or mean
-	array.seen = count
+	array.seen = 0
 	array.confidence = confidence
 	-- This is additional data
 	array.normalized = average
 	array.mean = mean
 	array.deviation = stdev
 	array.variance = variance
+	array.processed = count
 
 	-- Return a temporary array. Data in this array is
 	-- only valid until this function is called again.
@@ -366,18 +363,16 @@ function lib.OnLoad(addon)
 	AucAdvanced.Settings.SetDefault("stat.ilevel.confid", true)
 	AucAdvanced.Settings.SetDefault("stat.ilevel.quantmul", true)
 	AucAdvanced.Settings.SetDefault("stat.ilevel.enable", true)
+
 end
 
 function lib.ClearItem(hyperlink, faction, realm)
-	local linkType, itemID, property, factor = AucAdvanced.DecodeLink(hyperlink)
-	if (linkType ~= "item") then return end
-
-	local _,_, quality, iLevel, _,_,_,_, equipPos = GetItemInfo(hyperlink)
-	if not equipPos then 
+	local linkType, itemId, property, factor, quality, iLevel, equipPos = private.GetItemDetail(hyperlink)
+	if not linkType then return end
+	if not quality then 
 		print(_TRANS('ILVL_Interface_NoDataHyperlink'):format(hyperlink) )--Stat-iLevel: unable to retrieve data for item: %s
 		return
 	end
-	equipPos = tonumber(iTypes[equipPos]) or -1
 	if quality < 1 then
 		print(_TRANS('ILVL_Interface_ItemNotFound') )--Stat-iLevel: item is not in database
 		return
@@ -409,10 +404,41 @@ end
 
 --[[ Local functions ]]--
 
+function private.GetItemDetail(hyperlink)
+	if not private.localcache then private.localcache = {} end
+	local cache = private.localcache[hyperlink]
+	if cache ~= nil then
+		if not cache then return end
+		return unpack(cache)
+	end
+
+	local linkType,itemId,property,factor = AucAdvanced.DecodeLink(hyperlink)
+	if (linkType ~= "item") then
+		private.localcache[hyperlink] = false
+		return
+	end
+
+	local _,_, quality, iLevel, _,_,_,_, equipPos = GetItemInfo(itemId)
+	if quality then
+		equipPos = tonumber(iTypes[equipPos]) or -1
+		if (equipPos < 1) then
+			private.localcache[hyperlink] = false
+			return
+		end
+	else 
+		private.localcache[hyperlink] = false
+		return
+	end
+
+	cache = { linkType,itemId,property,factor,quality,iLevel,equipPos }
+	private.localcache[hyperlink] = cache
+	return unpack(cache)
+end
+
 function private.DataLoaded()
 	-- This function gets called when the data is first loaded. You may do any required maintenence
 	-- here before the data gets used.
-
+	data.itemcache = nil
 end
 
 function private.UnpackStatIter(data, ...)
@@ -432,21 +458,33 @@ function private.UnpackStatIter(data, ...)
 		end
 	end
 end
-function private.UnpackStats(dataItem)
-	local data = {}
-	if (dataItem) then
-		private.UnpackStatIter(data, strsplit(",", dataItem))
+function private.UnpackStats(data, item)
+	if (unpacked[item]) then return unpacked[item] end
+	local stats = {}
+	if (data and data[item]) then
+		private.UnpackStatIter(stats, strsplit(",", data[item]))
+		unpacked[item] = stats
 	end
-	return data
+	return stats
 end
 function private.PackStats(data)
 	local stats = ""
 	local joiner = ""
 	for property, info in pairs(data) do
-		stats = stats..joiner..property..":"..strjoin(";", unpack(info))
+		local n = max(1, #info - KEEP_NUM_POINTS)
+        stats = stats..joiner..property..":"..strjoin(";", select(n, unpack(info)))
 		joiner = ","
 	end
 	return stats
+end
+function private.RepackStats()
+	local faction = AucAdvanced.GetFaction()
+	for item, stats in pairs(unpacked) do
+		if updated[stats] then
+			data[faction][item] = private.PackStats(stats)
+		end
+	end
+	updated = {}
 end
 
 function private.makeData()
@@ -455,6 +493,5 @@ function private.makeData()
 	data = AucAdvancedStat_iLevelData
 	private.DataLoaded()
 end
-
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
