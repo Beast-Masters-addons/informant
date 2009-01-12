@@ -276,23 +276,30 @@ function getItem(itemID, static)
 				end
 				if (vendName) then
 					table.insert(vendList, vendName)
-					local zone,xloc,yloc = strsplit(",",self.vendorLocation[ merchID ])
-					zone = tonumber(zone)
-					if self.infZones[zone] then
-						zone = self.infZones[zone]
+					local zone,xloc,yloc
+					if self.vendorLocation[merchID] then
+						zone,xloc,yloc = strsplit(",",self.vendorLocation[merchID])
 					end
-					local location = zone
-					if xloc and yloc then
-						location = location.." ("..xloc..","..yloc..")"
+					if zone then
+						local location
+						zone = tonumber(zone)
+						if self.infZones[zone] then
+							zone = self.infZones[zone]
+						end
+						location = zone
+						if xloc and yloc then
+							location = location.." ("..xloc..","..yloc..")"
+						end
+						vendLoc[vendName] = location
+					else
+						vendLoc[vendName] = "No set location for this vendor"
 					end
-					vendLoc[vendName] = location
-
 				end
 			end
 		end
 		dataItem.merchantList = merchList
 		dataItem.vendors = vendList
-		dataItem.vendLoc = vendLoc
+		dataItem.vendorLoc = vendLoc
 	else
 		dataItem.merchantList = nil
 		dataItem.vendors = nil
@@ -550,7 +557,9 @@ local function showItem(itemInfo)
 				addLine(_INFM('InfoVendorHeader'):format(vendorCount), "ddff40")
 				for pos, merchant in pairs(itemInfo.vendors) do
 					addLine("-".._INFM('InfoVendorName'):format(merchant), "dede3c")
-					addLine("     ".._INFM('InfoVendorName'):format(itemInfo.vendLoc[merchant]), "ffff86")
+					if itemInfo.vendorLoc[merchant] then
+						addLine("     ".._INFM('InfoVendorName'):format(itemInfo.vendorLoc[merchant]), "ffff86")
+					end
 				end
 			end
 		end
@@ -753,6 +762,31 @@ function onQuit()
 	InformantConfig.position.x, InformantConfig.position.y = InformantFrame:GetCenter()
 end
 
+local function slidebarclickhandler(_, button)
+	--if we rightclick open the configuration window for the whole addon
+	Informant.Settings.MakeGuiConfig()
+	local gui = Informant.Settings.Gui
+	if (gui:IsVisible()) then
+		gui:Hide()
+	else
+		gui:Show()
+	end
+end
+
+local sideIcon
+local function slidebar()
+	if LibStub then
+		local SlideBar = LibStub:GetLibrary("SlideBar", true)
+		if SlideBar then
+			sideIcon = SlideBar.AddButton("Informant", "Interface\\AddOns\\Informant\\inficon")
+			sideIcon:RegisterForClicks("LeftButtonUp","RightButtonUp")
+			sideIcon:SetScript("OnClick", slidebarclickhandler)
+			sideIcon.tip = {
+				"Informant Configuration",
+			}
+		end
+	end
+end
 
 function onLoad()
 	this:RegisterEvent("ADDON_LOADED")
@@ -768,6 +802,7 @@ function onLoad()
 	this:RegisterEvent("MERCHANT_UPDATE");
 
 	InformantFrameTitle:SetText(_INFM('FrameTitle'))
+	slidebar()
 end
 
 local function frameLoaded()
@@ -858,7 +893,6 @@ function onEvent(event, addon)
 		doUpdateMerchant();
 	end
 
-	
 	if( event == "MERCHANT_SHOW" or event == "MERCHANT_UPDATE" ) then
 		doUpdateMerchant();
 	end
