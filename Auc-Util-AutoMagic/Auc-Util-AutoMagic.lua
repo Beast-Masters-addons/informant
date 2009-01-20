@@ -32,7 +32,7 @@ if not AucAdvanced then return end
 local libName, libType = "AutoMagic", "Util"
 local lib,parent,private = AucAdvanced.NewModule(libType, libName)
 if not lib then return end
-local print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill = AucAdvanced.GetModuleLocals()
+local print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill,_TRANS = AucAdvanced.GetModuleLocals()
 
 --Start Module Code
 local amBTMRule, itemName, itemID, _
@@ -43,8 +43,7 @@ local autosellframe = CreateFrame("Frame", "autosellframe", UIParent); autosellf
 local autoselldata = {}
 local autosell = {}
 local GetPrice = AucAdvanced.Modules.Util.Appraiser.GetPrice
-lib.autoSellList = get("util.automagic.autoSellList") or {} --get sell list or create new
-
+lib.autoSellList = {} -- default empty table in case of no saved data
 
 function lib.Processor(callbackType, ...)
 	if (callbackType == "tooltip") then lib.ProcessTooltip(...) --Called when the tooltip is being drawn.
@@ -67,7 +66,7 @@ function lib.ProcessTooltip(tooltip, name, hyperlink, quality, quantity, cost, a
 			if (ttdepcost == nil) then
 				tooltip:AddLine("|cff336699 Unknown deposit cost |r")
 			elseif (ttdepcost == 0) then
-				tooltip:AddLine("|cff336699 No deposit cost |r")				
+				tooltip:AddLine("|cff336699 No deposit cost |r")
 			else
 				tooltip:AddLine("|cffCCFF99"..get("util.automagic.deplength").."hr Deposit : |r" , ttdepcost)
 			end
@@ -91,7 +90,10 @@ local frame = CreateFrame("Frame","")
 	frame:RegisterEvent("UI_ERROR_MESSAGE");
 	--frame:RegisterEvent("AUCTION_HOUSE_SHOW");
 
--- Sets defaults
+	-- Read saved variables
+	lib.autoSellList = get("util.automagic.autoSellList") or lib.autoSellList -- will default to empty table if no saved variables
+
+	-- Sets defaults
 	print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
 
 	default("util.automagic.autovendor", false) -- DO NOT SET TRUE ALL AUTOMAGIC OPTIONS SHOULD BE TURNED ON MANUALLY BY END USER!!!!!!!
@@ -128,52 +130,50 @@ function lib.SetupConfigGui(gui)
 
 
 		gui:AddHelp(id, "what is AutoMagic?",
-			"What is AutoMagic?",
-			"AutoMagic is a work-in-progress. Its goal is to automate tasks that auctioneers run into that can be a pain to do, as long as it is within the bounds set by Blizzard.\n\n"..
-			"AutoMagic currently will auto sell any item bought via BottomScan or SearchUI for vendors, any item that is grey (if enabled) or any item on the auto sell list. If enabled, when you open a merchant window you will see a listing of the items to sell.\n\n")
+			_TRANS('AAMU_Help_WhatAutoMagic'), --"What is AutoMagic?"
+			_TRANS('AAMU_Help_WhatAutoMagicAnswer')) --"AutoMagic is a work-in-progress. Its goal is to automate tasks that auctioneers run into that can be a pain to do, as long as it is within the bounds set by Blizzard. \n\nAutoMagic currently will auto-sell any item bought via SearchUI for vendors, any item that is grey (if enabled) or any item on the auto-sell list. If enabled, when you open a merchant window you will see a listing of the items to sell."
 		gui:AddHelp(id, "AAMU: vendor options",
-			"AAMU: vendor options?",
-			"AutoMagic will sell items bought for vendoring to the vendor automatically. It also has the option of auto selling all grey items or items on the custom sell list.\n\n")
+			_TRANS('AAMU_Help_VendorOptions'), --"AAMU: Vendor Options"
+			_TRANS('AAMU_Help_VendorOptionsAnswer')) --"AutoMagic will sell items bought for vendoring to the vendor automatically. It also has the option of auto-selling all grey items or items on the custom sell list."
 		gui:AddHelp(id, "what is Mail GUI?",
-			"What is the Mail GUI?",
-			"This displays a window when the mailbox is opened that allows for the auto-loading of items into the send mail window based on purchase reasons from BottomScan or SearchUI. It can also use the Item Suggest module reasons instead of the provided BottomScan/SearchUI reasons. Very handy for mass mailing items bought for a profession that another character has.\n\n"..
-		"\n")
+			_TRANS('AAMU_Help_WhatMailGUI'), --"What is the Mail GUI?"
+			_TRANS('AAMU_Help_WhatMailGUIAnswer')) --"This displays a window when the mailbox is opened that allows for the auto-loading of items into the send mail window based on purchase reasons from SearchUI. It can also use the ItemSuggest module reasons instead of the provided SearchUI reasons. Very handy for mass mailing items bought for a profession that another character has."
 
 
-		gui:AddControl(id, "Header",     0,    libName.." General options")
-		gui:AddControl(id, "Checkbox",		0, 1, "util.automagic.displaybeginerTooltips", "Enable AutoMagic beginner tooltips")
-		gui:AddTip(id, 'Turns on the beginner tooltips which display on mouseover.')
+		gui:AddControl(id, "Header",     0,    libName.._TRANS('AAMU_Interface_GeneralOptions')) --" General Options"
+		gui:AddControl(id, "Checkbox",		0, 1, "util.automagic.displaybeginerTooltips", _TRANS('AAMU_Interface_BeginnerTooltip')) --"Enable AutoMagic beginner tooltips"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_BeginnerTooltip')) --'Display the beginner tooltips on mouseover.'
 
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.chatspam", "Enable AutoMagic Chat Spam")
-		gui:AddTip(id, 'Display chat messages from AutoMagic.')
+		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.chatspam", _TRANS('AAMU_Interface_Chatspam')) --"Enable AutoMagic chat spam"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_Chatspam')) --'Display chat messages from AutoMagic.'
 
 		gui:AddControl(id, "Header", 0, "") --Spacer for options
 		gui:AddControl(id, "Header", 0, "") --Spacer for options
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.depositTT", "Disable deposit costs in the tooltip.")
-		gui:AddTip(id, 'Show selected item deposit costs in the tooltips.')
+		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.depositTT", _TRANS('AAMU_Interface_DepositTooltip')) --"Disable deposit costs in the tooltip"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_DepositTooltip')) --'Remove item deposit costs from the tooltip.'
 
-		gui:AddControl(id, "Selectbox",		0, 1, 	ahdeplength, "util.automagic.deplength", "Base deposits on what length of auction.")
-		gui:AddTip(id, 'Select the auction length deposit cost you want to display in the tooltips.')
+		gui:AddControl(id, "Selectbox",		0, 1, 	ahdeplength, "util.automagic.deplength", _TRANS('AAMU_Interface_DepositLength')) --"Base deposits on what length of auction."
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_DepositLength')) --'Select the auction length deposit cost you want to display in the tooltip.'
 
-		gui:AddControl(id, "Header",     0,    " Vendor options")
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autovendor", "Enable AutoMagic vendoring (W A R N I N G: READ HELP!). ")
-		gui:AddTip(id, 'Enable the auto vendor options.')
+		gui:AddControl(id, "Header",     0,    _TRANS('AAMU_Interface_VendorOptions')) --" Vendor Options"
+		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autovendor", _TRANS('AAMU_Interface_Vendoring')) --"Enable AutoMagic vendoring (W A R N I N G: READ HELP!) "
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_Vendoring')) --'Enable the auto-vendor options.'
 
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autosellgrey", "Allow AutoMagic to auto sell grey items in addition to bought for vendor items.")
-		gui:AddTip(id, 'Auto sell grey level items at vendor.')
+		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autosellgrey", _TRANS('AAMU_Interface_AutoSellGrey')) --"Allow AutoMagic to auto-sell grey items in addition to bought for vendor items"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellGrey')) --'Auto-sell grey level items at the vendor.'
 
 		--gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autoclosemerchant", "Auto Merchant Window Close(Power user feature READ HELP)")
 		gui:AddControl(id, "Header", 0, "") --Spacer for options
-		gui:AddControl(id, "Button",     0, 1, "util.automagic.autosellgui", "Auto-Sell List")
-		gui:AddTip(id, 'Check the box to view the Auto-Sell configuration GUI.')
+		gui:AddControl(id, "Button",     0, 1, "util.automagic.autosellgui", _TRANS('AAMU_Interface_AutoSellList')) --"Auto-Sell List"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellList')) --'Check the box to view the Auto-Sell configuration GUI.'
 
 
-		gui:AddControl(id, "Header",     0,    " GUI options")
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.showmailgui", "Enable Mail GUI for additional mail features.")
-		gui:AddTip(id, 'Display the auto mail window at the mail box.')
+		gui:AddControl(id, "Header",     0,    _TRANS('AAMU_Interface_GUIOptions')) --" GUI options"
+		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.showmailgui", _TRANS('AAMU_Interface_MailGUI')) --"Enable Mail GUI for additional mail features"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_MailGUI')) --'Display the auto-mail window at the mail box.')
 
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.overidebtmmail", "Use ItemSuggest values instead of BTM buy rule for Mail Loader.")
-		gui:AddTip(id, 'Use ItemSuggest module instead of the BTM/SearchUI reason codes when sorting mail.')
+		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.overidebtmmail", _TRANS('AAMU_Interface_OverrideSUIMail')) --"Use ItemSuggest values instead of SearchUI's reasons for Mail Loader"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_OverrideSUIMail')) --"Use the ItemSuggest reasons instead of the SearchUI 'Purchased for' reasons when sorting mail."
 end
 
 --Beginner Tooltips script display for all UI elements
@@ -283,9 +283,9 @@ function lib.slidebar()
 			sideIcon.OnLeave = lib.sideIconLeave
 			sideIcon:SetScript("OnClick", lib.autosellslidebar)
 			sideIcon.tip = {
-				"AutoMagic: Auto Sell Config",
+				"AutoMagic: Auto-Sell Config",
 				"",
-				"{{Left-Click}} to open the 'Auto Sell' list.",
+				"{{Left-Click}} to open the 'Auto-Sell' list.",
 				"{{Right-Click}} to edit the configuration.",
 			}
 		end
