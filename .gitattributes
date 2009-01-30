@@ -23,7 +23,7 @@ Auc-Advanced/Textures/WhiteCornerBorder.blp -text
 Auc-Advanced/includes -text
 Auc-Db/Auc-Db.toc -text
 Auc-Db/DbCore.lua -text
-Auc-Db/DbData.lua -text
+Auc-Db/DbMain.lua -text
 Auc-Db/Support/LibRevision.lua -text
 Auc-Db/Support/Load.xml -text
 Auc-Db/Support/StringRope.lua -text

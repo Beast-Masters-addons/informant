@@ -273,7 +273,7 @@ function private.CreateFrames()
 	frame.searchBox:SetScript("OnEnterPressed", function()
 		private.startSearch(frame.searchBox:GetText(), private.getCheckboxSettings())
 	end)
-	frame.searchBox:SetScript("OnEnter", function() private.buttonTooltips( frame.searchBox, _BC('TT_SearchBox')) end) --"Enter search query's here or leave blank to search all"
+	frame.searchBox:SetScript("OnEnter", function() private.buttonTooltips( frame.searchBox, _BC("TT_SearchBox")) end) --"Enter search query's here or leave blank to search all"
 	frame.searchBox:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 
