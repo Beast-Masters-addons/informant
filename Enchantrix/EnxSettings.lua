@@ -143,16 +143,7 @@ local settingDefaults = {
 
 	['profile.name'] = '',		-- not sure why this gets hit so often, might be a bug
 
---	['maxBuyoutPrice'] = 800000,
---	['defaultProfitMargin'] = 1000,		 -- default profit margin = 10s
---	['minProfitMargin'] = 100,			 -- min allowed profit margin = 1s (100c)
---	['defaultPercentLessThanHSP'] = 20,	 -- default for percentless scan = 20% under HSP
---	['minPercentLessThanHSP'] = 5,		 -- min for percentless scan = 5% under HSP
---	['defaultProfitPricePercent'] = 10,	 --default for bidbroker scan = 10% under HSP
---	['minProfitPricePercent'] = 5,		 --minimum percent under for bidbroker scan = 5% under HSP
 	['ScanValueType'] = "average",		-- what value to use for auction scans
---	['RestrictToLevel'] = true,			-- should scans only show items that the user can disenchant at their current skill level
---	['RestrictUnbidded'] = false,		-- should bidbroker only show items that don't have bids?
 
 	['AuctionBalanceEssencePrices'] = false,	-- should we balance the price of essences before doing auction scans?
 	['AuctionBalanceEssenceStyle'] = "avg",		-- how do we balance the price of essences
@@ -262,6 +253,46 @@ local function setter(setting, value)
 			end
 
 			DEFAULT_CHAT_FRAME:AddMessage(_ENCH("ChatSavedProfile")..value)
+
+		elseif (setting == "profile.duplicate") then
+			-- User clicked the Duplicate button, copy the current profile using the new name
+			value = gui.elements["profile"].value
+
+			-- If there's a profile name supplied
+			if (value) then
+				local existingProfile = EnchantConfig["profile."..value]
+				
+				local newName = gui.elements["profile.name"]:GetText()
+
+				if (newName and newName ~= "") then
+					-- copy it under the new name
+					EnchantConfig["profile."..newName] = existingProfile
+					
+					-- Set the current profile to the new profile
+					EnchantConfig[getUserSig()] = newName
+
+					-- Add the new profile to the profiles list
+					local profiles = EnchantConfig["profiles"]
+					if (not profiles) then
+						profiles = { "Default" }
+						EnchantConfig["profiles"] = profiles
+					end
+
+					-- Check to see if it already exists
+					local found = false
+					for pos, name in ipairs(profiles) do
+						if (name == newName) then found = true end
+					end
+
+					-- If not, add it and then sort it
+					if (not found) then
+						table.insert(profiles, newName)
+						table.sort(profiles)
+					end
+
+					DEFAULT_CHAT_FRAME:AddMessage(_ENCH("ChatDuplicatedProfile")..newName)
+				end
+			end
 
 		elseif (setting == "profile.delete") then
 			-- User clicked the Delete button, see what the select box's value is.
@@ -492,6 +523,7 @@ function lib.MakeGuiConfig()
 	gui:AddControl(id, "Subhead",    0,    _ENCH("GuiCreateReplaceProfile"))
 	gui:AddControl(id, "Text",       0, 1, "profile.name", _ENCH("GuiNewProfileName"))
 	gui:AddControl(id, "Button",     0, 1, "profile.save", _ENCH("GuiSaveProfileButton"))
+	gui:AddControl(id, "Button",     0, 1, "profile.duplicate", _ENCH("GuiDuplicateProfileButton"))
 
 	id = gui:AddTab(_ENCH("GuiTabGeneral"))
 	gui:AddControl(id, "Header",     0,    _ENCH("GuiGeneralOptions"))
@@ -585,6 +617,8 @@ function lib.MakeGuiConfig()
 		local reagName = Enchantrix.Util.GetReagentInfo(reagId)
 		if (not reagName) then reagName = "item:"..reagId end
 		gui:AddControl(id, "WideSlider", 0, 1, "weight."..reagId, 0, 250, 5, reagName..": %s%%")
+		local reagLink = Enchantrix.Util.GetLinkFromName(reagName)
+		gui:AddLinkTip(id, reagLink)
 	end
 
 	id = gui:AddTab(_ENCH("GuiTabFixed"))
@@ -599,6 +633,8 @@ function lib.MakeGuiConfig()
 		if (not reagName) then reagName = "item:"..reagId end
 		last = gui:GetLast(id)
 		gui:AddControl(id, "Checkbox", 0, 1, "fixed."..reagId, ("%s:"):format(reagName))
+		local reagLink = Enchantrix.Util.GetLinkFromName(reagName)
+		gui:AddLinkTip(id, reagLink)
 		gui:SetLast(id, last)
 		gui:AddControl(id, "MoneyFramePinned", 0.6, 1, "fixed."..reagId..".value", 0, 99999999)
 	end
