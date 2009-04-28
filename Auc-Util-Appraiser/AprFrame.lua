@@ -1912,6 +1912,8 @@ function private.CreateFrames()
 	frame.salebox.info:SetJustifyH("LEFT")
 	frame.salebox.info:SetJustifyV("BOTTOM")
 	frame.salebox.info:SetText("APPR_Interface_SelectItemLeftAuctioning")--Select an item to the left to begin auctioning...
+	frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemLeftAuctioning') )--Select an item to the left to begin auctioning...
+	frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemLeftAuctioning') )--Select an item from the list in the left column or drop an item in the square to begin auctioning.
 	frame.salebox.info:SetTextColor(0.5, 0.5, 0.7)
 
 	frame.salebox.warn = frame.salebox:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -2235,7 +2237,7 @@ function private.CreateFrames()
 		AucAdvanced.Settings.SetSetting("util.appraiser.classic", (not AucAdvanced.Settings.GetSetting("util.appraiser.classic")))
 		frame.ChangeUI()
 	end)
-	frame.switchToStack.TooltipText = _TRANS('APPR_HelpTooltip_SimpleView')--Switch to a Simple layout 
+	frame.switchToStack.TooltipText = _TRANS('APPR_HelpTooltip_PricingMethod')--Switch between 'Per Item' and 'Per Stack' Pricing.
 	frame.switchToStack:SetScript("OnEnter", function() return frame.SetButtonTooltip(this.TooltipText) end)
 	frame.switchToStack:SetScript("OnLeave", function() return GameTooltip:Hide() end)
 	frame.switchToStack:Enable()
@@ -2251,7 +2253,7 @@ function private.CreateFrames()
 		AucAdvanced.Settings.SetSetting("util.appraiser.classic", (not AucAdvanced.Settings.GetSetting("util.appraiser.classic")))
 		frame.ChangeUI()
 	end)
-	frame.switchToStack2.TooltipText = _TRANS('APPR_HelpTooltip_SimpleView')
+	frame.switchToStack2.TooltipText = _TRANS('APPR_HelpTooltip_PricingMethod')
 	frame.switchToStack2:SetScript("OnEnter", function() return frame.SetButtonTooltip(this.TooltipText) end)
 	frame.switchToStack2:SetScript("OnLeave", function() return GameTooltip:Hide() end)
 	frame.switchToStack2:Enable()
@@ -2599,7 +2601,7 @@ function private.CreateFrames()
 
 	frame.imageview.sheet:EnableSelect(true)
 	--callback functions for frame.imageview.sheet events
-	function frame.imageview.sheet.Processor(callback, self, button, column, row, order)
+	function frame.imageview.sheet.Processor(callback, self, button, column, row, order, curDir, ...)
 		if (callback == "OnMouseDownCell")  then
 			private.onSelect()
 		elseif (callback == "OnClickCell") then
@@ -2610,14 +2612,12 @@ function private.CreateFrames()
 			private.onResize(self, column, button:GetWidth() )
 		elseif (callback == "ColumnWidthReset") then
 			private.onResize(self, column, nil)
+		elseif (callback == "ColumnSort") then
+			set("util.appraiser.columnsortcurDir", curDir)
+			set("util.appraiser.columnsortcurSort", column)
 		end
 	end
-	--If we have a saved column arrangement reapply
-	if get("util.appraiser.columnorder") then
-		frame.imageview.sheet:SetOrder(get("util.appraiser.columnorder") )
-	end
-
-	
+		
 	frame.imageview.purchase = CreateFrame("Frame", nil, frame.imageview)
 	frame.imageview.purchase:SetPoint("TOPLEFT", frame.imageview, "BOTTOMLEFT", 0, 4)
 	frame.imageview.purchase:SetPoint("BOTTOMRIGHT", frame.imageview, "BOTTOMRIGHT", 0, -16)
@@ -2749,6 +2749,16 @@ function private.CreateFrames()
 
 	hooksecurefunc("HandleModifiedItemClick", frame.ClickAnythingHook)
 
+	--If we have a saved column arrangement reapply
+	if get("util.appraiser.columnorder") then
+		frame.imageview.sheet:SetOrder(get("util.appraiser.columnorder") )
+	end
+	--Apply last column sort used
+	if get("util.appraiser.columnsortcurSort") then
+		frame.imageview.sheet.curSort = get("util.appraiser.columnsortcurSort") or 1
+		frame.imageview.sheet.curDir = get("util.appraiser.columnsortcurDir") or 1
+		frame.imageview.sheet:PerformSort()
+	end
 end
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
