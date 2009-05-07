@@ -602,7 +602,7 @@ end
 
 function private.ignoreperm()
 	local sig = AucAdvanced.API.GetSigFromLink(private.data.link)
-	AucSearchUI.Filters.ItemPrice.AddIgnore(sig, 1)
+	AucSearchUI.Filters.ItemPrice.AddIgnore(sig, 0)
 	print("SearchUI now ignoring "..private.data.link.." at any price")
 	private.removeline()
 end
@@ -1414,15 +1414,7 @@ gui.ScansRemaining:SetJustifyH("RIGHT")
 	gui:ActivateTab(gui.aboutTab)
 end
 
--- Single static table for use by searchers and filters
-local auclentable = {
-	{12, "12 hour"},
-	{24, "24 hour"},
-	{48, "48 hour"},
-}
-function lib.AucLengthSelector ()
-	return auclentable
-end
+lib.AucLengthSelector = AucAdvanced.selectorAuctionLength
 
 local sideIcon
 local SlideBar = LibStub:GetLibrary("SlideBar", true)
