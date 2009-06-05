@@ -93,6 +93,7 @@ BeanCounter/BeanCounter.lua svneol=native#text/lua
 BeanCounter/BeanCounterConfig.lua svneol=native#text/lua
 BeanCounter/BeanCounterMail.lua svneol=native#text/lua
 BeanCounter/BeanCounterSearch.lua svneol=native#text/lua
+BeanCounter/BeanCounterTidyUp.lua svneol=native#text/lua
 BeanCounter/GPL.txt -text
 BeanCounter/Support/LibRevision.lua -text
 BeanCounter/Support/Load.xml -text
