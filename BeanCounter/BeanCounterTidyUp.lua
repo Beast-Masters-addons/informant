@@ -4,7 +4,7 @@
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
 	
-	BeanCounterTidyUp - Data base clean up and maintenance functions
+	BeanCounterTidyUp - Database clean up and maintenance functions
 
 	License:
 		This program is free software; you can redistribute it and/or
@@ -33,6 +33,8 @@ LibStub("LibRevision"):Set("$URL$","$Rev$","5.1.DEV.", 'auctioneer', 'libs')
 local lib = BeanCounter
 local private = lib.Private
 local private, print, get, set, _BC = lib.getLocals()
+local pairs,ipairs,next,select,type = pairs,ipairs,next,select,type
+local strsplit = strsplit
 
 local function debugPrint(...)
     if get("util.beancounter.debugTidyUp") then
@@ -44,7 +46,7 @@ function private.sumDatabase()
 	private.DBSumEntry, private.DBSumItems = 0, 0
 	for player, v in pairs(private.serverData) do
 		for DB, data in pairs(v) do
-			if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBids/Buyouts" then
+			if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBidsBuyouts" or DB == "failedBidsNeutral" or DB == "failedAuctionsNeutral" or DB == "completedAuctionsNeutral" or DB == "completedBidsBuyoutsNeutralNeutral" then
 				for itemID, value in pairs(data) do
 					for itemString, data in pairs(value) do
 						private.DBSumEntry = private.DBSumEntry +1
@@ -118,18 +120,17 @@ end
 function private.compactDB(announce)
 	debugPrint("Compressing database entries older than 40 days")
 	for DB,data in pairs(private.playerData) do -- just do current player to make process as fast as possible
-		if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBids/Buyouts" then
+		if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBidsBuyouts" or DB == "failedBidsNeutral" or DB == "failedAuctionsNeutral" or DB == "completedAuctionsNeutral" or DB == "completedBidsBuyoutsNeutralNeutral" then
 			for itemID, value in pairs(data) do
 				for itemString, index in pairs(value) do
-					local _, _, uniqueID = lib.API.decodeLink(itemString)
-					local itemLink = lib.API.getArrayItemLink(itemString)
-					if uniqueID ~= "0" then --ignore the already compacted keys
-						private.removeUniqueID(index, DB, itemID, itemLink, itemString)
+					local _, suffix, uniqueID = lib.API.decodeLink(itemString)
+					if uniqueID ~= "0" and string.len(uniqueID) > 8 then --ignore the already compacted keys, compacted keys are uniqueID of 0 or the scaling factor for negative suffix items
+						private.removeUniqueID(index, DB, itemString)
 					elseif lib.GetSetting("oldDataExpireEnabled") then
 						--for non unique strings we know they are already older than the compress date, So check to see if they are old enough to be pruned by the Remove Old transactions option
 						local months = lib.GetSetting("monthstokeepdata")
 						local expire =  time() - (months * 30 * 24 * 60 * 60)
-						private.removeOldData(index, DB, itemID, itemLink, itemString, expire)
+						private.removeOldData(index, DB, itemString, expire)
 					end
 					--remove itemStrings that are now empty, all the keys have been moved to compressed format
 					if #index == 0 then debugPrint("Removed empty table:", itemString) private.playerData[DB][itemID][itemString] = nil end
@@ -139,30 +140,32 @@ function private.compactDB(announce)
 	end
 	if announce then print("Finished compressing Databases") end
 end
-function private.removeUniqueID(data, DB, itemID, itemLink, itemString)
+function private.removeUniqueID(data, DB, itemString)
 	local _, _, _, _, _, _, _, postTime  = private.unpackString(data[1])
 	if data[1] and (time() - postTime) >= 3456000 then --we have an old data entry lets process this
-		--debugPrint("Compressed", "|H"..itemString, data[1] )
-		private.databaseAdd(DB, itemID, itemLink, data[1], true) --store using the compress option set to true
+		debugPrint("Compressed", "|H"..itemString, data[1] )
+		private.databaseAdd(DB, nil, itemString, data[1], true) --store using the compress option set to true
 		table.remove(data, 1)
-		private.removeUniqueID(data, DB, itemID, itemLink, itemString)
+		private.removeUniqueID(data, DB, itemString)
 	end
 end
-function private.removeOldData(data, DB, itemID, itemLink, itemString, expire)
+
+function private.removeOldData(data, DB, itemString, expire)
 	local _, _, _, _, _, _, _, postTime = private.unpackString(data[1])
 	postTime = tonumber(postTime)
 	if data[1] and (postTime) <= expire then --we have an old data entry lets process this
 		debugPrint("Removed", "|H"..itemString, data[1] , date("%c", postTime), "Older than",  date("%c", keep) )
 		table.remove(data, 1)
-		private.removeOldData(data, DB, itemID, itemLink, itemString, expire)
+		private.removeOldData(data, DB, itemString, expire)
 	end
 end
+
 --Sort all array entries by Date oldest to newest
 --Helps make compact more efficent needs to run once per week or so
 function private.sortArrayByDate(announce)
 	for player, v in pairs(private.serverData)do
 		for DB, data in pairs(private.serverData[player]) do
-			if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBids/Buyouts" then
+			if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBidsBuyouts" or DB == "failedBidsNeutral" or DB == "failedAuctionsNeutral" or DB == "completedAuctionsNeutral" or DB == "completedBidsBuyoutsNeutralNeutral" then
 				for itemID, value in pairs(data) do
 					for itemString, index in pairs(value) do
 						table.sort(index,  function(a,b)
@@ -214,18 +217,43 @@ function private.prunePostedDB(announce)
 	end
 	if announce then print("Finished pruning Posted Databases") end
 end
+--deletes all entries matching a itemLink from database for that server
+function private.deleteExactItem(itemLink)
+	if not itemLink or not itemLink:match("^(|c%x+|H.+|h%[.+%])") then return end
+	for player, playerData in pairs(private.serverData) do
+		for DB, data in pairs(playerData) do
+			if DB ~= "mailbox" and type(data) == "table" then
+				for itemID, itemIDData in pairs(data) do
+					for itemString, itemStringData in pairs(itemIDData) do
+						local  _,_,_,_,_,_, _, suffix, uniqueID = strsplit(":", itemString)
+						local linkID, linkSuffix = lib.API.decodeLink(itemLink)
+						if linkID == itemID and suffix == linkSuffix then
+							debugPrint("matched", itemLink, itemString, linkSuffix, suffix)
+							itemIDData[itemString] = nil
+						end
+					end
+				end
+			end
+		end
+	end
+end
 
 --[[INTEGRITY CHECKS
 Make sure the DB format is correct removing any entries that were missed by updating.
 To be run after every DB update
 ]]--
 local integrity = {} --table containing teh DB layout
-	integrity["completedBids/Buyouts"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
+	integrity["completedBidsBuyouts"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
 	integrity["completedAuctions"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
 	integrity["failedBids"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
 	integrity["failedAuctions"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
 	integrity["postedBids"] = {"number", "number", "string", "string", "number", "number", "string" } --7
 	integrity["postedAuctions"] = {"number", "number", "number", "number", "number" ,"number", "string"} --7
+	
+	integrity["completedBidsBuyoutsNeutral"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
+	integrity["completedAuctionsNeutral"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
+	integrity["failedBidsNeutral"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
+	integrity["failedAuctionsNeutral"] = {"number", "number", "number", "number", "number", "number", "string", "number", "string", "string"}--10
 local integrityClean, integrityCount = true, 1
  function private.integrityCheck(complete, server)
 	if not server then server = private.realmName end
@@ -233,7 +261,7 @@ local integrityClean, integrityCount = true, 1
 	debugPrint(integrityCount)
 	for player, v in pairs(BeanCounterDB[server])do
 		for DB, data in pairs(v) do
-			if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBids/Buyouts" or DB == "postedBids" or DB == "postedAuctions" then
+			if  DB == "failedBids" or DB == "failedAuctions" or DB == "completedAuctions" or DB == "completedBidsBuyouts" or DB == "postedBids" or DB == "postedAuctions" or DB == "failedBidsNeutral" or DB == "failedAuctionsNeutral" or DB == "completedAuctionsNeutral" or DB == "completedBidsBuyoutsNeutralNeutral" then
 				for itemID, value in pairs(data) do
 					for itemString, data in pairs(value) do
 						local _, itemStringLength = itemString:gsub(":", ":")

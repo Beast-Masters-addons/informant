@@ -115,6 +115,11 @@ function private.displayGUI( action )
 		BeanCounterBaseFrame:Show()
 		frame:Show()
 	end
+	--show the last postponed query if one was sent while frame was hidden
+	if private.storedQuery and frame:IsVisible() then
+		private.searchByItemID(private.storedQuery)
+		private.storedQuery = nil
+	end
 end
 --Change parent to our GUI base frame/ Also used to display our Config frame
 function private.GUI(_, button)
@@ -271,7 +276,7 @@ function private.CreateFrames()
 	end
 	--Default Server wide
 	--Used GLOBALSTRINGS for the horde alliance translations
-	local vals = {{"server", private.realmName.." ".._BC('UiData')},{"alliance", FACTION_ALLIANCE.." ".._BC('UiData')},{"horde", FACTION_HORDE.." ".._BC('UiData')},}
+	local vals = {{"server", private.realmName.." ".._BC('UiData')},{"alliance", FACTION_ALLIANCE.." ".._BC('UiData')},{"horde", FACTION_HORDE.." ".._BC('UiData')}, {"neutral", _BC('MailNeutralAuctionHouse')}}
 	for name,data in pairs(private.serverData) do
 		table.insert(vals,{name, name.." ".._BC('UiData')})
 	end
@@ -347,33 +352,26 @@ function private.CreateFrames()
 	frame.exactCheck = CreateFrame("CheckButton", "BeancounterexactCheck", frame, "OptionsCheckButtonTemplate")
 	frame.exactCheck:SetChecked(get("util.beancounter.ButtonExactCheck")) --get the last used checked/unchecked value Then use below script to store state changes
 	frame.exactCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 19, -217)
-	frame.exactCheck:SetScript("OnClick", function() local on if frame.exactCheck:GetChecked() then on = true end set("util.beancounter.ButtonExactCheck", on) private.SearchCache = {} end)
+	frame.exactCheck:SetScript("OnClick", function() local on if frame.exactCheck:GetChecked() then on = true end set("util.beancounter.ButtonExactCheck", on) private.wipeSearchCache() end)
 	getglobal("BeancounterexactCheckText"):SetText(_BC('UiExactNameSearch'))
 	frame.exactCheck:SetScript("OnEnter", function() private.buttonTooltips( frame.exactCheck, _BC('TT_ExactCheck')) end) --"Only match the Exact text in the search box"
 	frame.exactCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	--search classic data
-	frame.classicCheck = CreateFrame("CheckButton", "BeancounterclassicCheck", frame, "OptionsCheckButtonTemplate")
-	frame.classicCheck:SetChecked(false) --Set this to false We only want this to be true/searchabe if there is a classic DB to search
-	frame.classicCheck:SetScript("OnClick", function() local on if frame.classicCheck:GetChecked() then on = true end set("util.beancounter.ButtonClassicCheck", on) private.SearchCache = {} end)
-	getglobal("BeancounterclassicCheckText"):SetText(_BC('UiClassicCheckBox'))
-	frame.classicCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 19, -242)
-	frame.classicCheck:Hide()
-	frame.classicCheck:SetScript("OnEnter", function() private.buttonTooltips( frame.classicCheck, _BC('TT_ClassicCheck')) end) --"Display results from BeanCounter Classic Database"
-	frame.classicCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	frame.neutralCheck = CreateFrame("CheckButton", "BeancounterneutralCheck", frame, "OptionsCheckButtonTemplate")
+	frame.neutralCheck:SetChecked(false) --Set this to false We only want this to be true/searchabe if there is a classic DB to search
+	frame.neutralCheck:SetScript("OnClick", function() local on if frame.neutralCheck:GetChecked() then on = true end set("util.beancounter.ButtonneutralCheck", on) private.wipeSearchCache() end)
+	getglobal("BeancounterneutralCheckText"):SetText(_BC('UiNeutralCheckBox'))
+	frame.neutralCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 19, -242)
+	frame.neutralCheck:SetScript("OnEnter", function() private.buttonTooltips( frame.neutralCheck, _BC('TT_neutralCheck')) end) --"Display results from BeanCounter Classic Database"
+	frame.neutralCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	--no need to show this button if theres no classic data to search
-	if BeanCounterAccountDB then
-		if BeanCounterAccountDB[private.realmName] then
-			frame.classicCheck:Show() --Show id classic has server data
-			frame.classicCheck:SetChecked(get("util.beancounter.ButtonClassicCheck")) --Recall last checked state
-		end
-	end
+	
 
 	--search bids
 	frame.bidCheck = CreateFrame("CheckButton", "BeancounterbidCheck", frame, "OptionsCheckButtonTemplate")
 	frame.bidCheck:SetChecked(get("util.beancounter.ButtonBidCheck"))
-	frame.bidCheck:SetScript("OnClick", function() local on if frame.bidCheck:GetChecked() then on = true end set("util.beancounter.ButtonBidCheck", on) private.SearchCache = {} end)
+	frame.bidCheck:SetScript("OnClick", function() local on if frame.bidCheck:GetChecked() then on = true end set("util.beancounter.ButtonBidCheck", on) private.wipeSearchCache() end)
 	getglobal("BeancounterbidCheckText"):SetText(_BC('UiBids'))
 	frame.bidCheck:SetScale(0.85)
 	frame.bidCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -335)
@@ -384,7 +382,7 @@ function private.CreateFrames()
 	
 	frame.bidFailedCheck = CreateFrame("CheckButton", "BeancounterbidFailedCheck", frame, "OptionsCheckButtonTemplate")
 	frame.bidFailedCheck:SetChecked(get("util.beancounter.ButtonBidFailedCheck"))
-	frame.bidFailedCheck:SetScript("OnClick", function() local on if frame.bidFailedCheck:GetChecked() then on = true end set("util.beancounter.ButtonBidFailedCheck", on) private.SearchCache = {} end)
+	frame.bidFailedCheck:SetScript("OnClick", function() local on if frame.bidFailedCheck:GetChecked() then on = true end set("util.beancounter.ButtonBidFailedCheck", on) private.wipeSearchCache() end)
 	frame.bidFailedCheck:SetScale(0.85)
 	getglobal("BeancounterbidFailedCheckText"):SetText(_BC('UiOutbids'))
 	frame.bidFailedCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -435)
@@ -394,7 +392,7 @@ function private.CreateFrames()
 	--search Auctions
 	frame.auctionCheck = CreateFrame("CheckButton", "BeancounterauctionCheck", frame, "OptionsCheckButtonTemplate")
 	frame.auctionCheck:SetChecked(get("util.beancounter.ButtonAuctionCheck"))
-	frame.auctionCheck:SetScript("OnClick", function() local on if frame.auctionCheck:GetChecked() then on = true end set("util.beancounter.ButtonAuctionCheck", on) private.SearchCache = {} end)
+	frame.auctionCheck:SetScript("OnClick", function() local on if frame.auctionCheck:GetChecked() then on = true end set("util.beancounter.ButtonAuctionCheck", on) private.wipeSearchCache() end)
 	getglobal("BeancounterauctionCheckText"):SetText(_BC('UiAuctions'))
 	frame.auctionCheck:SetScale(0.85)
 	frame.auctionCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -360)
@@ -405,7 +403,7 @@ function private.CreateFrames()
 	
 	frame.auctionFailedCheck = CreateFrame("CheckButton", "BeancounterauctionFailedCheck", frame, "OptionsCheckButtonTemplate")
 	frame.auctionFailedCheck:SetChecked(get("util.beancounter.ButtonAuctionFailedCheck"))
-	frame.auctionFailedCheck:SetScript("OnClick", function() local on if frame.auctionFailedCheck:GetChecked() then on = true end set("util.beancounter.ButtonAuctionFailedCheck", on) private.SearchCache = {} end)
+	frame.auctionFailedCheck:SetScript("OnClick", function() local on if frame.auctionFailedCheck:GetChecked() then on = true end set("util.beancounter.ButtonAuctionFailedCheck", on) private.wipeSearchCache() end)
 	frame.auctionFailedCheck:SetScale(0.85)
 	getglobal("BeancounterauctionFailedCheckText"):SetText(_BC('UiFailedAuctions'))
 	frame.auctionFailedCheck:SetPoint("TOPLEFT", frame, "TOPLEFT", 25, -460)
@@ -481,7 +479,7 @@ function private.CreateFrames()
 		if IsShiftKeyDown() then
 			ChatEdit_InsertLink(link)--sends to chat or auction house
 		elseif IsAltKeyDown() and text then -- Search for the item in BeanCounter
-			private.SearchCache = {} --clear cache
+			private.wipeSearchCache()
 			frame.searchBox:SetText(text)
 			private.startSearch(text, private.getCheckboxSettings())
 		end
@@ -545,7 +543,7 @@ function private.CreateFrames()
 	
 	--All the UI settings are stored here. We then split it to get the appropriate search settings
 	function private.getCheckboxSettings()
-		return {["selectbox"] = frame.SelectBoxSetting , ["exact"] = frame.exactCheck:GetChecked(), ["classic"] = frame.classicCheck:GetChecked(),
+		return {["selectbox"] = frame.SelectBoxSetting , ["exact"] = frame.exactCheck:GetChecked(), ["neutral"] = frame.neutralCheck:GetChecked(),
 			["bid"] = frame.bidCheck:GetChecked(), ["failedbid"] = frame.bidFailedCheck:GetChecked(), ["auction"] = frame.auctionCheck:GetChecked(),
 			["failedauction"] = frame.auctionFailedCheck:GetChecked()
 			}
@@ -579,6 +577,48 @@ function private.CreateMailFrames()
 	private.CountGUI = countdown
 	countdown:SetPoint("CENTER", frame, "CENTER", 0, -60)
 	countdown:SetText("Recording: "..count.." of "..total.." items")
+end
+
+
+function private.createDeleteItemPrompt()
+	--Create the base frame for external GUI
+	local frame = CreateFrame("Frame", nil, UIParent)
+	frame:SetFrameStrata("DIALOG")
+	frame:SetBackdrop({
+		bgFile = "Interface/Tooltips/ChatBubble-Background",
+		edgeFile = "Interface/Tooltips/ChatBubble-BackDrop",
+		tile = true, tileSize = 32, edgeSize = 32,
+		insets = { left = 32, right = 32, top = 32, bottom = 32 }
+	})
+	frame:SetBackdropColor(0,0,0, 1)
+	frame:Hide()
+
+	frame:SetPoint("CENTER", UIParent, "CENTER")
+	frame:SetWidth(500)
+	frame:SetHeight(200)
+	
+	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	frame.title:SetPoint("CENTER", frame, "CENTER", 0,30)
+	frame.title:SetText(_BC('Do you want to delete this item from the database?'))
+	
+	frame.item = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	frame.item:SetPoint("CENTER", frame, "CENTER", 0,0)
+	
+	frame.yes = CreateFrame("Button", nil, frame, "OptionsButtonTemplate")
+	frame.yes:SetPoint("CENTER", frame, "CENTER", -120, -60)
+	frame.yes:SetText(_BC('Yes'))
+	frame.yes:SetScript("OnClick", function() private.deleteExactItem( frame.item:GetText() )
+								frame:Hide()
+								frame.item:SetText("")
+					end)
+	
+	frame.no = CreateFrame("Button", nil, frame, "OptionsButtonTemplate")
+	frame.no:SetPoint("LEFT", frame.yes, "RIGHT", 50, 0)
+	frame.no:SetText(_BC('No'))
+	frame.no:SetScale(1.8)
+	frame.no:SetScript("OnClick", function()  frame:Hide() frame.item:SetText("") end)
+	
+	private.deletePromptFrame = frame
 end
 
 --ONLOAD Error frame, used to show missmatched DB versus client errors that stop BC load NEEDS LOCALIZATION

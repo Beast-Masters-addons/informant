@@ -1,10 +1,12 @@
 --[[
-	Auctioneer Advanced - Price Level Utility module
+	Auctioneer - Stat-Sales module
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
 
-	This is an Auctioneer Advanced module that does something nifty.
+	This Auctioneer statistic module calculates a price statistics for items
+	based on the price that you specifically have sold this item for in the
+	past, based on your BeanCounter history information.
 
 	License:
 		This program is free software; you can redistribute it and/or
@@ -34,7 +36,11 @@ local libType, libName = "Stat", "Sales"
 local lib,parent,private = AucAdvanced.NewModule(libType, libName)
 if not lib then return end
 local print,decode,_,_,replicate,_,get,set,default,debugPrint,fill, _TRANS = AucAdvanced.GetModuleLocals()
-local empty = table.wipe
+
+local unpack,pairs,wipe = unpack,pairs,wipe
+local floor,abs,sqrt = floor,abs,sqrt
+local strmatch = strmatch
+
 local GetSigFromLink = AucAdvanced.API.GetSigFromLink
 local GetFaction = AucAdvanced.GetFaction
 
@@ -43,11 +49,13 @@ local pricecache = setmetatable({}, {__mode="v"})
 local currenttime = time()
 local day3time = currenttime - 3*86400
 local day7time = currenttime - 7*86400
+--local name for our saved var file
+local SalesDB
 
 function private.onEvent(frame, event, arg, ...)
 	if (event == "MAIL_CLOSED") then
 		-- Clear pricecache
-		empty(pricecache)
+		wipe(pricecache)
 	end
 end
 
@@ -150,6 +158,9 @@ function lib.GetPrice(hyperlink, serverKey)
 	local tbl = BeanCounter.API.search(hyperlink, settings, true, 99999)
 	local bought, sold, boughtseen, soldseen, boughtqty, soldqty, bought3, sold3, boughtqty3, soldqty3, bought7, sold7, boughtqty7, soldqty7 = 0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	local reason, qty, priceper, thistime
+	--check for ignore date for current serverKey or all servers
+	local ignoreDate = SalesDB[sig] or SalesDB["All"..GetSigFromLink(hyperlink)] or 0
+	
 	if tbl then
 		for i,v in pairs(tbl) do
 			-- local itemLink, reason, bid, buy, net, qty, priceper, seller, deposit, fee, wealth, date = v
@@ -167,7 +178,7 @@ function lib.GetPrice(hyperlink, serverKey)
 			--11 10387318
 			--12 1198401769
 			reason, qty, priceper, thistime = v[2], v[6], v[7], v[12] or 0
-			if priceper and qty and priceper>0 and qty>0 then
+			if priceper and qty and priceper>0 and qty>0 and thistime > ignoreDate then
 				if reason == Rsn_WonBuy  or reason == Rsn_WonBid  then
 					boughtqty = boughtqty + qty
 					bought = bought + priceper*qty
@@ -227,7 +238,7 @@ function lib.GetPrice(hyperlink, serverKey)
 	for i,v in pairs(tbl) do -- We do multiple passes, but creating a slimmer table would be more memory manipulation and not necessarily faster
 		reason, qty, priceper = v[2], v[6], v[7]
 		if priceper and qty and priceper>0 and qty>0 and reason == Rsn_Success  then
-			if (math.abs(priceper - mean) < deviation) then
+			if (abs(priceper - mean) < deviation) then
 				total = total + priceper * qty
 				number = number + qty
 			end
@@ -290,8 +301,12 @@ function lib.GetPriceArray(hyperlink, serverKey)
 	return array
 end
 
-function lib.ClearItem(hyperlink, faction, realm)
-	print(_TRANS('ASAL_Interface_SlashHelpClearingData') )-- Sales does not store data itself. It uses your Beancounter data.
+function lib.ClearItem(hyperlink, serverKey)
+	print(_TRANS('ASAL_Interface_SlashHelpClearingData') )-- Sales does not store data itself. It uses your Beancounter data. BeanCounter data before todays date will be ignored.
+	serverKey = serverKey or "All"
+	local sig = serverKey..GetSigFromLink(hyperlink)
+	SalesDB[sig] = time()
+	wipe(pricecache)
 end
 
 function lib.OnLoad(addon)
@@ -303,6 +318,11 @@ function lib.OnLoad(addon)
 	default("stat.sales.stddev", false)
 	default("stat.sales.confidence", false)
 	default("stat.sales.enable", true)
+	
+	if not AucAdvancedStatSalesData then
+		AucAdvancedStatSalesData = {}
+	end
+	SalesDB = AucAdvancedStatSalesData
 end
 
 function lib.Processor(callbackType, ...)
@@ -352,7 +372,7 @@ function private.ProcessTooltip(tooltip, name, hyperlink, quality, quantity, cos
 		end
 		if (average and average > 0) then
 			if get("stat.sales.normal") then
-				tooltip:AddLine("  ".._TRANS('ASAL_Tooltip_NormalizedStack'), average*quantity)--
+				tooltip:AddLine("  ".._TRANS('ASAL_Tooltip_NormalizedStack'), average*quantity)--Normalized (stack)
 				if (quantity > 1) then
 					tooltip:AddLine("  ".._TRANS('ASAL_Tooltip_Individually'), average)--(or individually)
 				end

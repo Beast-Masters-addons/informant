@@ -32,6 +32,11 @@ LibStub("LibRevision"):Set("$URL$","$Rev$","5.1.DEV.", 'auctioneer', 'libs')
 
 --AucAdvanced.Modules["Util"]["BeanCounter"]
 
+local select,ipairs,pairs=select,ipairs,pairs
+local concat=table.concat
+local tonumber,tostring,strsplit,strjoin=tonumber,tostring,strsplit,strjoin
+local tinsert,tremove = tinsert,tremove
+
 local libName = "BeanCounter"
 local libType = "Util"
 local lib
@@ -44,11 +49,9 @@ local private = {
 	realmName = GetRealmName(),
 	AucModule, --registers as an auctioneer module if present and stores module local functions
 	faction = nil,
-	version = 2.09,
+	version = 2.11,
 	wealth, --This characters current net worth. This will be appended to each transaction.
 	compressed = false,
-	--cache for the searchAPI
-	SearchCache = {},
 
 	playerData, --Alias for BeanCounterDB[private.realmName][private.playerName]
 	serverData, --Alias for BeanCounterDB[private.realmName]
@@ -111,19 +114,27 @@ end
 lib.API.isLoaded = false
 function lib.OnLoad(addon)
 	private.initializeDB() --create or initialize the saved DB
+	 --OK we now have our Database ready, lets create an Alias to make refrencing easier
+	local db = BeanCounterDB
+	private.playerData = db[private.realmName][private.playerName]
+	private.serverData = db[private.realmName]
+	private.wealth = private.playerData["wealth"]
+	--Upgrade DB if needed
+	private.UpgradeDatabaseVersion()
 	--Check if user is trying to use old client with newer database or if the database has failed to update
-	if private.version and BeanCounterDB and BeanCounterDB[private.realmName][private.playerName].version then
-		if private.version < BeanCounterDB[private.realmName][private.playerName].version then
-			private.CreateErrorFrames("bean older", private.version, BeanCounterDB[private.realmName][private.playerName].version)
+	if private.version and private.playerData.version then
+		if private.version < private.playerData.version then
+			private.CreateErrorFrames("bean older", private.version, private.playerData.version)
 			return
-		elseif private.version ~= BeanCounterDB[private.realmName][private.playerName].version then
-			private.CreateErrorFrames("failed update", private.version, BeanCounterDB[private.realmName][private.playerName].version)
+		elseif private.version ~= private.playerData.version then
+			private.CreateErrorFrames("failed update", private.version, private.playerData.version)
 			return
 		end
 	end
 	--Continue loading if the Database is ready
 	lib.MakeGuiConfig() --create the configurator GUI frame
 	private.CreateFrames() --create our framework used for AH and GUI
+	private.createDeleteItemPrompt() --create the item delete prompt
 	private.slidebar() --create slidebar icon
 
 	private.scriptframe:RegisterEvent("PLAYER_MONEY")
@@ -163,43 +174,45 @@ function private.initializeDB(server, player)
 	if not server then server = private.realmName end
 	if not player then player = private.playerName end
 	
-	if not BeanCounterDB  then
-		BeanCounterDB  = {}
-		BeanCounterDB["settings"] = {}
-		BeanCounterDB["ItemIDArray"] = {}
+	local db = BeanCounterDB
+	if not db then
+		db = {}
+		BeanCounterDB  = db
+		db["settings"] = {}
+		db["ItemIDArray"] = {}
 	end
-	if not BeanCounterDB[server] then
-		BeanCounterDB[server] = {}
-
+	
+	if not db[server] then
+		db[server] = {}
 	end
-	if not BeanCounterDB[server][player] then
-		BeanCounterDB[server][player] = {}
-		BeanCounterDB[server][player]["version"] = private.version
+	
+	if not db[server][player] then
+		local playerData = {}
+		db[server][player] = playerData
+		
+		playerData["version"] = private.version
+		playerData["faction"] = "unknown" --faction is recorded when we get the login event
+		playerData["wealth"] = GetMoney()
 
-		BeanCounterDB[server][player]["faction"] = "unknown" --faction is recorded when we get the login event
-		BeanCounterDB[server][player]["wealth"] = GetMoney()
+		playerData["vendorbuy"] = {}
+		playerData["vendorsell"] = {}
 
-		BeanCounterDB[server][player]["vendorbuy"] = {}
-		BeanCounterDB[server][player]["vendorsell"] = {}
+		playerData["postedAuctions"] = {}
+		playerData["completedAuctions"] = {}
+		playerData["failedAuctions"] = {}
 
-		BeanCounterDB[server][player]["postedAuctions"] = {}
-		BeanCounterDB[server][player]["completedAuctions"] = {}
-		BeanCounterDB[server][player]["failedAuctions"] = {}
+		playerData["postedBids"] = {}
+		playerData["completedBidsBuyouts"]  = {}
+		playerData["failedBids"]  = {}
+		
+		playerData["completedAuctionsNeutral"] = {}
+		playerData["failedAuctionsNeutral"] = {}
 
-		BeanCounterDB[server][player]["postedBids"] = {}
-		--BeanCounterDB[server][player]["postedBuyouts"] = {} removed as unneccessary
-		BeanCounterDB[server][player]["completedBids/Buyouts"]  = {}
-		BeanCounterDB[server][player]["failedBids"]  = {}
+		playerData["completedBidsBuyoutsNeutral"]  = {}
+		playerData["failedBidsNeutral"]  = {}
 
-		BeanCounterDB[server][player]["mailbox"] = {}
+		playerData["mailbox"] = {}
 	end
-
-
-	 --OK we now have our Database ready, lets create an Alias to make refrencing easier
-	private.playerData = BeanCounterDB[private.realmName][private.playerName]
-	private.serverData = BeanCounterDB[private.realmName]
-	private.wealth = private.playerData["wealth"]
-	private.UpgradeDatabaseVersion()
 end
 
 --[[ Configator Section ]]--
@@ -258,6 +271,7 @@ function private.onEvent(frame, event, arg, ...)
 	elseif (event == "ADDON_LOADED") then
 		if arg == "BeanCounter" then
 		   lib.OnLoad()
+		   private.scriptframe:UnregisterEvent("ADDON_LOADED")
 		end
 	end
 end
@@ -276,9 +290,10 @@ function lib.externalSearch(name, settings, queryReturn, count)
 end
 
 --will return any length arguments into a ; seperated string
+local tmp={}
 function private.packString(...)
-local String
-	for n = 1, select("#", ...) do
+	local num = select("#", ...)
+	for n = 1, num do
 		local msg = select(n, ...)
 		if msg == nil then
 			msg = ""
@@ -291,13 +306,9 @@ local String
 		elseif msg == "<nil>" then
 			msg = ""
 		end
-		if n == 1 then  --This prevents a seperator from being the first character.  :foo:foo:
-			String = msg
-		else
-			String = strjoin(";",String,msg)
-		end
+		tmp[n] = msg
 	end
-	return(String)
+	return concat(tmp,";",1,num)
 end
 --Will split any string and return a table value, replace gsub with tbl compare, slightly faster this way.
 function private.unpackString(text)
@@ -316,25 +327,40 @@ function private.unpackString(text)
 	
 	return stack, money, deposit , fee, buyout , bid, buyer, Time, reason, location
 end
---Add data to DB
---~ local color = {["cff9d9d9d"] = 0, ["cffffffff"] = 1, ["cff1eff00"] = 2, ["cff0070dd"] = 3, ["cffa335ee"] = 4, ["cffff8000"] = 5, ["cffe6cc80"] = 6}
-function private.databaseAdd(key, itemID, itemLink, value, compress)
-	if not key or not itemID or not itemLink or not value then 
-		debugPrint("BeanCounter database add error: Missing required data") debugPrint("Database:", key, "itemID:", itemID, "itemLink:", itemLink, "Data:", data, "compress:",compress)
+--[[
+Adds data to the database in proper place, adds link to itemName array, optionally compresses the itemstring into compact format
+return false if data fails to write
+]]
+function private.databaseAdd(key, itemLink, itemString, value, compress)
+	--if we are passed a link and not both then extract the string
+	if itemLink and not itemString then
+		itemString = lib.API.getItemString(itemLink)
+	end
+	
+	if not key or not itemString or not value then
+		debugPrint("BeanCounter database add error: Missing required data") 
+		debugPrint("Database:", key, "itemString:", itemString, "Value:", value, "compress:",compress)
 		return false
 	end
 
-	local _, suffix = lib.API.decodeLink(itemLink)
-	local itemString = lib.API.getItemString(itemLink)
-
-	--if this will be a compressed entry replace uniqueID with 0
+	local item, itemID, enchantID, jewelID1, jewelID2, jewelID3, jewelID4, suffixID, uniqueID, linkLevel = strsplit(":", itemString)
+	--if this will be a compressed entry replace uniqueID with 0 or its scaling factor
 	if compress then
-		itemString  = itemString:gsub("^(item:%d+:.+:.-):.-:(.-)", "%1:0:%2")
+		suffixID = tonumber(suffixID)
+		--print(itemString)
+		if suffixID < 0 then --scaling factor built into uniqueID, extract it and store so we can create properly scaled itemLinks
+			uniqueID = bit.band(uniqueID, 65535)
+		--	print(uniqueID)
+		else
+			uniqueID = 0
+		end
+		itemString = strjoin(":", item, itemID, enchantID, jewelID1, jewelID2, jewelID3, jewelID4, suffixID, uniqueID, linkLevel)
+		--print(itemString)
 	end
-
+	
 	if private.playerData[key][itemID] then --if ltemID exists
 		if private.playerData[key][itemID][itemString] then
-			table.insert(private.playerData[key][itemID][itemString], value)
+			tinsert(private.playerData[key][itemID][itemString], value)
 		else
 			private.playerData[key][itemID][itemString] = {value}
 		end
@@ -342,10 +368,12 @@ function private.databaseAdd(key, itemID, itemLink, value, compress)
 		private.playerData[key][itemID]={[itemString] = {value}}
 	end
 	--Insert into the ItemName:ItemID dictionary array
-	if itemID and suffix and itemLink then
+	if itemLink then
 		lib.API.storeItemLinkToArray(itemLink)
 	end
+	return true
 end
+
 --remove item (for pending bids only atm)
 function private.databaseRemove(key, itemID, itemLink, NAME, COUNT)
 	if key == "postedBids" then
@@ -357,8 +385,8 @@ function private.databaseRemove(key, itemID, itemLink, NAME, COUNT)
 				if postSeller and itemID  and NAME then
 					if postSeller == NAME and tonumber(postCount) == COUNT then
 						--debugPrint("Removing entry from postedBids this is a match", itemID, NAME, "vs", postedName, postedCount, "vs",  COUNT)
-						table.remove(private.playerData[key][itemID][itemString], i)--Just remove the key
-							break
+						tremove(private.playerData[key][itemID][itemString], i)--Just remove the key
+						break
 					end
 				end
 			end
@@ -409,6 +437,7 @@ function private.getItemInfo(link, cmd)
 	elseif itemStackCount and (cmd == "stack") then
 		return itemStackCount
 	end
+	return
 end
 
 function private.debugPrint(...)

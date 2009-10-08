@@ -33,6 +33,12 @@ LibStub("LibRevision"):Set("$URL$","$Rev$","5.1.DEV.", 'auctioneer', 'libs')
 local lib = BeanCounter
 local private, print, get, set, _BC = lib.getLocals()
 
+local ipairs,pairs,select,type,next = ipairs,pairs,select,type,next
+local tinsert = tinsert
+local tonumber,tostring = tonumber,tostring
+local abs = abs
+local strsplit = strsplit
+
 local function debugPrint(...)
     if get("util.beancounter.debugSearch") then
         private.debugPrint("BeanCounterSearch",...)
@@ -61,20 +67,20 @@ function private.startSearch(itemName, settings, queryReturn, count, itemTexture
 			if settings.exact and private.frame.searchBox:GetText() ~= "" then --if the search field is blank do not exact check
 				local _, name = strsplit(";", data)
 				if itemName:lower() == name:lower() then
-					local itemID, suffix = string.split(":", itemKey)--Create a list of itemIDs that match the search text
+					local itemID, suffix = strsplit(":", itemKey)--Create a list of itemIDs that match the search text
 					settings.suffix = suffix -- Store Suffix used to later filter unwated results from the itemID search
 					tbl[itemID] = itemID --Since its possible to have the same itemID returned multiple times this will only allow one instance to be recorded
 					break
 				end
 			else
-				local itemID = string.split(":", itemKey)--Create a list of itemIDs that match the search text
+				local itemID = strsplit(":", itemKey)--Create a list of itemIDs that match the search text
 				tbl[itemID] = itemID --Since its possible to have the same itemID returned multiple times this will only allow one instance to be recorded
 			end
 		end
 	end
 
 	if queryReturn then --need to return the ItemID results to calling function
-		return(private.searchByItemID(tbl, settings, queryReturn, count, itemTexture, itemName))
+		return private.searchByItemID(tbl, settings, queryReturn, count, itemTexture, itemName)
 	else
 		--get the itemTexture for display in the drop box
 		for i, data in pairs(BeanCounterDB.ItemIDArray) do
@@ -98,7 +104,7 @@ function private.searchByItemID(id, settings, queryReturn, count, itemTexture, c
 	tbl = {}
 	if type(id) == "table" then --we can search for a sinlge itemID or an array of itemIDs
 		for i,v in pairs(id)do
-			table.insert(tbl, tostring(v))
+			tinsert(tbl, tostring(v))
 		end
 	else
 		tbl[1] = tostring(id)
@@ -140,6 +146,12 @@ function private.searchByItemID(id, settings, queryReturn, count, itemTexture, c
 		return data --All results are now returned, calling addons can filter
 	end
 	
+	--if BeanCounters frame is not visible then store till we are and cease processing
+	if not private.frame:IsVisible() then
+		private.storedQuery = id
+		return
+	end
+	
 	--store profit for this item, need to do this before we reduce number of results for display
 	local player = private.frame.SelectBoxSetting[2]
 	profit, low, high = lib.API.getAHProfit(player, data)
@@ -161,7 +173,7 @@ function private.searchByItemID(id, settings, queryReturn, count, itemTexture, c
 	--display profit for the search term
 	if profit then
 		local change = "|CFF33FF33Gained"
-		if profit < 0 then change = "|CFFFF3333Lost" profit = math.abs(profit) end-- if profit negative  ABS to keep tiplib from missrepresenting #
+		if profit < 0 then change = "|CFFFF3333Lost" profit = abs(profit) end-- if profit negative  ABS to keep tiplib from missrepresenting #
 		profit = private.tooltip:Coins(profit)
 		private.frame.slot.help:SetTextColor(.8, .5, 1)
 		private.frame.slot.help:SetText(change..(" %s from %s to %s"):format(profit or "", date("%x", low) or "", date("%x", high) or ""))
@@ -193,73 +205,50 @@ function private.searchServerData(serverName, data, tbl, settings)
 			--If looking for alliance and player is not alliance fall into this null
 		elseif settings.selectbox[2] == "horde" and server[i]["faction"] and server[i]["faction"]:lower() ~= settings.selectbox[2] then
 			--If looking for horde and player is not horde fall into this null
-		elseif (settings.selectbox[2] ~= "server" and settings.selectbox[2] ~= "alliance" and settings.selectbox[2] ~= "horde") and i ~= settings.selectbox[2] then
+		elseif (settings.selectbox[2] ~= "server" and settings.selectbox[2] ~= "alliance" and settings.selectbox[2] ~= "horde" and settings.selectbox[2] ~= "neutral") and i ~= settings.selectbox[2] then
 			--If we are not doing a whole server search and the chosen search player is not "i" then we fall into this null
 			--otherwise we search the server or toon as normal
 		else
-		--flag to filter neutral AH from results, this will remove neutral AH when alliance, horde filter is used. This is temporary we need to change teh DB layout to better manage neutral AH
-		local filterNeutral
-		if settings.selectbox[2] == "alliance" or settings.selectbox[2] == "horde" then filterNeutral = true end
+			--flag on how we handle neutral AH    nil = no filter  1 = remove neutral AH   2 = remove NON neutral
+			local filterNeutral = 1 --by default HIDE neutral trxns
+			if settings.neutral then filterNeutral = nil end --GUI check to display neutral trxn over ridden by select box
+			if settings.selectbox[2] == "neutral" then filterNeutral = 2 end
 			for _, id in pairs(tbl) do
-				if settings.auction and server[i]["completedAuctions"][id] then
-					for index, itemKey in pairs(server[i]["completedAuctions"][id]) do
-						for _, text in ipairs(itemKey) do
-							if filterNeutral then
-								local stack,  money, deposit , fee, buyout , bid, buyer, Time, reason, location = strsplit(";", text)
-								if location ~= "N" then
-									table.insert(data, {"COMPLETEDAUCTIONS", id, index, text})
-								end
-							else
-								table.insert(data, {"COMPLETEDAUCTIONS", id, index, text})
-							end
-						end
-					end
+				if settings.auction and server[i]["completedAuctions"][id] and filterNeutral ~= 2 then
+					data = private.searchDB(data, server, i, "completedAuctions", id)
 				end
-				if settings.failedauction and server[i]["failedAuctions"][id] then
-					for index, itemKey in pairs(server[i]["failedAuctions"][id]) do
-						for _, text in ipairs(itemKey) do
-							if filterNeutral then
-								local stack,  money, deposit , fee, buyout , bid, buyer, Time, reason, location = strsplit(";", text)
-								if location ~= "N" then
-									table.insert(data, {"FAILEDAUCTIONS", id, index, text})
-								end					
-							else
-								table.insert(data, {"FAILEDAUCTIONS", id, index, text})
-							end
-							
-						end
-					end
+				if settings.failedauction and server[i]["failedAuctions"][id] and filterNeutral ~= 2 then
+					data = private.searchDB(data, server, i, "failedAuctions", id)
 				end
-				if settings.bid and server[i]["completedBids/Buyouts"][id] then
-					for index, itemKey in pairs(server[i]["completedBids/Buyouts"][id]) do
-						for _, text in ipairs(itemKey) do
-							if filterNeutral then
-								local stack,  money, deposit , fee, buyout , bid, buyer, Time, reason, location = strsplit(";", text)
-								if location ~= "N" then
-									table.insert(data, {"COMPLETEDBIDSBUYOUTS", id, index, text})
-								end
-							else
-								table.insert(data, {"COMPLETEDBIDSBUYOUTS", id, index, text})
-							end
-						end
-					end
+				if settings.bid and server[i]["completedBidsBuyouts"][id] and filterNeutral ~= 2 then
+					data =  private.searchDB(data, server, i, "completedBidsBuyouts", id)
 				end
-				if settings.failedbid and server[i]["failedBids"][id] then
-					for index, itemKey in pairs(server[i]["failedBids"][id]) do
-						for _, text in ipairs(itemKey) do
-							if filterNeutral then
-								local stack,  money, deposit , fee, buyout , bid, buyer, Time, reason, location = strsplit(";", text)
-								if location ~= "N" then
-									table.insert(data, {"FAILEDBIDS", id, index, text})
-								end
-							else
-								table.insert(data, {"FAILEDBIDS", id, index, text})
-							end
-							
-						end
-					end
+				if settings.failedbid and server[i]["failedBids"][id] and filterNeutral ~= 2 then
+					data = private.searchDB(data, server, i, "failedBids", id)
+				end
+				--neutral AH handling
+				if settings.auction and server[i]["completedAuctionsNeutral"][id] and filterNeutral ~= 1 then
+					data = private.searchDB(data, server, i, "completedAuctionsNeutral", id)
+				end
+				if settings.failedauction and server[i]["failedAuctionsNeutral"][id] and filterNeutral ~= 1 then
+					data = private.searchDB(data, server, i, "failedAuctionsNeutral", id)
+				end
+				if settings.bid and  server[i]["completedBidsBuyoutsNeutral"][id] and filterNeutral ~= 1 then
+					data =  private.searchDB(data, server, i, "completedBidsBuyoutsNeutral", id)
+				end
+				if settings.failedbid and server[i]["failedBidsNeutral"][id] and filterNeutral ~= 1 then
+					data = private.searchDB(data, server, i, "failedBidsNeutral", id)
 				end
 			end
+		end
+	end
+	return data
+end
+function private.searchDB(data, server, player, DB, itemID)
+	for index, itemKey in pairs(server[player][DB][itemID]) do
+		DB = DB:gsub("Neutral", "")--remove the Neutral part so we send it to the proper function
+		for _, text in ipairs(itemKey) do
+			tinsert(data, {DB:upper(), id, index, text})
 		end
 	end
 	return data
@@ -284,7 +273,7 @@ function private.formatServerData(data, settings)
 			--just a wrapper to call the correct function for the database we are wanting to format. Example function private.FAILEDBIDS(...)  ==  private["FAILEDBIDS"](...)
 			local store = private[database]
 			local entry = store(v[2], v[3], v[4], settings)
-			table.insert(formatedData, entry)
+			tinsert(formatedData, entry)
 		end
 	end
 	
@@ -325,7 +314,7 @@ function private.reduceSize(tbl, count)
 			end)
 	local data = {} -- this will be a new table, this prevents chages from being propagated back to the cached "data" refrence
 	for i = 1, count do
-		table.insert(data, tbl[i])
+		tinsert(data, tbl[i])
 	end
 	return data
 end
@@ -340,12 +329,12 @@ end
 			local stack = tonumber(uStack) or 0
 			if stack > 0 then pricePer =  (uMoney - uDeposit + uFee)/stack end
 			
-			local itemID, suffix = lib.API.decodeLink(itemKey)
-			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix)
+			local itemID, suffix, uniqueID = lib.API.decodeLink(itemKey)
+			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix, uniqueID)
 
 			if not itemLink then itemLink = private.getItemInfo(id, "name") end--if not in our DB ask the server
 
-			return({
+			return {
 				itemLink or "Failed to get Link", --itemname
 				_BC('UiAucSuccessful'), --status
 
@@ -361,7 +350,7 @@ end
 				tonumber(uFee), --fee
 				uReason, --reason bought
 				tonumber(uTime), --time, --Make this a user choosable option.
-			})
+			}
 	end
 	--STACK; BUY; BID; DEPOSIT; TIME; DATE; WEALTH
 	function private.FAILEDAUCTIONS(id, itemKey, text)
@@ -369,11 +358,11 @@ end
 			if uSeller == "0" then uSeller = "..." end
 			if uReason == "0" then uReason = "..." end
 			
-			local itemID, suffix = lib.API.decodeLink(itemKey)
-			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix)
+			local itemID, suffix, uniqueID = lib.API.decodeLink(itemKey)
+			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix, uniqueID)
 			if not itemLink then itemLink = private.getItemInfo(id, "name") end--if not in our DB ask the server
 
-			return({
+			return {
 				itemLink, --itemname
 				_BC('UiAucExpired'), --status
 
@@ -389,7 +378,7 @@ end
 				0, --fee
 				uReason, --reason bought
 				tonumber(uTime), --time, --Make this a user choosable option.
-			})
+			}
 	end
 	function private.COMPLETEDBIDSBUYOUTS(id, itemKey, text)
 			--local value = "stack"], "money"], p"fee"], buyout"], "bid"], p"Seller/buyer"], ["time"], reason)
@@ -408,11 +397,11 @@ end
 				if stack > 0 then pricePer = (uBuyout - uMoney + uFee)/stack end
 			end
 
-			local itemID, suffix = lib.API.decodeLink(itemKey)
-			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix)
+			local itemID, suffix, uniqueID = lib.API.decodeLink(itemKey)
+			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix, uniqueID)
 			if not itemLink then itemLink = private.getItemInfo(id, "name") end--if not in our DB ask the server
 
-			return({
+			return {
 				itemLink, --itemname
 				text, --status
 
@@ -428,7 +417,7 @@ end
 				tonumber(uFee), --fee
 				uReason, --reason bought
 				tonumber(uTime), --time, --Make this a user choosable option.
-			})
+			}
 	end
 	function private.FAILEDBIDS(id, itemKey, text)
 			
@@ -436,11 +425,11 @@ end
 			if uSeller == "0" then uSeller = "..." end
 			if uReason == "0" then uReason = "..." end
 			
-			local itemID, suffix = lib.API.decodeLink(itemKey)
-			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix)
+			local itemID, suffix, uniqueID = lib.API.decodeLink(itemKey)
+			local itemLink =  lib.API.createItemLinkFromArray(itemID..":"..suffix, uniqueID)
 			if not itemLink then itemLink = private.getItemInfo(id, "name") end--if not in our DB ask the server
 			
-			return({
+			return {
 				itemLink, --itemname
 				_BC('UiOutbid'), --status
 
@@ -456,5 +445,5 @@ end
 				tonumber(uFee), --fee
 				tonumber(uReason), --reason bought
 				tonumber(uTime), --time, --Make this a user choosable option.
-			})
+			}
 	end

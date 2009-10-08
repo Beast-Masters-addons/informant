@@ -1,12 +1,13 @@
 --[[
-	Auctioneer Advanced - Search UI
+	Auctioneer - Search UI
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
 
-	This is an addon for World of Warcraft that adds a price level indicator
-	to auctions when browsing the Auction House, so that you may readily see
-	which items are bargains or overpriced at a glance.
+	This Addon provides a Search tab on the AH interface, which allows
+	Auctioneer users to use Searcher plug-ins to search for good deals
+	in the auction house.  It searches the "snapshot", which requires
+	having data from recent auction house scans.
 
 	License:
 		This program is free software; you can redistribute it and/or
@@ -32,11 +33,19 @@
 --]]
 
 local libType, libName = "Util", "SearchUI"
+local AucAdvanced = AucAdvanced
 local lib,parent,private = AucAdvanced.NewModule(libType, libName)
 if not lib then return end
 local print,decode,_,_,replicate,_,get,set,default,debugPrint,fill = AucAdvanced.GetModuleLocals()
 local debugPrint = AucAdvanced.Debug.DebugPrint
+
 local empty = wipe
+local ipairs,pairs,type,select = ipairs,pairs,type,select
+local tostring,tonumber = tostring,tonumber
+local floor,ceil,abs = floor,ceil,abs
+local strmatch,format = strmatch,format
+local tinsert,tremove = tinsert,tremove
+-- GLOBALS: CreateFrame, GameTooltip
 
 -- Our official name:
 AucSearchUI = lib
@@ -238,10 +247,12 @@ function lib.Processor(callbackType, ...)
 	elseif (callbackType == "tooltip") then
 		lib.ProcessTooltip(...)
 	elseif callbackType == "scanstats" then
-		--lib.NotifyCallbacks("scanstats") -- pass the message on
+		-- pass the message in next OnUpdate
 		flagScanStats = true
 	elseif callbackType == "scanprogress" and private.UpdateScanProgress then
 		private.UpdateScanProgress(...)
+	elseif callbackType == "buyqueue" and private.UpdateBuyQueue then
+		private.UpdateBuyQueue()
 	end
 end
 
@@ -305,7 +316,7 @@ function lib.ProcessTooltip(tooltip, name, hyperlink, quality, quantity, cost, a
 			local success, returnvalue, value = lib.SearchItem(name, ItemTable, true, true)
 			if success then
 				if value then
-					tooltip:AddLine("  "..name.." profit:"..math.floor(100*returnvalue/value).."%:", returnvalue, 1, 0.7, 0.3)
+					tooltip:AddLine("  "..name.." profit:"..floor(100*returnvalue/value).."%:", returnvalue, 1, 0.7, 0.3)
 				elseif returnvalue then
 					tooltip:AddLine("  "..name.." profit:", returnvalue, 1, 0.7, 0.3)
 				else
@@ -376,6 +387,7 @@ local function isGlobalSetting(setting)
 	local a,b,c = strsplit(".", setting)
 	if a == "configator" then return true end
 	if a == "global" then return true end
+	return
 end
 
 local function setter(setting, value)
@@ -591,13 +603,6 @@ function lib.GetSearchLocals()
 	return lib.GetSetting, lib.SetSetting, lib.SetDefault, Const, resources
 end
 
-function private.SetButtonTooltip(message)
-	if lib.GetSetting("tooltiphelp.show") then
-		GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT")
-		GameTooltip:SetText(message)
-	end
-end
-
 function private.removeline()
 	local selected = gui.sheet.selected
 	--find the place in the sort list, so we can select the next one.
@@ -607,7 +612,7 @@ function private.removeline()
 			break
 		end
 	end
-	table.remove(private.sheetData, gui.sheet.selected)
+	tremove(private.sheetData, gui.sheet.selected)
 	--gui.frame.remove:Disable()
 	gui.sheet.selected = nil
 	gui.sheet:SetData(private.sheetData)
@@ -625,9 +630,19 @@ function private.removeall()
 	lib.UpdateControls()
 end
 
+function private.repaintSheet()
+	local wasEmpty = #gui.sheet.data < 1
+	gui.sheet:SetData(private.sheetData)
+	if wasEmpty then --sheet was empty, so select the just added auction
+		gui.sheet.selected = 1
+		gui.sheet:Render() --need to redraw, so the selection looks right
+		lib.UpdateControls()
+	end
+end
+
 function private.cropreason(reason)
 	if reason then
-		reason = string.split(":", reason)
+		reason = strsplit(":", reason)
 		return reason
 	end
 end
@@ -649,11 +664,11 @@ function private.buyfirst()
 		return
 	end
 	lib.UpdateControls()
-	if string.match(private.data.reason, ":buy") then
+	if strmatch(private.data.reason, ":buy") then
 		AucAdvanced.Buy.QueueBuy(private.data.link, private.data.seller, private.data.stack, private.data.minbid, private.data.buyout, private.data.buyout, private.cropreason(private.data.reason))
-	elseif string.match(private.data.reason, ":bid") then
+	elseif strmatch(private.data.reason, ":bid") then
 		AucAdvanced.Buy.QueueBuy(private.data.link, private.data.seller, private.data.stack, private.data.minbid, private.data.buyout, private.data.bid, private.cropreason(private.data.reason))
-	elseif private.data.buyout then
+	elseif private.data.buyout > 0 then
 		AucAdvanced.Buy.QueueBuy(private.data.link, private.data.seller, private.data.stack, private.data.minbid, private.data.buyout, private.data.buyout, private.cropreason(private.data.reason))
 	else
 		AucAdvanced.Buy.QueueBuy(private.data.link, private.data.seller, private.data.stack, private.data.minbid, private.data.buyout, private.data.bid, private.cropreason(private.data.reason))
@@ -674,11 +689,11 @@ function private.purchase()
 	balance = balance - bidqueue --account for money we've already "spent"
 
 	local price = 0
-	if string.match(private.data.reason, ":buy") then
+	if strmatch(private.data.reason, ":buy") then
 		price = private.data.buyout
-	elseif string.match(private.data.reason, ":bid") then
+	elseif strmatch(private.data.reason, ":bid") then
 		price = private.data.bid
-	elseif private.data.buyout then
+	elseif private.data.buyout > 0 then
 		price = private.data.buyout
 	else
 		price = private.data.bid
@@ -707,18 +722,17 @@ function private.purchaseall()
 		balance = balance - bidqueue --account for money we've already "spent"
 
 		local price = 0
-		if string.match(private.data.reason, ":buy") then
+		if strmatch(private.data.reason, ":buy") then
 			price = private.data.buyout
-		elseif string.match(private.data.reason, ":bid") then
+		elseif strmatch(private.data.reason, ":bid") then
 			price = private.data.bid
-		elseif private.data.buyout then
+		elseif private.data.buyout > 0 then
 			price = private.data.buyout
 		else
 			price = private.data.bid
 		end
 		if ((balance-price) > reserve or not enableres) then
 			AucAdvanced.Buy.QueueBuy(private.data.link, private.data.seller, private.data.stack, private.data.minbid, private.data.buyout, price, private.cropreason(private.data.reason))
-			gui.frame.cancel.updateDisplay() -- force update of gui.frame.cancel.value
 		else
 			print("Purchase cancelled: Reserve reached")
 		end
@@ -728,17 +742,17 @@ end
 function private.ignore()
 	local sig = AucAdvanced.API.GetSigFromLink(private.data.link)
 	local price
-	if string.match(private.data.reason, ":buy") then
+	if strmatch(private.data.reason, ":buy") then
 		price = private.data.buyout
-	elseif string.match(private.data.reason, ":bid") then
+	elseif strmatch(private.data.reason, ":bid") then
 		price = private.data.bid
-	elseif private.data.buyout then
+	elseif private.data.buyout > 0 then
 		price = private.data.buyout
 	else
 		price = private.data.bid
 	end
 	local count = private.data.stack or 1
-	price = math.floor(price/count)
+	price = floor(price/count)
 	AucSearchUI.Filters.ItemPrice.AddIgnore(sig, price)
 	print("SearchUI now ignoring "..private.data.link.." at "..AucAdvanced.Coins(price, true))
 	private.removeline()
@@ -753,9 +767,9 @@ end
 
 --a bid was cancelled, so ignore for session
 function private.bidcancelled(callbackstring)
-	local link, price, count = string.split(";", callbackstring)
+	local link, price, count = strsplit(";", callbackstring)
 	local sig = AucAdvanced.API.GetSigFromLink(link)
-	local price = math.floor(price/count) - 1
+	local price = floor(price/count) - 1
 	if AucSearchUI.Filters.ItemPrice then
 		AucSearchUI.Filters.ItemPrice.AddIgnore(sig, price, true)
 		print("SearchUI now ignoring "..link.." at "..AucAdvanced.Coins(price, true).." for the session")
@@ -766,17 +780,17 @@ end
 function private.ignoretemp()
 	local sig = AucAdvanced.API.GetSigFromLink(private.data.link)
 	local price
-	if string.match(private.data.reason, ":buy") then
+	if strmatch(private.data.reason, ":buy") then
 		price = private.data.buyout
-	elseif string.match(private.data.reason, ":bid") then
+	elseif strmatch(private.data.reason, ":bid") then
 		price = private.data.bid
-	elseif private.data.buyout then
+	elseif private.data.buyout > 0 then
 		price = private.data.buyout
 	else
 		price = private.data.bid
 	end
 	local count = private.data.stack or 1
-	price = math.floor(price/count)
+	price = floor(price/count)
 	AucSearchUI.Filters.ItemPrice.AddIgnore(sig, price, true)
 	print("SearchUI now ignoring "..private.data.link.." at "..AucAdvanced.Coins(price, true).." for the session")
 	private.removeline()
@@ -785,24 +799,24 @@ end
 function private.snatch()
 	local link = private.data.link
 	local price
-		if string.match(private.data.reason, ":buy") then
+		if strmatch(private.data.reason, ":buy") then
 		price = private.data.buyout
-	elseif string.match(private.data.reason, ":bid") then
+	elseif strmatch(private.data.reason, ":bid") then
 		price = private.data.bid
-	elseif private.data.buyout then
+	elseif private.data.buyout > 0 then
 		price = private.data.buyout
 	else
 		price = private.data.bid
 	end
 	local count = private.data.stack or 1
-	price = math.floor(price/count) + 1 -- +1 so the current item also matches the search
+	price = floor(price/count) + 1 -- +1 so the current item also matches the search
 	lib.Searchers.Snatch.AddSnatch(link,price)
 	print("SearchUI will now snatch "..private.data.link.." at "..AucAdvanced.Coins(price, true))
 end
 
 local function keyPairs(t,f)
 	local a, i = {}, 0
-	for n in pairs(t) do table.insert(a, n) end
+	for n in pairs(t) do tinsert(a, n) end
 	table.sort(a, f)
 	local iter = function ()
 		i = i + 1
@@ -978,17 +992,17 @@ function lib.CreateAuctionFrames()
 	frame:SetPoint("TOPLEFT", AuctionFrame, "TOPLEFT")
 	frame:SetPoint("BOTTOMRIGHT", AuctionFrame, "BOTTOMRIGHT")
 
-	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	frame.title:SetPoint("TOP", frame,  "TOP", 0, -20)
-	frame.title:SetText("SearchUi - Auction search interface.")
+	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	frame.title:SetPoint("TOP", frame,  "TOP", 20, -17)
+	frame.title:SetText("SearchUI - Auction search interface")
 
 	local myTabName = "AuctionFrameTabUtilSearchUi"
 	frame.tab = CreateFrame("Button", myTabName, AuctionFrame, "AuctionTabTemplate")
 	frame.tab:SetText(TAB_NAME)
 	frame.tab:Show()
 
-	function frame.tab.OnClick(_, _, index)
-		if not index then index = this:GetID() end
+	function frame.tab.OnClick(self, button, down)
+		local index = self:GetID()
 		local tab = getglobal("AuctionFrameTab"..index)
 		if (tab and tab:GetName() == myTabName) then
 			AuctionFrameTopLeft:SetTexture("Interface\\AddOns\\Auc-Advanced\\Textures\\AuctionFrameTopLeft")
@@ -1024,16 +1038,24 @@ function lib.CreateAuctionFrames()
 	frame.backing:SetBackdrop({ bgFile="Interface\\AddOns\\Auc-Advanced\\Textures\\BlackBack", edgeFile="Interface\\AddOns\\Auc-Advanced\\Textures\\WhiteCornerBorder", tile=1, tileSize=8, edgeSize=8, insets={left=3, right=3, top=3, bottom=3} })
 	frame.backing:SetBackdropColor(0,0,0, 0.60)
 
---[[
-	frame.config = CreateFrame("Button", nil, frame, "OptionsButtonTemplate")
-	frame.config:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -25, -13)
-	frame.config:SetText("Configure")
-	frame.config:SetScript("OnClick", function()
-		AucAdvanced.Settings.Show()
-		private.gui:ActivateTab(private.guiId)
-	end)
-]]
-
+	frame.scanslabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	frame.scanslabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 72, -20)
+	frame.scanslabel:SetText("Pending Scans")
+	frame.scanscount = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	frame.scanscount:ClearAllPoints()
+	frame.scanscount:SetPoint("LEFT", frame.scanslabel, "RIGHT", 5, 0)
+	frame.scanscount:SetText("0")
+	frame.scanscount:SetJustifyH("RIGHT")
+	frame.scanscount.last = 0
+	function private.UpdateScanProgress(_, _, _, _, _, _, _, scansQueued)
+		if AucAdvanced.Scan.IsScanning() then
+			scansQueued = scansQueued + 1
+		end
+		if scansQueued ~= frame.scanscount.last then
+			frame.scanscount.last = scansQueued
+			frame.scanscount:SetText(scansQueued)
+		end
+	end
 end
 
 function lib.MakeGuiConfig()
@@ -1073,9 +1095,22 @@ function lib.MakeGuiConfig()
 			gui.LastActiveTab = newtab
 			lib.NotifyCallbacks("selecttab", newtab)
 		end
+		gui.Search.updateDisplay()
 	end
 
 	private.gui = gui
+
+	-- common functions and scripthandlers, used by various buttons and frames
+	local function showTooltipText(button)
+		if lib.GetSetting("tooltiphelp.show") then
+			GameTooltip:SetOwner(button, "ANCHOR_BOTTOMRIGHT")
+			GameTooltip:SetText(button.TooltipText)
+		end
+	end
+	local function hideTooltip()
+		GameTooltip:Hide()
+	end
+
 	gui.frame = CreateFrame("Frame", nil, gui)
 	gui.frame:SetPoint("TOP", gui, "TOP", 0, -115)
 	gui.frame:SetPoint("BOTTOMRIGHT", gui.Done, "TOPRIGHT", 0,25)
@@ -1129,7 +1164,7 @@ function lib.MakeGuiConfig()
 		local items = {}
 		if (saves) then
 			for name, sdata in keyPairs(saves) do
-				table.insert(items, name)
+				tinsert(items, name)
 			end
 		end
 		return items
@@ -1175,33 +1210,13 @@ function lib.MakeGuiConfig()
 		end
 	end)
 
-	 --displays remaining # of scans queued
-	gui.ScansRemaining = gui.saves:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	gui.ScansRemaining:ClearAllPoints()
-	gui.ScansRemaining:SetPoint("RIGHT", gui.saves, "LEFT", -5, 0)
-	gui.ScansRemaining:SetTextColor(1, 0.8, 0)
-	gui.ScansRemaining:SetText("0")
-	gui.ScansRemaining:SetJustifyH("RIGHT")
-	gui.ScansRemaining.last = 0
-	function private.UpdateScanProgress(_, _, _, _, _, _, _, scansQueued)
-		if AucAdvanced.Scan.IsScanning() then
-			scansQueued = scansQueued + 1
-		end
-		if scansQueued ~= gui.ScansRemaining.last then
-			gui.ScansRemaining.last = scansQueued
-			gui.ScansRemaining:SetText(scansQueued)
-		end
-	end
-
 	function lib.UpdateControls()
 		if gui.sheet.selected then
-			--gui.frame.remove:Enable()
 			gui.frame.ignore:Enable()
 			gui.frame.ignoreperm:Enable()
 			gui.frame.notnow:Enable()
 			gui.frame.snatch:Enable()
 		else
-			--gui.frame.remove:Disable()
 			gui.frame.ignore:Disable()
 			gui.frame.ignoreperm:Disable()
 			gui.frame.notnow:Disable()
@@ -1238,8 +1253,8 @@ function lib.MakeGuiConfig()
 				gui.frame.bid:Disable()
 			end
 		elseif private.data.curbid then--bid price was changed, so make sure that it's allowable
-			if MoneyInputFrame_GetCopper(gui.frame.bidbox) < math.ceil(private.data.curbid*1.05) then
-				MoneyInputFrame_SetCopper(gui.frame.bidbox, math.ceil(private.data.curbid*1.05))
+			if MoneyInputFrame_GetCopper(gui.frame.bidbox) < ceil(private.data.curbid*1.05) then
+				MoneyInputFrame_SetCopper(gui.frame.bidbox, ceil(private.data.curbid*1.05))
 			end
 			gui.frame.bid:Enable()
 		end
@@ -1248,11 +1263,7 @@ function lib.MakeGuiConfig()
 			MoneyInputFrame_SetCopper(gui.frame.bidbox, private.data.buyout)
 			gui.frame.bid:Disable()
 		end
-		if (gui.frame.bid:IsEnabled()==1) or (gui.frame.buyout:IsEnabled()==1) then
-			gui.frame.purchase:Enable()
-		else
-			gui.frame.purchase:Disable()
-		end
+		gui.frame.purchase.updateEnable()
 	end
 
 	function lib.OnEnterSheet(button, row, index)
@@ -1324,7 +1335,7 @@ function lib.MakeGuiConfig()
 	})
 	gui.sheet:EnableSelect(true)
 	gui.sheet:EnableVerticalScrollReset(false) --tells scrollframes we do NOT want to reset position when rendering a new data table
-	
+
 	--If we have a saved order reapply
 	if lib.GetSetting("columnorder") then
 		--print("saved order applied")
@@ -1354,28 +1365,24 @@ function lib.MakeGuiConfig()
 			lib.SetSetting("columnsortcurDir", curDir)
 			lib.SetSetting("columnsortcurSort", column)
 		elseif (callback == "OnMouseDownCell") then
-			lib.UpdateControls()		
+			lib.UpdateControls()
 		end
-	end	
-	
+	end
+
 	gui.Search = CreateFrame("Button", "AucSearchUISearchButton", gui, "OptionsButtonTemplate")
 	gui.Search:SetPoint("BOTTOMLEFT", gui, "BOTTOMLEFT", 30, 50)
 	gui.Search:SetText("Search")
 	gui.Search:SetScript("OnClick", lib.PerformSearch)
 	gui.Search:SetFrameLevel(11)
 	gui.Search.TooltipText = "Search Snapshot using current Searcher"
-	gui.Search:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.Search:SetScript("OnLeave", function() return GameTooltip:Hide() end)
-	gui.Search:Hide()
+	gui.Search:SetScript("OnEnter", showTooltipText)
+	gui.Search:SetScript("OnLeave", hideTooltip)
+	gui.Search:Disable()
 	gui.Search.updateDisplay = function()
 		if gui.config.selectedCat == "Searchers" then
-			if not gui.Search:IsShown() then
-				gui.Search:Show()
-			end
+			gui.Search:Enable()
 		else
-			if gui.Search:IsShown() then
-				gui.Search:Hide()
-			end
+			gui.Search:Disable()
 		end
 	end
 
@@ -1428,9 +1435,24 @@ function lib.MakeGuiConfig()
 	gui.frame.purchase:SetScript("OnClick", private.purchase)
 	gui.frame.purchase:Disable()
 	gui.frame.purchase.TooltipText = "Bid/BuyOut selected auction\nbased on 'reason' column. \nHold CTRL+ALT+SHIFT to purchase all items."
-	gui.frame.purchase:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.purchase:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.purchase:SetScript("OnEnter", showTooltipText)
+	gui.frame.purchase:SetScript("OnLeave", hideTooltip)
 	gui.frame.purchase.toggleAll = false
+	gui.frame.purchase.updateEnable = function()
+		if gui.frame.purchase.toggleAll then
+			if gui.sheet.sort[1] then
+				gui.frame.purchase:Enable()
+			else
+				gui.frame.purchase:Disable()
+			end
+		else
+			if (gui.frame.bid:IsEnabled()==1) or (gui.frame.buyout:IsEnabled()==1) then
+				gui.frame.purchase:Enable()
+			else
+				gui.frame.purchase:Disable()
+			end
+		end
+	end
 	gui.frame.purchase.updateDisplay = function()
 		local all = IsShiftKeyDown() and IsControlKeyDown() and IsAltKeyDown()
 		if all ~= gui.frame.purchase.toggleAll then
@@ -1443,7 +1465,9 @@ function lib.MakeGuiConfig()
 				gui.frame.purchase:SetScript("OnClick", private.purchase)
 			end
 		end
+		gui.frame.purchase.updateEnable()
 	end
+	Stubby.RegisterEventHook("MODIFIER_STATE_CHANGED", "Auc-Util-SearchUI", gui.frame.purchase.updateDisplay)
 
 
 	gui.frame.notnow = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
@@ -1452,8 +1476,8 @@ function lib.MakeGuiConfig()
 	gui.frame.notnow:SetScript("OnClick", private.ignoretemp)
 	gui.frame.notnow:Disable()
 	gui.frame.notnow.TooltipText = "Ignore selected auction for session"
-	gui.frame.notnow:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.notnow:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.notnow:SetScript("OnEnter", showTooltipText)
+	gui.frame.notnow:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.ignore = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
 	gui.frame.ignore:SetPoint("BOTTOMLEFT", gui, "BOTTOMLEFT", 400, 35)
@@ -1461,8 +1485,8 @@ function lib.MakeGuiConfig()
 	gui.frame.ignore:SetScript("OnClick", private.ignore)
 	gui.frame.ignore:Disable()
 	gui.frame.ignore.TooltipText = "Ignore selected auction at listed price"
-	gui.frame.ignore:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.ignore:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.ignore:SetScript("OnEnter", showTooltipText)
+	gui.frame.ignore:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.ignoreperm = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
 	gui.frame.ignoreperm:SetPoint("BOTTOMLEFT", gui, "BOTTOMLEFT", 490, 35)
@@ -1470,8 +1494,8 @@ function lib.MakeGuiConfig()
 	gui.frame.ignoreperm:SetScript("OnClick", private.ignoreperm)
 	gui.frame.ignoreperm:Disable()
 	gui.frame.ignoreperm.TooltipText = "Ignore selected auction at any price"
-	gui.frame.ignoreperm:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.ignoreperm:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.ignoreperm:SetScript("OnEnter", showTooltipText)
+	gui.frame.ignoreperm:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.snatch = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
 	gui.frame.snatch:SetPoint("BOTTOMLEFT", gui, "BOTTOMLEFT", 630, 35)
@@ -1479,8 +1503,8 @@ function lib.MakeGuiConfig()
 	gui.frame.snatch:SetScript("OnClick", private.snatch)
 	gui.frame.snatch:Disable()
 	gui.frame.snatch.TooltipText = "Add selected auction to snatch list"
-	gui.frame.snatch:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.snatch:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.snatch:SetScript("OnEnter", showTooltipText)
+	gui.frame.snatch:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.clear = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
 	gui.frame.clear:SetPoint("BOTTOMLEFT", gui, "BOTTOMLEFT", 170, 10)
@@ -1488,8 +1512,8 @@ function lib.MakeGuiConfig()
 	gui.frame.clear:SetScript("OnClick", private.removeall)
 	gui.frame.clear:Enable()
 	gui.frame.clear.TooltipText = "Clear results list"
-	gui.frame.clear:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.clear:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.clear:SetScript("OnEnter", showTooltipText)
+	gui.frame.clear:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.cancel = CreateFrame("Button", "AucAdvSearchUICancelButton", gui.frame, "OptionsButtonTemplate")
 	gui.frame.cancel:SetPoint("BOTTOMLEFT", gui, "BOTTOMLEFT", 30, 30)
@@ -1497,25 +1521,24 @@ function lib.MakeGuiConfig()
 	gui.frame.cancel:SetHeight(18)
 	gui.frame.cancel:Disable()
 	gui.frame.cancel:SetScript("OnClick", function()
-		AucAdvanced.Buy.Private.BuyRequests = {}
-		gui.frame.cancel.size = 0
+		AucAdvanced.Buy.CancelBuyQueue(true)
 		gui.frame.cancel.value = 0
 	end)
-	gui.frame.cancel.size = 0
 	gui.frame.cancel.value = 0
-	gui.frame.cancel.updateDisplay = function()
-		local queuesize = #AucAdvanced.Buy.Private.BuyRequests
-		if queuesize > 0 and queuesize ~= gui.frame.cancel.size then
-			local value = 0
-			for i,j in pairs(AucAdvanced.Buy.Private.BuyRequests) do
-				value = value + j["price"]
-			end
-			gui.frame.cancel.label:SetText(tostring(queuesize)..": "..AucAdvanced.Coins(value, true))
-			gui.frame.cancel.value = value
+	private.UpdateBuyQueue = function ()
+		local queuelen, queuecost, prompt, promptcost = AucAdvanced.Buy.GetQueueStatus()
+		if prompt then
+			queuelen = queuelen + 1
+			queuecost = queuecost + promptcost
+		end
+		if queuelen > 0 then
+			gui.frame.cancel.label:SetText(tostring(queuelen)..": "..AucAdvanced.Coins(queuecost, true))
+			gui.frame.cancel.value = queuecost
 			gui.frame.cancel:Enable()
 			gui.frame.cancel.tex:SetVertexColor(1.0, 0.9, 0.1)
-		elseif queuesize == 0 and gui.frame.cancel:IsEnabled() == 1 then
+		else
 			gui.frame.cancel.label:SetText("")
+			gui.frame.cancel.value = 0
 			gui.frame.cancel:Disable()
 			gui.frame.cancel.tex:SetVertexColor(0.3, 0.3, 0.3)
 		end
@@ -1538,8 +1561,8 @@ function lib.MakeGuiConfig()
 	gui.frame.buyout:SetScript("OnClick", private.buyauction)
 	gui.frame.buyout:Disable()
 	gui.frame.buyout.TooltipText = "Buyout selected auction"
-	gui.frame.buyout:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.buyout:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.buyout:SetScript("OnEnter", showTooltipText)
+	gui.frame.buyout:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.buyoutbox = gui.frame.buyout:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	gui.frame.buyoutbox:SetPoint("BOTTOMRIGHT", gui.frame.buyout, "BOTTOMLEFT", -4, 4)
@@ -1551,24 +1574,12 @@ function lib.MakeGuiConfig()
 	gui.frame.bid:SetScript("OnClick", private.bidauction)
 	gui.frame.bid:Disable()
 	gui.frame.bid.TooltipText = "Bid on selected auction using custom price"
-	gui.frame.bid:SetScript("OnEnter", function() return private.SetButtonTooltip(this.TooltipText) end)
-	gui.frame.bid:SetScript("OnLeave", function() return GameTooltip:Hide() end)
+	gui.frame.bid:SetScript("OnEnter", showTooltipText)
+	gui.frame.bid:SetScript("OnLeave", hideTooltip)
 
 	gui.frame.bidbox = CreateFrame("Frame", "AucAdvSearchUIBidBox", gui.frame, "MoneyInputFrameTemplate")
 	gui.frame.bidbox:SetPoint("BOTTOMRIGHT", gui.frame.bid, "BOTTOMLEFT", -4, 4)
 	MoneyInputFrame_SetOnValueChangedFunc(gui.frame.bidbox, lib.UpdateControls)
-
---	gui.frame.buyfirst = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
---	gui.frame.buyfirst:SetPoint("BOTTOMRIGHT", gui.frame.bidbox, "BOTTOMLEFT", -30, -4)
---	gui.frame.buyfirst:SetText("Buy First")
---	gui.frame.buyfirst:SetScript("OnClick", private.buyfirst)
---	gui.frame.buyfirst:Enable()
-
---	gui.frame.remove = CreateFrame("Button", nil, gui.frame, "OptionsButtonTemplate")
---	gui.frame.remove:SetPoint("BOTTOMLEFT", gui.frame.clear, "BOTTOMRIGHT", 30, 0)
---	gui.frame.remove:SetText("Remove")
---	gui.frame.remove:SetScript("OnClick", private.removeline)
---	gui.frame.remove:Disable()
 
 	gui.frame.progressbar = CreateFrame("STATUSBAR", nil, gui.frame, "TextStatusBar")
 	gui.frame.progressbar:SetWidth(400)
@@ -1597,20 +1608,6 @@ function lib.MakeGuiConfig()
 	gui.frame.progressbar.cancel:SetPoint("TOPLEFT", gui.frame.progressbar, "TOPRIGHT", -25, -5)
 	gui.frame.progressbar.cancel:SetText("X")
 	gui.frame.progressbar.cancel:SetScript("OnClick", private.cancelSearch)
-
-	gui.frame.updateThrottle = TOOLTIP_UPDATE_TIME
-	gui.frame:SetScript("OnUpdate", function(self, elapsed)
-		self.updateThrottle = self.updateThrottle - elapsed
-		if self.updateThrottle > 0 then
-			return
-		end
-		self.updateThrottle = TOOLTIP_UPDATE_TIME
-
-		-- display updater functions
-		self.cancel.updateDisplay()
-		self.purchase.updateDisplay()
-		gui.Search.updateDisplay()
-	end)
 
 	-- Alert our searchers?
 	for name, searcher in pairs(lib.Searchers) do
@@ -1672,7 +1669,7 @@ if SlideBar then
 	sideIcon:SetScript("OnClick", lib.Toggle)
 	sideIcon.tip = {
 		"Auction SearchUI",
-		"Allows you to perform searches on the AuctioneerAdvanced auction cache, even when away from the Auction House",
+		"Allows you to perform searches on the Auctioneer auction cache snapshot, even when away from the Auction House",
 		"{{Click}} to open the Search UI.",
 	}
 end
@@ -1695,10 +1692,10 @@ end
 --lib.SearchItem(searcherName, item, nodupes)
 --purpose: handles sending the item to the specified searcher, and if necessary, adds it to the SearchUI results
 --nodupes is boolean flag.  If true, no duplicate checking is done.  This flag is true for searching from the cache, but false for realtime.
---debugonly is boolean flag, If true, nothing gets added to the results list
+--skipresults is boolean flag, If true, nothing gets added to the results list
 --returns true, value, profit when successful
 --returns false, reason when not
-function lib.SearchItem(searcherName, item, nodupes, debugonly)
+function lib.SearchItem(searcherName, item, nodupes, skipresults)
 	if not searcherName or not item or #item == 0 then
 		return
 	end
@@ -1789,6 +1786,7 @@ function lib.SearchItem(searcherName, item, nodupes, debugonly)
 			--Check to see whether the item already exists in the results table
 			local isdupe = false
 			if not nodupes then
+
 				if not private.sheetData then
 					private.sheetData = {}
 				end
@@ -1797,6 +1795,7 @@ function lib.SearchItem(searcherName, item, nodupes, debugonly)
 						isdupe = true
 					end
 				end
+
 			end
 			if nodupes or (not isdupe) then
 				local level, _, r, g, b
@@ -1816,7 +1815,7 @@ function lib.SearchItem(searcherName, item, nodupes, debugonly)
 						g = g*255
 						b = b*255
 						--first color code here is for sorting purposes
-						pctstring = string.format("|cff%06d|cff%02x%02x%02x"..math.floor(level), 100*level, r, g, b)
+						pctstring = format("|cff%06d|cff%02x%02x%02x"..floor(level), 100*level, r, g, b)
 						pct = pctstring
 					end
 				end
@@ -1827,8 +1826,8 @@ function lib.SearchItem(searcherName, item, nodupes, debugonly)
 				local cur = item[Const.CURBID] or 0
 				local buy = item[Const.BUYOUT] or 0
 				local price = item[Const.PRICE] or 0
-				if not debugonly then
-					table.insert(private.sheetData, {
+				if not skipresults then
+					tinsert(private.sheetData, {
 						item[Const.LINK],
 						item["pct"],
 						item["profit"],
@@ -1845,12 +1844,6 @@ function lib.SearchItem(searcherName, item, nodupes, debugonly)
 						min/count,
 						cur/count
 					})
-					gui.sheet:SetData(private.sheetData)
-					if #private.sheetData == 1 then --sheet was empty, so select the just added auction
-						gui.sheet.selected = 1
-						gui.sheet:Render() --need to redraw, so the selection looks right
-						lib.UpdateControls()
-					end
 				end
 				return true, item["profit"], value
 			end
@@ -1874,7 +1867,7 @@ local PerformSearch = function()
 	speed = (speed / 100)^2.5
 	local processingTime = speed * 0.1 + 0.02
 	local GetTime = GetTime
-	local lastPause = GetTime()
+	local nextPause = GetTime() + processingTime
 
 	local searcher, searcherName = private.FindSearcher()
 	if not searcher then
@@ -1886,22 +1879,38 @@ local PerformSearch = function()
 
 	--clear the results table
 	private.removeall()
+	local repaintSheet = false
+	local nextRepaint = 0	-- can do it immediately
 
 	private.isSearching = true
 	AucAdvanced.SendProcessorMessage("searchbegin", searcherName)
 	lib.NotifyCallbacks("search", "begin", searcherName)
 	for i, data in ipairs(scandata.image) do
-		if GetTime() - lastPause > processingTime then
+		if GetTime() > nextPause then
 			gui.frame.progressbar:SetValue((i/#scandata.image)*1000)
+
 			coroutine.yield()
-			lastPause = GetTime()
+
+			nextPause = GetTime() + processingTime
 			if private.SearchCancel then
 				private.SearchCancel = nil
 				break
 			end
+			if repaintSheet and GetTime()>=nextRepaint then
+				local b=GetTime()
+				private.repaintSheet()
+				repaintSheet = false
+				local e=GetTime()
+				nextRepaint = e + ((e-b)*10)  -- only let repainting consume 10% of our total CPU
+			end
 		end
-		lib.SearchItem(searcher.name, data, true)
+		if lib.SearchItem(searcher.name, data, true) then
+			repaintSheet = true
+		end
 	end
+
+	private.repaintSheet()
+
 	private.isSearching = false
 	empty(SettingCache)
 	gui.frame.progressbar:Hide()

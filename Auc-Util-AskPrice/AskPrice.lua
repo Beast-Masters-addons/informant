@@ -5,8 +5,7 @@
 	URL: http://auctioneeraddon.com/
 
 	Auctioneer AskPrice created by Mikezter and merged into
-	Auctioneer Advanced by MentalPower. Swarm response
-	functionallity added by Kandoko.
+	Auctioneer by MentalPower. Swarm response functionallity added by Kandoko.
 
 	Functions responsible for AskPrice's operation.
 
@@ -222,7 +221,7 @@ function private.sendResponse(link, count, player, answerCount, totalSeenCount, 
 	if (totalSeenCount > 0) then
 		local averageSeenCount = math.floor(totalSeenCount/answerCount + 0.5)
 		private.sendWhisper(
-			(_TRANS('ASKP_Interface_SeenAverageByAuctioneer') ):format( --%s: Seen an average of %d times at auction by %d people using Auctioneer Advanced
+			(_TRANS('ASKP_Interface_SeenAverageByAuctioneer') ):format( --%s: Seen an average of %d times at auction by %d people using Auctioneer
 				link,
 				averageSeenCount,
 				answerCount),
@@ -237,7 +236,7 @@ function private.sendResponse(link, count, player, answerCount, totalSeenCount, 
 		)
 	else
 		private.sendWhisper(
-			(_TRANS('ASKP_Interface_NeverSeenByAuctioneer') ):format(--%s: Never seen at %s by Auctioneer Advanced
+			(_TRANS('ASKP_Interface_NeverSeenByAuctioneer') ):format(--%s: Never seen at %s by Auctioneer
 				link,
 				AucAdvanced.GetFaction()
 			),
@@ -454,6 +453,57 @@ function private.isSmartWordsRequest(text)
 		end
 	end
 end
+
+private.SlashHandler = {}
+
+--This is the function that will be called by the slash handler when
+--/askprice send is issued.
+function private.SlashHandler.send(queryString)
+	local parseError = false
+	if queryString then
+		local player, itemLinks = strsplit(" ", queryString, 2)
+		print(player, itemLinks)
+
+		--Error out if we have a target, but no potential itemLinks
+		if itemLinks then
+			local items = private.getItems(itemLinks)
+			--Error out if we dont get any items back
+			if #items == 0 then parseError = true end
+
+			for i = 1, #items, 2 do
+				local count = items[i]
+				local link = items[i+1]
+
+				private.sendResponse(link, count, player, 1, private.getData(link))
+			end
+		else
+			parseError = true
+		end
+	else
+			parseError = true
+	end
+
+	if parseError then
+		print("The correct syntax is {{/asprice send Player <#>[Item Link]}}, where {{<#>}} is the stack size (optional) and {{Player}} is the person you wish to send to.")
+	end
+end
+
+--This function handles parsing of the /askprice commands
+function private.slashcommands(commandstring)
+	if commandstring then
+		local command, remains = strsplit(" ",commandstring, 2)
+		if command then
+			command = command:lower()
+			if private.SlashHandler[command] then
+				private.SlashHandler[command](remains)
+			end
+		end
+	end
+end
+
+--Add the slash command
+SlashCmdList['AUC_UTIL_ASKPRICE_SEND'] = private.slashcommands
+_G['SLASH_AUC_UTIL_ASKPRICE_SEND1'] = '/askprice'
 
 --[[ Configator Section ]]--
 private.defaults = {

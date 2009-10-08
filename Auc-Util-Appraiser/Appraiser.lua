@@ -1,11 +1,11 @@
 --[[
-	Auctioneer Advanced - Appraisals and Auction Posting
-	Version: 5.1.3955 (SnaggleTooth)
+	Auctioneer - Appraisals and Auction Posting
+	Version: <%version%> (<%codename%>)
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
 
-	This is an addon for World of Warcraft that adds an appriasals dialog for
-	easy posting of your auctionables when you are at the auction-house.
+	This is an addon for World of Warcraft that adds an appraisals tab to the AH for
+	easy posting of your auctionables when you are at the auction house.
 
 	License:
 		This program is free software; you can redistribute it and/or
@@ -46,19 +46,27 @@ function lib.Processor(callbackType, ...)
 	if (callbackType == "tooltip") then
 		lib.ProcessTooltip(...)
 	elseif (callbackType == "auctionui") then
-        if private.CreateFrames then private.CreateFrames(...) end
+		if private.CreateFrames then private.CreateFrames(...) end
 	elseif (callbackType == "config") then
 		private.SetupConfigGui(...)
 	elseif (callbackType == "configchanged") then
-		local change = ... --get the reason if its a scrollframe color change re-render the window
+		local change, value = ... --get the reason if its a scrollframe color change re-render the window
 		if private.frame then
 			private.frame.salebox.config = true
-		--	private.frame.SetPriceFromModel()
+			--	private.frame.SetPriceFromModel()
 			private.frame.UpdatePricing()
 			private.frame.UpdateDisplay()
-		--	private.frame.salebox.config = nil
+			--	private.frame.salebox.config = nil
 			if change == "util.appraiser.color" or change == "util.appraiser.colordirection" then
 				private.frame.UpdateImage()
+			end
+			--show/hide the appraiser tab on the AH
+			if change == "util.appraiser.displayauctiontab" then
+				if value then
+					AucAdvanced.AddTab(private.frame.ScanTab, private.frame)
+				else
+					AucAdvanced.RemoveTab(private.frame.ScanTab, private.frame)
+				end
 			end
 		end
 		if change:sub(1, 20) == "util.appraiser.round" then
@@ -119,12 +127,6 @@ function lib.ProcessTooltip(tooltip, name, hyperlink, quality, quantity, cost, a
 		end
 	end
     if AucAdvanced.Settings.GetSetting("util.appraiser.ownauctions") then
-        -- Just to make sure it has the data seeing it likes to not load when you first load the auction house currently
-		if not lib.ownResults and AuctionFrame and AuctionFrame:IsVisible() then
-            lib.GetOwnAuctionDetails()
-        end
-        if not lib.ownResults then return end
-
         local itemName = name
 
         local colored = get('util.appraiser.manifest.color') and AucAdvanced.Modules.Util.PriceLevel
@@ -245,16 +247,17 @@ function lib.OnLoad()
 	AucAdvanced.Settings.SetDefault("util.appraiser.clickhookany", true)
 	AucAdvanced.Settings.SetDefault("util.appraiser.reselect", true)
 	AucAdvanced.Settings.SetDefault("util.appraiser.buttontips", true)
+	AucAdvanced.Settings.SetDefault("util.appraiser.displayauctiontab", true)
 	--Default sizes for the scrollframe column widths
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Seller'), 71)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Left'), 25)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Stk'), 27 )
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Min/ea'), 65)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Cur/ea'), 65)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Buy/ea'), 65)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_MinBid'), 65)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_CurBid'), 65)
-	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Buyout'), 68)
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Seller'), 71) --Seller
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Left'), 25) --Left
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Stk'), 27 ) --Stk
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Min/ea'), 65) --Min/ea
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Cur/ea'), 65) --Cur/ea
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Buy/ea'), 65) --Buy/ea
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_MinBid'), 65) --MinBid
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_CurBid'), 65) --CurBid
+	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Buyout'), 68) --Buyout
 	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.BLANK", 0.05)
 end
 
@@ -381,10 +384,13 @@ function private.GetPriceCore(sig, link, serverKey, match)
 	return newBuy, newBid, seen, curModelText, MatchString, stack, number, duration
 end
 
--- Called by AprFrame in AUCTION_OWNED_LIST_UPDATE event
+lib.ownResults = {}
+lib.ownCounts = {}
 function lib.GetOwnAuctionDetails()
-	local results = {}
-	local counts = {}
+	local results = lib.ownResults
+	local counts = lib.ownCounts
+	empty(results)
+	empty(counts)
 	local numBatchAuctions, totalAuctions = GetNumAuctionItems("owner");
 	if totalAuctions >0 then
 		for i=1, totalAuctions do
@@ -412,8 +418,7 @@ function lib.GetOwnAuctionDetails()
 			end
 		end
 	end
-	lib.ownResults = results
-	lib.ownCounts = counts
 end
+Stubby.RegisterEventHook("AUCTION_OWNED_LIST_UPDATE", "Auc-Util-Appraiser", lib.GetOwnAuctionDetails)
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")

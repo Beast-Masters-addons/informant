@@ -32,8 +32,17 @@ LibStub("LibRevision"):Set("$URL$","$Rev$","5.1.DEV.", 'auctioneer', 'libs')
 
 local lib = BeanCounter
 lib.API = {}
-local private = lib.Private
 local private, print, get, set, _BC = lib.getLocals()
+
+local type,select,strsplit,strjoin,ipairs,pairs = type,select,strsplit,strjoin,ipairs,pairs
+local tostring,tonumber,strlower = tostring,tonumber,strlower
+local tinsert,tremove,sort = tinsert,tremove,sort
+local wipe = wipe
+local time = time
+
+local GetRealmName = GetRealmName
+-- GLOBALS: BeanCounter, BeanCounterDB
+
 
 local function debugPrint(...)
     if get("util.beancounter.debugAPI") then
@@ -104,30 +113,27 @@ function lib.API.search(name, settings, queryReturn)
 		end
 	end
 end
---Cache system for searches
+
+
+
+
+-- Cache system for searches
+local cache = setmetatable({}, {__mode="v"})
 
 function private.checkSearchCache(name, serverName, playerName)
-	local SearchCache = private.SearchCache
-	--return cached search
-	name = name:lower() --lower case names for better matching
-	if SearchCache[name..serverName..playerName] then
-		debugPrint("cached used", name, serverName, playerName  )
-		return SearchCache[name..serverName..playerName]
-	end
+	if not name or not serverName or not playerName then return end --nil safe the cache check
+	return cache[strlower(name)..serverName..playerName]
 end
+
 function private.addSearchCache(name, data, serverName, playerName)
-	local SearchCache = private.SearchCache
-	--remove oldest cache entry, only save 5 searches
-	if #SearchCache >= 10 then
-		--debugPrint("removing",  SearchCache[1] )
-		SearchCache[ SearchCache[1] ] = nil
-		table.remove(SearchCache, 1)
-	end
-	--store cache of the request
-	name = name:lower() -- store as lower case for better matching
-	SearchCache[name..serverName..playerName] = data
-	SearchCache[#SearchCache + 1] = name..serverName..playerName
+	if not name or not serverName or not playerName then return end --nil safe the cache add
+	cache[strlower(name)..serverName..playerName] = data
 end
+
+function private.wipeSearchCache()
+	wipe(cache)
+end
+
 
 --[[ Returns the Sum of all AH sold vs AH buys along with the date range
 If no player name is supplied then the entire server profit will be totaled
@@ -193,15 +199,15 @@ function lib.API.getAHProfitGraph(player, item ,days)
 	--Merge and edit provided table to needed format
 	for i,v in pairs(tbl) do
 		for a,b in pairs(v) do
-			table.insert(tbl, b)
+			tinsert(tbl, b)
 		end
 	end
 	--remove now redundant table entries
-	tbl.completedAuctions, tbl["completedBids/Buyouts"], tbl.failedAuctions, tbl.failedBids = nil, nil, nil, nil
+	tbl.completedAuctions, tbl["completedBidsBuyouts"], tbl.failedAuctions, tbl.failedBids = nil, nil, nil, nil
 	--check if we actually have any results from the search
 	if #tbl == 0 then return {0}, 0, 0 end
 	--sort by date
-	table.sort(tbl, function(a,b) return a[5] > b[5] end)
+	sort(tbl, function(a,b) return a[5] > b[5] end)
 	--get min and max dates.
 	local high, low, count, sum, number = tbl[1][5], tbl[#tbl][5], 1, 0, 0
 	local range = high - (days* 86400)
@@ -281,7 +287,7 @@ function lib.API.getAHSoldFailed(player, link, days)
 			end
 		end
 	else
-		if BeanCounter and BeanCounter.Private.playerData then
+		if private.playerData then
 			if private.serverData[player]["completedAuctions"][itemID]  then
 				for key in pairs(private.serverData[player]["completedAuctions"][itemID] ) do
 					success = success + #private.serverData[player]["completedAuctions"][itemID][key]
@@ -304,21 +310,22 @@ end
 we store itemKeys with a unique ID but our name array does not
 ]]
 function lib.API.getArrayItemLink(itemString)
-	local itemID, suffix = lib.API.decodeLink(itemString)
+	local itemID, suffix, uniqueID = lib.API.decodeLink(itemString)
 	local itemKey = itemID..":"..suffix
 	if BeanCounterDB.ItemIDArray[itemKey] then
-		return lib.API.createItemLinkFromArray(itemKey, BeanCounterDB.ItemIDArray[itemKey])
+		return lib.API.createItemLinkFromArray(itemKey, uniqueID) --uniqueID is used as a scaling factor for "of the" suffix items
 	end
 	debugPrint("Searching DB for ItemID..", suffix, itemID, "Failed Item does not exist")
 	return
 end
 
 --[[Converts the compressed link stored in the itemIDArray back to a standard blizzard format]]
-function lib.API.createItemLinkFromArray(itemKey)
-	if BeanCounterDB["ItemIDArray"][itemKey] then 
-		local itemID, suffix = string.split(":", itemKey)
-		local color, name = string.split(";", BeanCounterDB["ItemIDArray"][itemKey])
-		return strjoin("", "|", color, "|Hitem:", itemID,":0:0:0:0:0:", suffix, ":0:80|h[", name, "]|h|r")
+function lib.API.createItemLinkFromArray(itemKey, uniqueID)
+	if BeanCounterDB["ItemIDArray"][itemKey] then
+		if not uniqueID then uniqueID = 0 end
+		local itemID, suffix = strsplit(":", itemKey)
+		local color, name = strsplit(";", BeanCounterDB["ItemIDArray"][itemKey])
+		return strjoin("", "|", color, "|Hitem:", itemID,":0:0:0:0:0:", suffix, ":", uniqueID, ":80|h[", name, "]|h|r")
 	end
 	return
 end
@@ -380,8 +387,8 @@ function lib.API.getBidReason(itemLink, quantity)
 	local itemString = lib.API.getItemString(itemLink)
 	local itemID, suffix = lib.API.decodeLink(itemLink)
 
-	if private.playerData["completedBids/Buyouts"][itemID] and private.playerData["completedBids/Buyouts"][itemID][itemString] then
-		for i,v in pairs(private.playerData["completedBids/Buyouts"][itemID][itemString]) do
+	if private.playerData["completedBidsBuyouts"][itemID] and private.playerData["completedBidsBuyouts"][itemID][itemString] then
+		for i,v in pairs(private.playerData["completedBidsBuyouts"][itemID][itemString]) do
 			local quan, _, _ , _, _, bid, _, Time, reason = private.unpackString(v)
 			if tonumber(quan) == tonumber(quantity) and reason and Time then
 				return reason, Time, tonumber(bid)
@@ -390,8 +397,8 @@ function lib.API.getBidReason(itemLink, quantity)
 	end
 	--not found on the current player lets see if we bought it on another player
 	for player in pairs(private.serverData) do
-		if private.serverData[player]["completedBids/Buyouts"][itemID] and private.serverData[player]["completedBids/Buyouts"][itemID][itemString] then
-			for i,v in pairs(private.serverData[player]["completedBids/Buyouts"][itemID][itemString]) do
+		if private.serverData[player]["completedBidsBuyouts"][itemID] and private.serverData[player]["completedBidsBuyouts"][itemID][itemString] then
+			for i,v in pairs(private.serverData[player]["completedBidsBuyouts"][itemID][itemString]) do
 				local quan, _, _ , _, _, bid, _, Time, reason = private.unpackString(v)
 				if tonumber(quan) == tonumber(quantity) and reason and Time then
 					return reason, Time, tonumber(bid), player
@@ -402,10 +409,21 @@ function lib.API.getBidReason(itemLink, quantity)
 	
 	return --if nothing found return nil
 end
+--[[Any itemlink passed into this function will be prompted to remove from the database]]
+function lib.API.deleteItem(itemLink)
+	if itemLink and itemLink:match("^(|c%x+|H.+|h%[.+%])") then
+		private.deletePromptFrame.item:SetText(itemLink)
+		private.deletePromptFrame:Show()
+	else
+		print("Invalid itemLink")
+	end
+end
+
 
 --[[===========================================================================
 --|| Deprecation Alert Functions
 --||=========================================================================]]
+-- GLOBALS: debugstack, geterrorhandler
  --Ths function was created by Shirik all thanks and blame go to him :P
 do
 	local SOURCE_PATTERN = "([^\\/:]+:%d+): in function ([^\"']+)[\"']";
@@ -433,7 +451,7 @@ do
 			seenCalls[source][caller]=true
 			-- Display it
 			debugPrint(
-			"Auctioneer Advanced: "..
+			"Auctioneer: "..
 			functionName .. " has been deprecated and was called by |cFF9999FF"..caller:match("^(.+)%.[lLxX][uUmM][aAlL]:").."|r. "..
 				(replacementName and ("Please use "..replacementName.." instead. ") or "")..
 				(comments or "")

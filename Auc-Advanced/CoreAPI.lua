@@ -32,6 +32,7 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 if not AucAdvanced then return end
+local AucAdvanced = AucAdvanced
 
 AucAdvanced.API = {}
 local lib = AucAdvanced.API
@@ -39,19 +40,20 @@ local private = {}
 
 lib.Print = AucAdvanced.Print
 local Const = AucAdvanced.Const
-
---local replicate, empty, fill = AucAdvanced.Replicate, AucAdvanced.Empty, AucAdvanced.Fill
-local empty = wipe
+local GetFaction = AucAdvanced.GetFaction
+local GetSetting = AucAdvanced.Settings.GetSetting
+local DecodeLink = AucAdvanced.DecodeLink
+local SanitizeLink = AucAdvanced.SanitizeLink
 
 local tinsert = table.insert
 local tremove = table.remove
-local next = next
-local pairs = pairs
-local ipairs = ipairs
-local ceil = math.ceil
-local max = math.max
-local tostring = tostring
-local type = type
+local next,pairs,ipairs,type = next,pairs,ipairs,type
+local wipe = wipe
+local ceil,floor,max,abs = ceil,floor,max,abs
+local tostring,tonumber,strjoin,strsplit,format = tostring,tonumber,strjoin,strsplit,format
+local GetItemInfo = GetItemInfo
+-- GLOBALS: nLog, N_NOTICE, N_WARNING, N_ERROR
+
 
 --[[
 	The following functions are defined for modules's exposed methods:
@@ -82,6 +84,12 @@ local type = type
 function lib.Processor(event, ...)
 	if event == "scanstats" then
 		private.clearCaches(...)
+		lib.ClearMarketCache()
+	elseif event == "configchanged" then
+		lib.ClearMarketCache()
+	elseif event == "newmodule" then
+		private.ClearEngineCache()
+		lib.ClearMarketCache()
 	end
 end
 
@@ -90,16 +98,16 @@ do
     local IMPROVEMENT_FACTOR = 0.8;
     local CORRECTION_FACTOR = 1000; -- 10 silver per gold, integration steps at tail
     local FALLBACK_ERROR = 1;       -- 1 silver per gold fallback error max
-    local cache = {};
+
+	-- cache[serverKey][itemsig]={value, seen, #stats}
+    local cache = setmetatable({}, { __index = function(tbl,key)
+			tbl[key] = {}
+			return tbl[key]
+		end
+	})
     local pdfList = {};
     local engines = {};
-    local abs = math.abs;
-    local floor = math.floor;
     local ERROR = 0.05;
-    local GetSetting = AucAdvanced.Settings.GetSetting;
-    local GetItemInfo = GetItemInfo;
-    local GetCVar = GetCVar;
-    local assert = assert;
     -- local LOWER_INT_LIMIT, HIGHER_INT_LIMIT = -100000, 10000000;
     --[[
         This function acquires the current market value of the mentioned item using
@@ -113,20 +121,21 @@ do
         AucAdvanced.API.GetMarketValue(itemLink, serverKey)
     ]]
     function lib.GetMarketValue(itemLink, serverKey)
-        ERROR = GetSetting("marketvalue.accuracy");
         local _;
         if type(itemLink) == 'number' then _, itemLink = GetItemInfo(itemLink) end
-        if not itemLink then return; end
-        local saneLink = AucAdvanced.SanitizeLink(itemLink)
+		if not itemLink then return end
 
-        -- Look up in the cache if it's recent enough
-        local cacheTable = cache[lib.GetSigFromLink(itemLink)..":"..(serverKey or GetCVar("realmName"))];
-        if cacheTable then
-            return cacheTable.value, cacheTable.seen, cacheTable.stats;
+		local cacheSig = lib.GetSigFromLink(itemLink)
+		if not cacheSig then return end -- not a valid item link
+		serverKey = serverKey or GetFaction() -- call GetFaction once here, instead of in every Stat module
+
+        local cacheEntry = cache[serverKey][cacheSig]
+        if cacheEntry then
+            return cacheEntry[1], cacheEntry[2], cacheEntry[3] -- explicit indexing faster than 'unpack' for 3 values
         end
 
-        if nLog then nLog.AddMessage("Auctioneer", "Market Pricing", N_NOTICE, "Cache Miss", "Auctioneer Advanced missed market pricing cache on item '"..itemLink.."'"); end
-
+        ERROR = GetSetting("marketvalue.accuracy");
+        local saneLink = SanitizeLink(itemLink)
 
         local upperLimit, lowerLimit, seen = 0, 1e11, 0;
 
@@ -138,12 +147,10 @@ do
                 if fn then
                     tinsert(engines, {pdf = fn, array = engineLib.GetPriceArray});
                 elseif nLog then
-                    nLog.AddMessage("Auctioneer", "Market Pricing", N_WARNING, "Missing PDF", "Auctioneer Advanced engine '"..engineLib.GetName().."' does not have a GetItemPDF() function. This check will be removed in the near future in favor of faster calls. Implement this function.");
+                    nLog.AddMessage("Auctioneer", "Market Pricing", N_WARNING, "Missing PDF", "Auctioneer engine '"..engineLib.GetName().."' does not have a GetItemPDF() function. This check will be removed in the near future in favor of faster calls. Implement this function.");
                 end
             end
         end
-
-        -- print("Calculating", itemLink);
 
         -- Run through all of the stat modules and get the PDFs
         local c, oldPdfMax, total = 0, #pdfList, 0;
@@ -153,7 +160,7 @@ do
 
             if type(i) == 'number' then
                 -- This is a fallback
-                if convergedFallback == nil or (type(convergedFallback) == 'number' and math.abs(convergedFallback - i) < FALLBACK_ERROR * convergedFallback / 10000) then
+                if convergedFallback == nil or (type(convergedFallback) == 'number' and abs(convergedFallback - i) < FALLBACK_ERROR * convergedFallback / 10000) then
                     convergedFallback = i;
                 else
                     convergedFallback = false;      -- Cannot converge on fallback pricing
@@ -181,13 +188,14 @@ do
         end
 
         if #pdfList == 0 and convergedFallback then
-            if nLog then nLog.AddMessage("Auctioneer", "Market Pricing", N_WARNING, "Fallback Pricing Used", "Fallback pricing used due to no available PDFs on item "..itemlink); end
+            if nLog then nLog.AddMessage("Auctioneer", "Market Pricing", N_WARNING, "Fallback Pricing Used", "Fallback pricing used due to no available PDFs on item "..itemLink); end
             return convergedFallback, 1, 1;
         end
 
 
-        assert(lowerLimit > -1/0 and upperLimit < 1/0, "Invalid bounds detected while pricing "..(GetItemInfo(itemLink) or itemLink)..": "..tostring(lowerLimit).." to "..tostring(upperLimit));
-
+        if not (lowerLimit > -1/0 and upperLimit < 1/0) then
+			error("Invalid bounds detected while pricing "..(GetItemInfo(itemLink) or itemLink)..": "..tostring(lowerLimit).." to "..tostring(upperLimit))
+		end
 
 
         -- Determine the totals from the PDFs
@@ -205,7 +213,9 @@ do
             lastMidpoint = midpoint;
             total = 0;
 
-            assert(delta > 0, "Infinite loop detected during market pricing for "..(GetItemInfo(itemLink) or itemLink));
+            if not(delta > 0) then
+				error("Infinite loop detected during market pricing for "..(GetItemInfo(itemLink) or itemLink))
+			end
 
             for x = lowerLimit, upperLimit, delta do
                 for i = 1, #pdfList do
@@ -244,13 +254,7 @@ do
             midpoint = floor(midpoint + 0.5);   -- Round to nearest copper
 
             -- Cache before finishing up
-            local cacheTable = {}
-            cache[lib.GetSigFromLink(itemLink)..":"..(serverKey or GetCVar("realmName"))] = cacheTable;
-            cacheTable.time = GetTime();
-            cacheTable.value = midpoint;
-            cacheTable.seen = seen;
-            cacheTable.stats = #pdfList;
-
+			cache[serverKey][cacheSig] = {midpoint, seen, #pdfList}
 
             return midpoint, seen, #pdfList;
         else
@@ -262,23 +266,19 @@ do
 
     end
 
-    -- Now hook NewModule so that we clear the engine cache when a new module comes into play
-    local oldNewModule = AucAdvanced.NewModule;
-    AucAdvanced.NewModule = function(...)
-        engines = {};               -- Clear the engine list
-        return oldNewModule(...);   -- Tailcall original function
-    end
+	-- Clear the cache of Stats engines (called if a new module is registered)
+	function private.ClearEngineCache()
+		wipe(engines)
+	end
 
-    -- Clears the cache for AucAdvanced.API.GetMarketValue()
+    -- Clears the results cache for AucAdvanced.API.GetMarketValue()
     function lib.ClearMarketCache()
-        for x, _ in pairs(cache) do
-            cache[x] = nil;
-        end
+		wipe(cache)
     end
 end
 
 function lib.ClearItem(itemLink, serverKey)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	local modules = AucAdvanced.GetAllModules("ClearItem")
 	for pos, engineLib in ipairs(modules) do
 		engineLib.ClearItem(saneLink, serverKey)
@@ -287,7 +287,7 @@ function lib.ClearItem(itemLink, serverKey)
 end
 
 function lib.GetAlgorithms(itemLink)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	local engines = {}
 	local modules = AucAdvanced.GetAllModules()
 	for pos, engineLib in ipairs(modules) do
@@ -303,7 +303,7 @@ function lib.GetAlgorithms(itemLink)
 end
 
 function lib.IsValidAlgorithm(algorithm, itemLink)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	local modules = AucAdvanced.GetAllModules()
 	for pos, engineLib in ipairs(modules) do
 		if engineLib.GetName() == algorithm and (engineLib.GetPrice or engineLib.GetPriceArray) then
@@ -338,9 +338,9 @@ function lib.GetAlgorithmValue(algorithm, itemLink, serverKey, reserved)
 
         serverKey = reserved.."-"..serverKey;
     end
-    serverKey = serverKey or AucAdvanced.GetFaction()
+    serverKey = serverKey or GetFaction()
 
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	local modules = AucAdvanced.GetAllModules()
 	for pos, engineLib in ipairs(modules) do
 		if engineLib.GetName() == algorithm and (engineLib.GetPrice or engineLib.GetPriceArray) then
@@ -439,8 +439,8 @@ function lib.QueryImage(query, faction, realm, ...)
 	end
 
 	-- reset results and save a copy of query
-	empty(curResults)
-	empty(prevQuery)
+	wipe(curResults)
+	wipe(prevQuery)
 	for k, v in pairs(query) do prevQuery[k] = v end
 
 	-- get image to search - may be the whole snapshot or a subset
@@ -454,7 +454,7 @@ function lib.QueryImage(query, faction, realm, ...)
 
 	local saneQueryLink
 	if query.link then
-		saneQueryLink = AucAdvanced.SanitizeLink(query.link)
+		saneQueryLink = SanitizeLink(query.link)
 	end
 
 	-- scan image to build a table of auctions that match query
@@ -506,11 +506,11 @@ function lib.QueryImage(query, faction, realm, ...)
 end
 
 function private.clearCaches(scanstats)
-	local serverKey = AucAdvanced.GetFaction()
-	empty(private.scandataIndex[serverKey])
+	local serverKey = GetFaction()
+	wipe(private.scandataIndex[serverKey])
 
-	empty(private.curResults)
-	empty(private.prevQuery)
+	wipe(private.curResults)
+	wipe(private.prevQuery)
 	private.prevQuery.empty = true
 end
 
@@ -545,9 +545,8 @@ function lib.IsBlocked()
 end
 
 --Market matcher APIs
-private.matcherlist = AucAdvanced.Settings.GetSetting("matcherlist")
 function lib.GetBestMatch(itemLink, algorithm, serverKey, reserved)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 
     if reserved then
         lib.ShowDeprecationAlert("AucAdvanced.API.GetBestMatch(itemLink, algorithm, serverKey)",
@@ -561,7 +560,7 @@ function lib.GetBestMatch(itemLink, algorithm, serverKey, reserved)
 	-- TODO: Make a configurable algorithm.
 	-- This algorithm is currently less than adequate.
 
-    local faction = (serverKey or ""):match("^[^%-]+%-(.+)$") or AucAdvanced.GetFaction()
+    local faction = (serverKey or ""):match("^[^%-]+%-(.+)$") or GetFaction()
 	local realm = (serverKey or ""):match("^([^%-]+)%-.+$") or GetRealmName()
 
 	local matchers = lib.GetMatchers(saneLink)
@@ -598,7 +597,7 @@ function lib.GetBestMatch(itemLink, algorithm, serverKey, reserved)
 end
 
 function lib.GetMatcherDropdownList()
-	private.matcherlist = AucAdvanced.Settings.GetSetting("matcherlist")
+	private.matcherlist = GetSetting("matcherlist")
 	if not private.matcherlist or #private.matcherlist == 0 then
 		lib.GetMatchers()
 	end
@@ -613,8 +612,8 @@ function lib.GetMatcherDropdownList()
 end
 
 function lib.GetMatchers(itemLink)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
-	private.matcherlist = AucAdvanced.Settings.GetSetting("matcherlist")
+	local saneLink = SanitizeLink(itemLink)
+	private.matcherlist = GetSetting("matcherlist")
 	local engines = {}
 	local modules = AucAdvanced.GetAllModules()
 	for pos, engineLib in ipairs(modules) do
@@ -650,7 +649,7 @@ function lib.GetMatchers(itemLink)
 end
 
 function lib.IsValidMatcher(matcher, itemLink)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	local engines = {}
 	local modules = AucAdvanced.GetAllModules()
 	for pos, engineLib in ipairs(modules) do
@@ -666,7 +665,7 @@ function lib.IsValidMatcher(matcher, itemLink)
 end
 
 function lib.GetMatcherValue(matcher, itemLink, price)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	if (type(matcher) == "string") then
 		matcher = lib.IsValidMatcher(matcher, saneLink)
 	end
@@ -686,7 +685,7 @@ end
 -- Allows the return of Appraiser price values to other functions.
 -- If Appraiser is not loaded it uses Market Price
 function lib.GetAppraiserValue(itemLink, useMatching)
-	local saneLink = AucAdvanced.SanitizeLink(itemLink)
+	local saneLink = SanitizeLink(itemLink)
 	local newBuy, newBid, _, seen, curModelText, MatchString, stack, number, duration
 	if not AucAdvanced.Modules.Util.Appraiser then
 		newBuy, seen = AucAdvanced.API.GetMarketValue(saneLink)
@@ -705,7 +704,7 @@ end
 -- Creates an AucAdvanced signature from an item link
 function lib.GetSigFromLink(link)
 	local sig
-	local itype, id, suffix, factor, enchant, seed = AucAdvanced.DecodeLink(link)
+	local itype, id, suffix, factor, enchant, seed = DecodeLink(link)
 	if itype == "item" then
 		if enchant ~= 0 then
 			sig = ("%d:%d:%d:%d"):format(id, suffix, factor, enchant)
@@ -724,15 +723,11 @@ end
 
 -- Creates an item link from an AucAdvanced signature
 function lib.GetLinkFromSig(sig)
-	local link, name
 	local id, suffix, factor, enchant = strsplit(":", sig)
-	if not suffix then suffix = "0" end
-	if not factor then factor = "0" end
-	if not enchant then enchant = "0" end
 
-	link = ("item:%d:%d:0:0:0:0:%d:%d:0"):format(id, enchant, suffix, factor)
-	name, link = GetItemInfo(link)
-	link = AucAdvanced.SanitizeLink(link)
+	local itemstring = format("item:%d:%d:0:0:0:0:%d:%d:0", id, enchant or 0, suffix or 0, factor or 0)
+	local name, link = GetItemInfo(itemstring)
+	link = SanitizeLink(link)
 	return link, name -- name is ignored by most calls
 end
 
@@ -751,7 +746,7 @@ end
 
 -------------------------------------------------------------------------------
 -- Statistical devices created by Matthew 'Shirik' Del Buono
--- For Auctioneer Advanced
+-- For Auctioneer
 -------------------------------------------------------------------------------
 local sqrtpi = math.sqrt(math.pi);
 local sqrtpiinv = 1/sqrtpi;
@@ -846,13 +841,13 @@ do
             seenCalls[source][caller]=true
             -- Display it
             AucAdvanced.Print(
-                "Auctioneer Advanced: "..
+                "Auctioneer: "..
                 functionName .. " has been deprecated and was called by |cFF9999FF"..caller:match("^(.+)%.[lLxX][uUmM][aAlL]:").."|r. "..
                 (replacementName and ("Please use "..replacementName.." instead. ") or "")..
                 (comments or "")
             );
 	        geterrorhandler()(
-	            "Deprecated function call occurred in AuctioneerAdvanced API:\n     {{{Deprecated Function:}}} "..functionName..
+	            "Deprecated function call occurred in Auctioneer API:\n     {{{Deprecated Function:}}} "..functionName..
 	                "\n     {{{Source Module:}}} "..source:match("^(.+)%.[lLxX][uUmM][aAlL]:")..
 	                "\n     {{{Calling Module:}}} "..caller:match("^(.+)%.[lLxX][uUmM][aAlL]:")..
 	                "\n     {{{Available Replacement:}}} "..replacementName..

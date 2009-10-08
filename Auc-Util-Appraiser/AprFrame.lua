@@ -1,11 +1,11 @@
 --[[
-	Auctioneer Advanced - Appraisals and Auction Posting
+	Auctioneer - Appraisals and Auction Posting
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
 
-	This is an addon for World of Warcraft that adds an appriasals dialog for
-	easy posting of your auctionables when you are at the auction-house.
+	This is an addon for World of Warcraft that adds an appraisals tab to the AH for
+	easy posting of your auctionables when you are at the auction house.
 
 	License:
 		This program is free software; you can redistribute it and/or
@@ -723,13 +723,13 @@ function private.CreateFrames()
 			frame.valuecache.numberentry = frame.salebox.numberentry:GetText()
 			AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".number", number)
 		elseif numberentry ~= frame.valuecache.numberentry then
-			if numberentry:lower() == _TRANS('APPR_Interface_Full') then
+			if numberentry:lower() == _TRANS('APPR_Interface_Full') then --Full
 				frame.salebox.number:SetAdjustedValue(-2)
-				numberentry = _TRANS('APPR_Interface_Full')
+				numberentry = _TRANS('APPR_Interface_Full') --Full
 				AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".number", -2)
-			elseif numberentry:lower() == _TRANS('APPR_Interface_All') then
+			elseif numberentry:lower() == _TRANS('APPR_Interface_All') then --All
 				frame.salebox.number:SetAdjustedValue(-1)
-				numberentry = _TRANS('APPR_Interface_All')
+				numberentry = _TRANS('APPR_Interface_All') --All
 				AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".number", -1)
 			elseif tonumber(numberentry) == nil then --we've typed in a partial word.  let them keep typing
 			else
@@ -2245,7 +2245,7 @@ function private.CreateFrames()
 		AucAdvanced.Settings.SetSetting("util.appraiser.classic", (not AucAdvanced.Settings.GetSetting("util.appraiser.classic")))
 		frame.ChangeUI()
 	end)
-	frame.switchToStack2.TooltipText = _TRANS('APPR_HelpTooltip_PricingMethod')
+	frame.switchToStack2.TooltipText = _TRANS('APPR_HelpTooltip_PricingMethod')--Switch between 'Per Item' and 'Per Stack' Pricing.
 	frame.switchToStack2:SetScript("OnEnter", function() return frame.SetButtonTooltip(this.TooltipText) end)
 	frame.switchToStack2:SetScript("OnLeave", function() return GameTooltip:Hide() end)
 	frame.switchToStack2:Enable()
@@ -2566,7 +2566,7 @@ function private.CreateFrames()
 	frame.sellerIgnore.no:SetNormalFontObject(GameFontNormalSmall)
 	frame.sellerIgnore.no:SetPoint("BOTTOMRIGHT", frame.sellerIgnore, "BOTTOMRIGHT", -5, 10)
 	frame.sellerIgnore.no:SetScript("OnClick", function()  frame.sellerIgnore:Hide() end)
-	frame.sellerIgnore.no:SetText("APPR_Interface_No")--No
+	frame.sellerIgnore.no:SetText(_TRANS("APPR_Interface_No"))--No
 	frame.sellerIgnore.no:SetWidth(30)
 	frame.sellerIgnore.no:SetHeight(10)
 	local font = frame.sellerIgnore.no:GetFontString()
@@ -2588,24 +2588,7 @@ function private.CreateFrames()
 	})
 
 	frame.imageview.sheet:EnableSelect(true)
-	--callback functions for frame.imageview.sheet events
-	function frame.imageview.sheet.Processor(callback, self, button, column, row, order, curDir, ...)
-		if (callback == "OnMouseDownCell")  then
-			private.onSelect()
-		elseif (callback == "OnClickCell") then
-			private.onClick(button, row, column)
-		elseif (callback == "ColumnOrder") then
-			set("util.appraiser.columnorder", order)
-		elseif (callback == "ColumnWidthSet") then
-			private.onResize(self, column, button:GetWidth() )
-		elseif (callback == "ColumnWidthReset") then
-			private.onResize(self, column, nil)
-		elseif (callback == "ColumnSort") then
-			set("util.appraiser.columnsortcurDir", curDir)
-			set("util.appraiser.columnsortcurSort", column)
-		end
-	end
-
+	
 	frame.imageview.purchase = CreateFrame("Frame", nil, frame.imageview)
 	frame.imageview.purchase:SetPoint("TOPLEFT", frame.imageview, "BOTTOMLEFT", 0, 4)
 	frame.imageview.purchase:SetPoint("BOTTOMRIGHT", frame.imageview, "BOTTOMRIGHT", 0, -16)
@@ -2646,7 +2629,10 @@ function private.CreateFrames()
 	frame.ScanTab:SetText(_TRANS('APPR_Interface_Appraiser') )--Appraiser
 	frame.ScanTab:Show()
 	PanelTemplates_DeselectTab(frame.ScanTab)
-	AucAdvanced.AddTab(frame.ScanTab, frame)
+	
+	if get("util.appraiser.displayauctiontab") then
+		AucAdvanced.AddTab(frame.ScanTab, frame)
+	end
 
 	function frame.ScanTab.OnClick(_, _, index)
 		if not index then index = this:GetID() end
@@ -2737,12 +2723,7 @@ function private.CreateFrames()
 
 	hooksecurefunc("HandleModifiedItemClick", frame.ClickAnythingHook)
 
-	frame:RegisterEvent("AUCTION_OWNED_LIST_UPDATE")
-	frame:SetScript("OnEvent", function()
-        AucAdvanced.Modules.Util.Appraiser.GetOwnAuctionDetails()
-	end)
-
-
+	--[[These scrollframe functions need to be here to avoid errors, since many elements of appraisers frames are not finished when we create the scrollframe]]
 	--If we have a saved column arrangement reapply
 	if get("util.appraiser.columnorder") then
 		frame.imageview.sheet:SetOrder(get("util.appraiser.columnorder") )
@@ -2753,6 +2734,24 @@ function private.CreateFrames()
 		frame.imageview.sheet.curDir = get("util.appraiser.columnsortcurDir") or 1
 		frame.imageview.sheet:PerformSort()
 	end
+	--callback functions for frame.imageview.sheet events, register for callbacks AFTER we have applied any saved changes
+	function frame.imageview.sheet.Processor(callback, self, button, column, row, order, curDir, ...)
+		if (callback == "OnMouseDownCell")  then
+			private.onSelect()
+		elseif (callback == "OnClickCell") then
+			private.onClick(button, row, column)
+		elseif (callback == "ColumnOrder") then
+			set("util.appraiser.columnorder", order)
+		elseif (callback == "ColumnWidthSet") then
+			private.onResize(self, column, button:GetWidth() )
+		elseif (callback == "ColumnWidthReset") then
+			private.onResize(self, column, nil)
+		elseif (callback == "ColumnSort") then
+			set("util.appraiser.columnsortcurDir", curDir)
+			set("util.appraiser.columnsortcurSort", column)
+		end
+	end
+
 end
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")

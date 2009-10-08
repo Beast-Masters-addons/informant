@@ -1,5 +1,5 @@
 --[[
-	Auctioneer Advanced
+	Auctioneer
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
@@ -72,13 +72,13 @@ local DecodeSig -- to be filled with AucAdvanced.API.DecodeSig when it has loade
 ]]
 local ERROR_NOITEM = "ItemId is empty"
 local ERROR_NOLOCAL = "Item is unknown"
-local ERROR_NOBLANK = "No blank bag spaces available"
+local ERROR_NOBLANK = "Requires a free bag slot that can hold a new stack of this item for posting"
 local ERROR_MAXSIZE = "Item cannot be stacked that high"
 local ERROR_AHCLOSED = "Auctionhouse is not open"
 local ERROR_NOTFOUND = "Item was not found in inventory"
 local ERROR_NOTENOUGH = "Not enough of item available"
 local ERROR_FAILRETRY = "Posting failed too many times"
-local ERROR_FAILTIMEOUT = "Timeout while waiting for posted item to clear"
+local ERROR_FAILTIMEOUT = "Timed out while waiting for posted item to clear from bags"
 
 local ConstErrors = {
 	ERROR_NOITEM = ERROR_NOITEM,
@@ -316,79 +316,63 @@ end
 function lib.FindMatchesInBags(...)
 	return private.FindMatchesInBags(lib.DecodeSig(...))
 end
-private.bagTypes = { GetAuctionItemSubClasses(3) }
-private.bagInfo = {}
 -- Internal implementation of FindMatchesInBags
 function private.FindMatchesInBags(matchId, matchSuffix, matchFactor, matchEnchant, matchSeed)
 	if not matchId then return end
 	local matches = {}
-	local blankBag, blankSlot
-	local specialBlank = false
-	local isLocked = false
-	local foundLink
 	local total = 0
+	local blankBag, blankSlot, foundLink, foundLocked, blankSpecial
 
-	for bag=0,4 do
-		local bagName = GetBagName(bag)
-		if bagName then
-			local bagType, isMultibag, _
+	local itemtype = GetItemFamily(matchId) or 0
+	if itemtype > 0 then
+		-- check to see if item is itself a bag
+		local _,_,_,_,_,_,_,_,equiploc = GetItemInfo(matchId)
+		if equiploc == "INVTYPE_BAG" then
+			itemtype = 0 -- can only be placed in general-purpose bags
+		end
+	end
 
-			if bag == 0 then
-				isMultibag = true
-				bagType = "Bag"
-			else
-				_,_,_,_,_,_, bagType = GetItemInfo(bagName)
-				isMultibag = (bagType == private.bagTypes[1])
-			end
-
-			if not (isMultibag or private.bagInfo[bagType]) then
-				private.bagInfo[bagType] = {}
-			end
-
-			for slot=1,GetContainerNumSlots(bag) do
-				local link = GetContainerItemLink(bag,slot)
-				if link then
-					local texture, itemCount, locked, quality, readable = GetContainerItemInfo(bag,slot)
-					if (locked) then
-						isLocked = true
-					end
-
-					local itype, itemId, suffix, factor, enchant, seed = AucAdvanced.DecodeLink(link)
-					if not isMultibag then
-						-- Store info that this bag can contain this item
-						private.bagInfo[bagType][itemId] = true
-					end
-
-					if itype == "item"
-					and itemId == matchId
-					and suffix == matchSuffix
-					and factor == matchFactor
-					and enchant == matchEnchant
-					and (matchSeed == 0 or seed == matchSeed)
-					then
-						if lib.IsAuctionable(bag, slot) then
-							if not itemCount or itemCount < 0 then itemCount = 1 end
+	for bag = 0, 4 do
+		local slots = GetContainerNumSlots(bag)
+		if slots > 0 then
+			local _, bagtype = GetContainerNumFreeSlots(bag)
+			-- can this bag contain the item we're looking for?
+			if bagtype == 0 or bit.band(bagtype, itemtype) ~= 0 then
+				for slot = 1, slots do
+					local link = GetContainerItemLink(bag,slot)
+					if link then
+						local texture, itemCount, locked, quality, readable = GetContainerItemInfo(bag,slot)
+						local itype, itemId, suffix, factor, enchant, seed = AucAdvanced.DecodeLink(link)
+						if itype == "item"
+						and itemId == matchId
+						and suffix == matchSuffix
+						and factor == matchFactor
+						and enchant == matchEnchant
+						and (matchSeed == 0 or seed == matchSeed)
+						and lib.IsAuctionable(bag, slot) then
+							if not itemCount or itemCount < 1 then itemCount = 1 end
 							tinsert(matches, {bag, slot, itemCount})
 							total = total + itemCount
 							foundLink = link
+							if locked then
+								foundLocked = true
+							end
 						end
-					end
-				else -- Blank slot
-					if isMultibag then
-						if not blankBag then
+					else -- blank slot
+						if bagtype ~= 0 and not blankSpecial then
+							blankBag = bag
+							blankSlot = slot
+							blankSpecial = true
+						elseif not blankBag then
 							blankBag = bag
 							blankSlot = slot
 						end
-					elseif not specialBlank and private.bagInfo[bagType][matchId] then
-						blankBag = bag
-						blankSlot = slot
-						specialBlank = true
 					end
 				end
 			end
 		end
 	end
-	return matches, total, blankBag, blankSlot, foundLink, isLocked
+	return matches, total, blankBag, blankSlot, foundLink, foundLocked
 end
 
 -- compare function to use in table.sort within FindOrMakeStack
@@ -540,7 +524,7 @@ end
 ]]
 local LAG_ADJUST = (3 / 1000)
 local POST_TIMEOUT = 6 -- seconds general timeout
-local POST_ERROR_PAUSE = 6 -- seconds pause after error
+local POST_ERROR_PAUSE = 1 -- seconds pause after error
 local POST_RETRYS = 2 -- Numer of retrys after the original failed attempt. Must never exceed value of POST_TIMEOUT
 local POST_THROTTLE = 0.1 -- time before starting to post the next item in the queue
 function private.ProcessPosts(source)

@@ -1,5 +1,5 @@
 --[[
-	Auctioneer Advanced - Standard Deviation Statistics module
+	Auctioneer - Standard Deviation Statistics module
 	Version: <%version%> (<%codename%>)
 	Revision: $Id$
 	URL: http://auctioneeraddon.com/
@@ -32,21 +32,33 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 --]]
 if not AucAdvanced then return end
+local AucAdvanced = AucAdvanced
 
 local libType, libName = "Stat", "StdDev"
 local lib,parent,private = AucAdvanced.NewModule(libType, libName)
 if not lib then return end
+
 local print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill, _TRANS = AucAdvanced.GetModuleLocals()
+local tonumber,strsplit,select,pairs=tonumber,strsplit,select,pairs
+local setmetatable=setmetatable
+local wipe=wipe
+local floor,ceil,abs=floor,ceil,abs
+local concat=table.concat
+local tinsert,tremove=table.insert,table.remove
+-- GLOBALS: AucAdvancedStatStdDevData
 
 local GetFaction = AucAdvanced.GetFaction
 
 local SSDRealmData
+
+local cache = {} -- setmetatable({}, {__mode="v"})
+
 local ZValues = {.063, .126, .189, .253, .319, .385, .454, .525, .598, .675, .756, .842, .935, 1.037, 1.151, 1.282, 1.441, 1.646, 1.962, 20, 20000}
 
 function lib.CommandHandler(command, ...)
 	local myFaction = GetFaction()
 	if (command == "help") then
-		print(_TRANS('SDEV_Help_SlashHelp1') )--Help for Auctioneer Advanced - StdDev
+		print(_TRANS('SDEV_Help_SlashHelp1') )--Help for Auctioneer - StdDev
 		local line = AucAdvanced.Config.GetCommandLead(libType, libName)
 		print(line, "help}} - ".._TRANS('SDEV_Help_SlashHelp2') ) --this StdDev help
 		print(line, "clear}} - ".._TRANS('SDEV_Help_SlashHelp3'):format(myFaction) ) --clear current %s StdDev price database
@@ -62,6 +74,8 @@ function lib.Processor(callbackType, ...)
 	elseif (callbackType == "config") then
 		--Called when you should build your Configator tab.
 		private.SetupConfigGui(...)
+	elseif (callbackType == "scanstats") then
+		wipe(cache)
 	end
 end
 
@@ -91,9 +105,9 @@ function lib.ScanProcessors.create(operation, itemData, oldData)
 	local stats = private.UnpackStats(SSDRealmData[serverKey][itemId])
 	if not stats[property] then stats[property] = {} end
 	if #stats[property] >= 100 then
-		table.remove(stats[property], 1)
+		tremove(stats[property], 1)
 	end
-	table.insert(stats[property], buyout)
+	tinsert(stats[property], buyout)
 	SSDRealmData[serverKey][itemId] = private.PackStats(stats)
 end
 
@@ -139,6 +153,9 @@ function private.GetCfromZ(Z)
 	end
 end
 
+local datapoints_price = {}	-- used temporarily in .GetPrice() to avoid unpacking strings multiple times
+local datapoints_stack = {}
+
 function lib.GetPrice(hyperlink, serverKey)
 	if not AucAdvanced.Settings.GetSetting("stat.stddev.enable") then return end
 
@@ -147,22 +164,30 @@ function lib.GetPrice(hyperlink, serverKey)
 	if (factor and factor ~= 0) then property = property.."x"..factor end
 
 	if not serverKey then serverKey = GetFaction() end
+	
 	if not SSDRealmData[serverKey] then return end
 	if not SSDRealmData[serverKey][itemId] then return end
+	
+	local cacheKey = serverKey ..":"..itemId..":"..property
+	if cache[cacheKey] then
+		return unpack(cache[cacheKey])
+	end
 
 	local stats = private.UnpackStats(SSDRealmData[serverKey][itemId])
 	if not stats[property] then return end
 
 	local count = #stats[property]
 	if (count < 1) then return end
-
+	
 	local total, number = 0, 0
 	for i = 1, count do
 		local price, stack = strsplit("/", stats[property][i])
 		price = tonumber(price) or 0
 		stack = tonumber(stack) or 1
 		if (stack < 1) then stack = 1 end
-		total = total + tonumber(price)
+		datapoints_price[i] = price		-- cache these for further processing below (so they don't need to strsplit etc)
+		datapoints_stack[i] = stack
+		total = total + price
 		number = number + stack
 	end
 	local mean = total / number
@@ -171,26 +196,20 @@ function lib.GetPrice(hyperlink, serverKey)
 
 	local variance = 0
 	for i = 1, count do
-		local price, stack = strsplit("/", stats[property][i])
-		price = tonumber(price) or 0
-		stack = tonumber(stack) or 1
-		if (stack < 1) then stack = 1 end
-		variance = variance + ((mean - price/stack) ^ 2);
+		variance = variance + ((mean - datapoints_price[i]/datapoints_stack[i]) ^ 2);
 	end
 
 	variance = variance / count;
 	local stdev = variance ^ 0.5
-	total = 0
 
 	local deviation = 1.5 * stdev
 
+	total = 0	-- recompute them from entries inside the allowed deviation
 	number = 0
+
 	for i = 1, count do
-		local price, stack = strsplit("/", stats[property][i])
-		price = tonumber(price) or 0
-		stack = tonumber(stack) or 1
-		if (stack < 1) then stack = 1 end
-		if (math.abs((price/stack) - mean) < deviation) then
+		local price,stack = datapoints_price[i], datapoints_stack[i]
+		if abs((price/stack) - mean) < deviation then
 			total = total + price
 			number = number + stack
 		end
@@ -198,12 +217,13 @@ function lib.GetPrice(hyperlink, serverKey)
 
 	local confidence = .01
 	local average
-	if (number > 0) then
+	if (number > 0) then	-- number<1  will happen if we have e.g. two big clusters: one at 1g and one at 10g
 		average = total / number
 		confidence = (.15*average)*(number^0.5)/(stdev)
 		confidence = private.GetCfromZ(confidence)
 	end
 
+	cache[cacheKey] = { average, mean, false, stdev, variance, count, confidence }
 	return average, mean, false, stdev, variance, count, confidence
 end
 
@@ -215,7 +235,7 @@ local array = {}
 function lib.GetPriceArray(hyperlink, serverKey)
 	if not AucAdvanced.Settings.GetSetting("stat.stddev.enable") then return end
 	-- Clean out the old array
-	empty(array)
+	wipe(array)
 
 	-- Get our statistics
 	local average, mean, _, stdev, variance, count, confidence = lib.GetPrice(hyperlink, serverKey)
@@ -395,14 +415,15 @@ function private.UnpackStats(dataItem)
 	end
 	return data
 end
+
+local tmp={}
 function private.PackStats(data)
-	local stats = ""
-	local joiner = ""
+	local n=0
 	for property, info in pairs(data) do
-		stats = stats..joiner..property..":"..strjoin(";", unpack(info))
-		joiner = ","
+		n=n+1
+		tmp[n]=property..":"..concat(info, ";")
 	end
-	return stats
+	return concat(tmp,",",1,n)
 end
 
 function private.InitData()
