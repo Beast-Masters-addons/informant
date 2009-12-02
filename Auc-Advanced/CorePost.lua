@@ -57,7 +57,13 @@ lib.Print = AucAdvanced.Print
 local Const = AucAdvanced.Const
 local print = lib.Print
 local debugPrint = AucAdvanced.Debug.DebugPrint
+local _TRANS = AucAdvanced.localizations
 local DecodeSig -- to be filled with AucAdvanced.API.DecodeSig when it has loaded
+
+-- Tooltip Scanning locals for speed, to be filled in near end of file
+local ScanTip
+local ScanTip2
+local ScanTip3
 
 --[[
     Errors that may be "thrown" by the below functions.
@@ -103,13 +109,34 @@ local ConstErrors = {
 lib.Const = ConstErrors
 
 local BindTypes = {
-	[ITEM_SOULBOUND] = "ITEM_SOULBOUND",
-	[ITEM_BIND_QUEST] = "ITEM_BIND_QUEST",
-	[ITEM_BIND_ON_PICKUP] = "ITEM_BIND_ON_PICKUP",
-	[ITEM_CONJURED] = "ITEM_CONJURED",
-	[ITEM_ACCOUNTBOUND] = "ITEM_ACCOUNTBOUND",
-	[ITEM_BIND_TO_ACCOUNT] = "ITEM_BIND_TO_ACCOUNT",
+	[ITEM_SOULBOUND] = "Bound",
+	[ITEM_BIND_QUEST] = "Quest",
+	[ITEM_BIND_ON_PICKUP] = "Bound",
+	[ITEM_CONJURED] = "Conjured",
+	[ITEM_ACCOUNTBOUND] = "Accountbound",
+	[ITEM_BIND_TO_ACCOUNT] = "Accountbound",
 }
+
+-- in OnLoad: auto-replace values with translations based on table key: "ADV_Help_PostError"..key - e.g. "ADV_Help_PostErrorBound"
+-- Some of these errors are only of use when debugging, so should probably not be translated. i.e. the "InvalidX" codes
+local ErrorText = {
+	Bound = "Cannot auction a Soulbound item",
+	Accountbound = "Cannot auction an Account Bound item",
+	Conjured = "Cannot auction a Conjured item",
+	Quest = "Cannot auction a Quest item",
+	Lootable = "Cannot auction a Lootable item",
+	Damaged = "Cannot auction a Damaged item",
+	InvalidBid = "Bid value is invalid",
+	InvalidBuyout = "Buyout value is invalid",
+	InvalidDuration = "Duration value is invalid",
+	InvalidSig = "Function requires a valid item sig",
+	InvalidSize = "Size value is invalid",
+	UnknownItem = "Item is unknown",
+	MaxSize = "Item cannot be stacked that high",
+	NotFound = "Item was not found in inventory",
+	NotEnough = "Not enough of item available",
+}
+lib.ErrorText = ErrorText
 
 -- local constants to index the posting request tables
 local REQ_SIG = 1
@@ -154,6 +181,7 @@ private.postRequests = {}
 private.lastReported = 0
 private.reportLock = 0
 function private.QueueReport()
+	private.lastCountSig = nil
 	if private.reportLock ~= 0 then return end
 	local queuelength = #private.postRequests
 	if private.lastReported ~= queuelength then
@@ -197,9 +225,6 @@ function private.QueueReorder(indexfrom, indexto)
 	private.QueueReport()
 	return true
 end
-function private.GetQueueIterator()
-	return ipairs(private.postRequests)
-end
 function private.GetQueueIndex(index)
 	return private.postRequests[index]
 end
@@ -209,6 +234,27 @@ end
 --]]
 function lib.GetQueueLen()
 	return #private.postRequests
+end
+
+--[[ GetQueueItemCount(sig)
+	Return number of requests and total number of items matching the sig
+--]]
+function lib.GetQueueItemCount(sig)
+	if sig and sig == private.lastCountSig then
+		-- "last item" cache: this function tends to get called multiple times for the same sig
+		return private.lastCountRequests, private.lastCountItems
+	end
+	local requestCount, itemCount = 0, 0
+	for _, request in ipairs(private.postRequests) do
+		if request[REQ_SIG] == sig then
+			requestCount = requestCount + 1
+			itemCount = itemCount + request[REQ_COUNT]
+		end
+	end
+	private.lastCountSig = sig
+	private.lastCountRequests = requestCount
+	private.lastCountItems = itemCount
+	return requestCount, itemCount
 end
 
 --[[ CancelPostQueue()
@@ -230,22 +276,45 @@ end
 
 --[[
     PostAuction(sig, size, bid, buyout, duration, [multiple])
-	Throws: ERROR_AHCLOSED
 
 	Places the request to post a stack of the "sig" item, "size" high
 	into the auction house for "bid" minimum bid, and "buy" buyout and
 	posted for "duration" minutes. The request will be posted
 	"multiple" number of times.
+
+	This is the main entry point to the Post library for other AddOns, so has the strictest parameter checking
+	"multiple" is optional, defaulting to 1. All other parameters are required.
 ]]
 function lib.PostAuction(sig, size, bid, buyout, duration, multiple)
-	if not AuctionFrame
-	or not AuctionFrame:IsVisible()
-	then
-		return error(ERROR_AHCLOSED)
+	local id = DecodeSig(sig)
+	if not id then
+		return nil, "InvalidSig"
+	elseif type(size) ~= "number" then
+		return nil, "InvalidSize"
+	elseif type(bid) ~= "number" or bid < 1 then
+		return nil, "InvalidBid"
+	elseif type(buyout) ~= "number" or (buyout < bid and buyout ~= 0) then
+		return nil, "InvalidBuyout"
+	elseif duration ~= 720 and duration ~= 1440 and duration ~= 2880 then
+		return nil, "InvalidDuration"
+	end
+
+	local name,_,_,_,_,_,_, maxSize = GetItemInfo(id)
+	if not name then
+		return nil, "UnknownItem"
+	elseif size > maxSize then
+		return nil, "MaxSize"
+	end
+
+	multiple = tonumber(multiple) or 1
+	local available, total, _, _, _, reason = lib.CountAvailableItems(sig)
+	if total == 0 then
+		return nil, reason or "NotFound"
+	elseif available < size * multiple then
+		return nil, "NotEnough"
 	end
 
 	local postIds = {}
-	if not multiple then multiple = 1 end
 	private.SetQueueReports(false)
 	for i = 1, multiple do
 		local request = private.NewRequestTable(sig, size, bid, buyout, duration)
@@ -259,12 +328,12 @@ end
 
 --[[
     DecodeSig(sig)
-    DecodeSig(itemid, suffix, factor, enchant, seed)
-    Returns: itemid, suffix, factor, enchant, seed
+    DecodeSig(itemid, suffix, factor, enchant)
+    Returns: itemid, suffix, factor, enchant
 	Retained for library compatibility
 	Real function moved to AucAdvanced.API, with the other sig functions
 ]]
-function lib.DecodeSig(matchId, matchSuffix, matchFactor, matchEnchant, matchSeed)
+function lib.DecodeSig(matchId, matchSuffix, matchFactor, matchEnchant)
 	if (type(matchId) == "string") then
 		return DecodeSig(matchId)
 	end
@@ -273,31 +342,40 @@ function lib.DecodeSig(matchId, matchSuffix, matchFactor, matchEnchant, matchSee
 	matchSuffix = tonumber(matchSuffix) or 0
 	matchFactor = tonumber(matchFactor) or 0
 	matchEnchant = tonumber(matchEnchant) or 0
-	matchSeed = tonumber(matchSeed) or 0
 
-	return matchId, matchSuffix, matchFactor, matchEnchant, matchSeed
+	return matchId, matchSuffix, matchFactor, matchEnchant
 end
 
 --[[
     IsAuctionable(bag, slot)
-      Returns: true if the item is possibly auctionable.
+    Returns:
+		true : if the item is possibly auctionable.
+		false, errorcode : if the item is not auctionable
+			errorcode will be an internal (non-localized) string code, use lib.ErrorText[errorcode] for a printable text string
 
-      This function does not check everything, but if it says no,
-      then the item is definately not auctionable.
+    This function does not check everything, but if it says no,
+    then the item is definately not auctionable.
 ]]
 function lib.IsAuctionable(bag, slot)
-	local damage, maxdur = GetContainerItemDurability(bag, slot)
-	if damage and damage ~= maxdur then
-		return false
+	local _,_,_,_,_,lootable = GetContainerItemInfo(bag, slot)
+	if lootable then
+		return false, "Lootable"
 	end
 
-	private.tip:SetOwner(UIParent, "ANCHOR_NONE")
-	private.tip:ClearLines()
-	private.tip:SetBagItem(bag, slot)
-	local test = BindTypes[AppraiserTipTextLeft2:GetText()] or BindTypes[AppraiserTipTextLeft3:GetText()]
-	private.tip:Hide()
+	ScanTip:SetOwner(UIParent, "ANCHOR_NONE")
+	ScanTip:ClearLines()
+	ScanTip:SetBagItem(bag, slot)
+	local test = BindTypes[ScanTip2:GetText()] or BindTypes[ScanTip3:GetText()]
+	ScanTip:Hide()
 	if test then
-		return false
+		return false, test
+	end
+
+	-- Check for 'fixable' conditions only after checking all 'unfixable' conditions
+
+	local damage, maxdur = GetContainerItemDurability(bag, slot)
+	if damage and damage ~= maxdur then
+		return false, "Damaged"
 	end
 
 	return true
@@ -305,48 +383,43 @@ end
 
 --[[
 	CountAvailableItems(sig)
-	Returns: availableCount, totalCount, unpostableCount, queuedCount
+	Returns: availableCount, totalCount, unpostableCount, queuedCount, nil, unpostableError
 	The Posting modules need to know how many items are available to be posted;
 	this is not the same as the number of items currently in the bags
 --]]
 function lib.CountAvailableItems(sig)
-	local matchId, matchSuffix, matchFactor, matchEnchant, matchSeed = DecodeSig(sig)
+	local matchId, matchSuffix, matchFactor, matchEnchant = DecodeSig(sig)
 	if not matchId then return end
-	local totalCount, unpostableCount, queuedCount = 0, 0, 0
+	local totalCount, unpostableCount = 0, 0
+	local expansionspace, unpostableError
 
 	for bag = 0, NUM_BAG_FRAMES do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local link = GetContainerItemLink(bag, slot)
 			if link then
-				local _, itemId, itemSuffix, itemFactor, itemEnchant, itemSeed = AucAdvanced.DecodeLink(link)
+				local _, itemId, itemSuffix, itemFactor, itemEnchant = AucAdvanced.DecodeLink(link)
 				if itemId == matchId
 				and itemSuffix == matchSuffix
 				and itemFactor == matchFactor
-				and itemEnchant == matchEnchant
-				and (matchSeed == 0 or itemSeed == matchSeed) then
+				and itemEnchant == matchEnchant then
 					local _, count = GetContainerItemInfo(bag, slot)
 					if not count or count < 1 then count = 1 end
 					totalCount = totalCount + count
-					if not lib.IsAuctionable(bag, slot) then
+					local test, code = lib.IsAuctionable(bag, slot)
+					if not test then
 						unpostableCount = unpostableCount + count
+						if unpostableError ~= "Damaged" then -- if there are both "Damaged" and "Soulbound" items, we want to report the "Damaged" code here
+							unpostableError = code
+						end
 					end
 				end
 			end
 		end
 	end
 
-	for _, request in private.GetQueueIterator() do
-		local itemId, itemSuffix, itemFactor, itemEnchant, itemSeed = DecodeSig(request[1])
-		if itemId == matchId
-		and itemSuffix == matchSuffix
-		and itemFactor == matchFactor
-		and itemEnchant == matchEnchant
-		and (matchSeed == 0 or itemSeed == matchSeed) then
-			queuedCount = queuedCount + request[2]
-		end
-	end
+	local _, queuedCount = lib.GetQueueItemCount(sig)
 
-	return (totalCount - unpostableCount - queuedCount), totalCount, unpostableCount, queuedCount
+	return (totalCount - unpostableCount - queuedCount), totalCount, unpostableCount, queuedCount, expansionspace, unpostableError
 end
 
 --[[
@@ -359,7 +432,7 @@ function lib.FindMatchesInBags(...)
 	return private.FindMatchesInBags(lib.DecodeSig(...))
 end
 -- Internal implementation of FindMatchesInBags
-function private.FindMatchesInBags(matchId, matchSuffix, matchFactor, matchEnchant, matchSeed)
+function private.FindMatchesInBags(matchId, matchSuffix, matchFactor, matchEnchant)
 	if not matchId then return end
 	local matches = {}
 	local total = 0
@@ -384,13 +457,12 @@ function private.FindMatchesInBags(matchId, matchSuffix, matchFactor, matchEncha
 					local link = GetContainerItemLink(bag,slot)
 					if link then
 						local texture, itemCount, locked, quality, readable = GetContainerItemInfo(bag,slot)
-						local itype, itemId, suffix, factor, enchant, seed = AucAdvanced.DecodeLink(link)
+						local itype, itemId, suffix, factor, enchant = AucAdvanced.DecodeLink(link)
 						if itype == "item"
 						and itemId == matchId
 						and suffix == matchSuffix
 						and factor == matchFactor
 						and enchant == matchEnchant
-						and (matchSeed == 0 or seed == matchSeed)
 						and lib.IsAuctionable(bag, slot) then
 							if not itemCount or itemCount < 1 then itemCount = 1 end
 							tinsert(matches, {bag, slot, itemCount})
@@ -413,11 +485,6 @@ function private.FindMatchesInBags(matchId, matchSuffix, matchFactor, matchEncha
 	return matches, total, blankBag, blankSlot, foundLink, foundLocked
 end
 
--- compare function to use in table.sort within FindOrMakeStack
-function private.sortCompare(a,b)
-	return a[3] < b[3]
-end
-
 --[[
     FindOrMakeStack(sig, size)
       Returns: bag, slot
@@ -434,7 +501,8 @@ end
 ]]
 private.moveWait = {}
 private.moveEmpty = {}
-function lib.FindOrMakeStack(sig, size)
+local function SortCompare(a, b) return a[3] < b[3] end
+function private.FindOrMakeStack(sig, size)
 	-- if we were splitting or combining a stack, check that the stack count has changed
 	if private.moveWait[1] then
 		local bag, slot, prev, wait = unpack(private.moveWait)
@@ -494,7 +562,7 @@ function lib.FindOrMakeStack(sig, size)
 
 	-- Join up smallest to largest stacks to build a larger stack
 	-- or, split a larger stack to the right size (if space available)
-	table.sort(matches, private.sortCompare)
+	table.sort(matches, SortCompare)
 	if (matches[1][3] > size) then
 		-- Our smallest stack is bigger than what we need
 		-- We will need to split it
@@ -584,7 +652,7 @@ function private.ProcessPosts(source)
 		return
 	end
 
-	local success, bag, slot = pcall(lib.FindOrMakeStack, request[REQ_SIG], request[REQ_COUNT])
+	local success, bag, slot = pcall(private.FindOrMakeStack, request[REQ_SIG], request[REQ_COUNT])
 	if not success then
 		local err = bag:match(": (.*)")
 		local link, name = AucAdvanced.API.GetLinkFromSig(request[REQ_SIG])
@@ -691,12 +759,24 @@ function lib.Processor(event, ...)
 		if lib.GetQueueLen() > 0 then
 			private.ProcessPosts(event)
 		end
+	elseif event == "auctionclose" then
+		if lib.GetQueueLen() > 0 then
+			StaticPopup_Show("CONFIRM_CANCEL_QUEUE_AH_CLOSED")
+		end
 	end
 end
 
 function lib.OnLoad(addon)
 	if addon == "auc-advanced" then
+		-- Install values into locals/tables, that are not available until Auctioneer is fully loaded
 		DecodeSig = AucAdvanced.API.DecodeSig
+		for code, text in pairs(ErrorText) do
+			local transkey = "ADV_Help_PostError"..code
+			local transtext = _TRANS(transkey)
+			if transtext ~= transkey then -- _TRANS returns transkey if there is no available translation
+				ErrorText = transtext
+			end
+		end
 	end
 end
 
@@ -710,6 +790,18 @@ private.updateFrame:SetScript("OnUpdate", function(obj, delay)
 end)
 
 -- Local tooltip for getting soulbound line from tooltip contents
-private.tip = CreateFrame("GameTooltip", "AppraiserTip", UIParent, "GameTooltipTemplate")
+ScanTip = CreateFrame("GameTooltip", "AppraiserTip", UIParent, "GameTooltipTemplate")
+ScanTip2 = _G["AppraiserTipTextLeft2"]
+ScanTip3 = _G["AppraiserTipTextLeft3"]
+
+StaticPopupDialogs["CONFIRM_CANCEL_QUEUE_AH_CLOSED"] = {
+  text = "The Auctionhouse has closed. Do you want to clear the Posting queue?",
+  button1 = YES,
+  button2 = NO,
+  OnAccept = lib.CancelPostQueue,
+  timeout = 20,
+  whileDead = true,
+  hideOnEscape = true,
+}
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")

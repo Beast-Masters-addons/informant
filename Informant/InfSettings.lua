@@ -130,6 +130,10 @@ local settingDefaults = {
 	['show-link'] = false,
 	['auto-update'] = false,
 	['ModTTShow'] = false,
+
+-- leave this option off until we have real data to test with
+-- enable only for dev testing
+	['show-crafted'] = false,
 }
 
 local function getDefault(setting)
@@ -377,6 +381,8 @@ function lib.MakeGuiConfig()
 
 	gui:AddControl(id, "Checkbox",   0, 1, "show-link", _TRANS('INF_Interface_ShowLink'))
 	gui:AddTip(id, _TRANS('INF_HelpTooltip_ShowLink'))
+	gui:AddControl(id, "Checkbox",   0, 1, "show-crafted", _TRANS('INF_Interface_ShowCrafted'))
+	gui:AddTip(id, _TRANS('INF_HelpTooltip_ShowCrafted'))
 	gui:AddControl(id, "Checkbox", 0, 1, "ModTTShow", _TRANS('INF_Interface_ModTTShow'))--Only show tooltip if Alt is pressed.
 	gui:AddTip(id, _TRANS('INF_HelpTooltip_ModTTShow'))--This will prevent the display of Informant's extra tooltip unless Alt is pressed.
 

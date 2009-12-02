@@ -246,10 +246,20 @@ end
 Get  Sold / Failed Ratio
 Used by match beancounter, made into an API  to allow other addons easier access to this data
 This returns the Sold/Failed number of auctions and Sold/Failed  number of items
+Adds ability to use  serverKey  ==  realm.."-"..faction
 ]]
-function lib.API.getAHSoldFailed(player, link, days)
+function lib.API.getAHSoldFailed(player, link, days, serverKey)
 	if not link or not player then return end
-	if not private.serverData[player] then return end
+	--check for server key or use home
+	local server
+	if serverKey then
+		server = lib.API.SplitServerKey(serverKey)
+	else
+		server = private.realmName
+	end
+	
+	if not BeanCounterDB[server] or not BeanCounterDB[server][player] then return end
+	local playerData = BeanCounterDB[server][player] --alias
 	
 	local itemID = lib.API.decodeLink(link)
 	if not itemID then return end
@@ -260,9 +270,9 @@ function lib.API.getAHSoldFailed(player, link, days)
 	--the second lookup is mesurably  faster but not noticable in real use due to not having to expand the DB. 100 trxns may have a  0.0001 sec diffrence
 	if days then
 		days = days * 86400 --days to seconds
-		if private.serverData[player]["completedAuctions"][itemID] then
-			for key in pairs(private.serverData[player]["completedAuctions"][itemID] ) do
-				for i, text in pairs(private.serverData[player]["completedAuctions"][itemID][key]) do
+		if playerData["completedAuctions"][itemID] then
+			for key in pairs(playerData["completedAuctions"][itemID] ) do
+				for i, text in pairs(playerData["completedAuctions"][itemID][key]) do
 					local stack, _, _, _, _, _, _, auctime = strsplit(";", text)
 					auctime, stack = tonumber(auctime), tonumber(stack)
 					
@@ -273,9 +283,9 @@ function lib.API.getAHSoldFailed(player, link, days)
 				end
 			end
 		end
-		if private.serverData[player]["failedAuctions"][itemID] then
-			for key in pairs(private.serverData[player]["failedAuctions"][itemID]) do
-				for i, text in pairs(private.serverData[player]["failedAuctions"][itemID][key]) do
+		if playerData["failedAuctions"][itemID] then
+			for key in pairs(playerData["failedAuctions"][itemID]) do
+				for i, text in pairs(playerData["failedAuctions"][itemID][key]) do
 					local stack, _, _, _, _, _, _, auctime = strsplit(";", text)
 					auctime, stack = tonumber(auctime), tonumber(stack)
 					
@@ -288,14 +298,14 @@ function lib.API.getAHSoldFailed(player, link, days)
 		end
 	else
 		if private.playerData then
-			if private.serverData[player]["completedAuctions"][itemID]  then
-				for key in pairs(private.serverData[player]["completedAuctions"][itemID] ) do
-					success = success + #private.serverData[player]["completedAuctions"][itemID][key]
+			if playerData["completedAuctions"][itemID]  then
+				for key in pairs(playerData["completedAuctions"][itemID] ) do
+					success = success + #playerData["completedAuctions"][itemID][key]
 				end
 			end
-			if private.serverData[player]["failedAuctions"][itemID] then
-				for key in pairs(private.serverData[player]["failedAuctions"][itemID]) do
-					failed = failed + #private.serverData[player]["failedAuctions"][itemID][key]
+			if playerData["failedAuctions"][itemID] then
+				for key in pairs(playerData["failedAuctions"][itemID]) do
+					failed = failed + #playerData["failedAuctions"][itemID][key]
 				end
 			end
 		end
@@ -418,6 +428,28 @@ function lib.API.deleteItem(itemLink)
 		print("Invalid itemLink")
 	end
 end
+
+--[[Duplicate of the function in auctioneer,  Splits and caches serverKey variable
+ realm, faction, localizedFaction = lib.API.SplitServerKey(serverKey)   ]]
+local splitcache = {}
+local localizedfactions = {
+["Alliance"] = FACTION_ALLIANCE,
+["Horde"] = FACTION_HORDE,
+["Neutral"] = COMBATLOG_FILTER_STRING_NEUTRAL_UNITS, -- if this is not the right context in other locales, may need to create our own localizer entry
+}
+function lib.API.SplitServerKey(serverKey)
+	local split = splitcache[serverKey]
+	if not split then
+		local realm, faction = strmatch(serverKey, "^(.+)%-(%u%l+)$")
+		local transfaction = localizedfactions[faction]
+		if not transfaction then return end
+		split = {realm, faction, realm.." - "..transfaction}
+		splitcache[serverKey] = split
+	end
+	return split[1], split[2], split[3]
+end
+
+
 
 
 --[[===========================================================================
