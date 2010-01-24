@@ -70,7 +70,6 @@ Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
 Auc-Util-ScanStart/Auc-Util-ScanStart.toc -text
 Auc-Util-ScanStart/Embed.xml -text
 Auc-Util-ScanStart/ScanStart.lua -text
-Auc-Util-ScanStart/svn-commit.tmp -text
 Auc-Util-SearchUI/DoorBell.mp3 -text
 Auc-Util-SearchUI/FilterItemAuctionHistory.lua svneol=native#text/lua
 Auc-Util-SearchUI/FilterItemLevel.lua svneol=native#text/lua
