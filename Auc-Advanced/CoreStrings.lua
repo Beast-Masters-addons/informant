@@ -761,6 +761,8 @@ AuctioneerLocalizations = {
 		["ADV_HelpTooltip_ModTTShow"]	= "Diese Einstellung versteckt die zusätzlichen Auctioneer-Tooltips, solange nicht ALT gedrückt wird.";
 		["ADV_HelpTooltip_MultiplyStack"]	= "Vervielfacht um die momentane Stacke groesse wenn aktiviert\n\n";
 		["ADV_HelpTooltip_NewProfile"]	= "Erstelle oder überscheribe ein Profil mit dem angegebenen Profilnamen. Alle Einstellungen werden zurückgesetzt.";
+		["ADV_HelpTooltip_PostClearOnClose"]	= "Wenn das Auktionshaus schließt, bricht jede Auktion Anfragen in der Warteschlange bis zu buchenden";
+		["ADV_HelpTooltip_PostConfirmOnClose"]	= "Wenn das Auktionshaus schließt, stellt ein Popup-Dialogfeld gefragt, ob Sie wirklich die Entsendung Warteschlange löschen wollen";
 		["ADV_HelpTooltip_PreferredLanguage"]	= "Wählt die Sprache, die von Auctioneer benutzt wird. Eine Änderung wird erst nach Neustart oder /reloadui aktiv.";
 		["ADV_HelpTooltip_ProcessPriority"]	= "Priorität der Datenerfassung. Höhere Werte verschlechtern die Verbindungsqualität, benötigen aber weniger Zeit.";
 		["ADV_HelpTooltip_ProgressBar"]	= "Fortschrittsbalken anzeigen, während Auctioneer Daten erfasst.";
@@ -955,9 +957,14 @@ AuctioneerLocalizations = {
 		["ADV_Interface_General"]	= "Allgemein";
 		["ADV_Interface_MarketValueAccuracy"]	= "Marktpreisfehler: %5.3f%%";
 		["ADV_Interface_MatchOrder"]	= "Treffer-Reihenfolge";
+		["ADV_Interface_MktPriceOptions"]	= "Markt-Preis Optionen";
 		["ADV_Interface_MktPriceShow"]	= "Marktpreis im Tooltip anzeigen";
 		["ADV_Interface_ModTTShow"]	= "Zusätzlichen Auctioneer-Tooltip nur zeigen, wenn ALT gedrückt wird.";
+		["ADV_Interface_MultiplyStack"]	= "Multipliziert mit Stack-Größe";
 		["ADV_Interface_NewProfile"]	= "Neu";
+		["ADV_Interface_PostClearOnClose"]	= "Leeren Sie den Beitrag, wenn die Warteschlange Auktionshaus ist geschlossen";
+		["ADV_Interface_PostConfirmOnClose"]	= "Fragen Sie vor der Räumung der Entsendung Warteschlange";
+		["ADV_Interface_PostingOptions"]	= "Optionen beim";
 		["ADV_Interface_PreferredLanguage"]	= "Bevorzugte Sprache";
 		["ADV_Interface_PreferredOutputFrame"]	= "Bevorzugtes Ausgabefenster";
 		["ADV_Interface_ProcessingPriority"]	= "Verarbeitungspriorität: %d";
@@ -1004,6 +1011,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_AlternatePricingModelSelectBox"]	= "Benutze alternatives Preismodell für Appraiser";
 		["APPR_Interface_Appraiser"]	= "Appraiser";
 		["APPR_Interface_AppraiserAuctionPostingInterface"]	= "Appraiser: Auktions-Menü";
+		["APPR_Interface_AppraiserFrameColoration"]	= "Gutachter Rahmen Färbung";
 		["APPR_Interface_AppraiserOptions"]	= "Appraiser-Optionen";
 		["APPR_Interface_AuctionDetail"]	= "Auktions-Details";
 		["APPR_Interface_Auctions"]	= "Auktionen";
@@ -1072,6 +1080,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_NoteMinBidLessVendor"]	= "Achtung: Mindestgebot <= Händlerpreis";
 		["APPR_Interface_NoteNoAuctionableItems"]	= "Achtung: Keine Gegenstände für Auktion";
 		["APPR_Interface_NoteNumbersRounded"]	= "Sollen Preise auf einen gewissen Anteil (z.B. Mehrfache von 0.25 = 0.25, 0.50, 0.75) oder auf einen bestimmten Stopwert (z.B. immer 0.95, 0.99) gerundet werden, bitte diese Option nutzen. Es können entweder Anteil (z.B. 0.25) oder Stopwert (z.B. 0.95) gesetzt werden. Dazu bitte den Schieberegler benutzen. Außerdem kann festgelegt werden, ab welchem Betrag Rundungen zur nächst höheren Einheit stattfinden sollen (z.B. ist der Betrag auf 5 gesetzt, wird 4g 72s 15c noch bei der Kupferstelle gerundet, jedoch 5g 72s 15c bereits bei der Silberstelle).     ";
+		["APPR_Interface_NotInScan"]	= "Nicht in der aktuellen Scan gesehen";
 		["APPR_Interface_NotStackable"]	= "Gegenstand ist nicht stapelbar";
 		["APPR_Interface_NumberAllFullStacks"]	= "Anzahl: Alle vollen Stapel (%d) = %d";
 		["APPR_Interface_NumberAllItems"]	= "Anzahl: Alle Items = %d";
@@ -1100,6 +1109,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_Seller"]	= "Verkäufer";
 		["APPR_Interface_Show"]	= "Zeige:";
 		["APPR_Interface_ShowAppraisalTooltips"]	= "Zeige Appraiser im Tooltip?";
+		["APPR_Interface_ShowAppraiserTab"]	= "Show Gutachter auf die Registerkarte Auktionshaus";
 		["APPR_Interface_ShowOwnAuctionsTooltips"]	= "Zeige eigene Auktionen in den Tooltips?";
 		["APPR_Interface_ShowTooltipControls"]	= "Zeige Tooltips über den Kontrollen";
 		["APPR_Interface_SimpleView"]	= "Einfache Anzeige";
@@ -1138,6 +1148,7 @@ AuctioneerLocalizations = {
 		["ASAL_Interface_SalesOptions"]	= "Verkaufsoptionen";
 		["ASAL_Interface_ShowSalesStat"]	= "Verkaufsstatistiken im Tooltip anzeigen?";
 		["ASAL_Interface_SlashHelpClearingData"]	= "Stat-Sales selbst speichert keine Daten, es nutzt deine Beancounter-Daten.";
+		["ASAL_Interface_SlashHelpClearingItemData"]	= "Stat - Vertrieb: ersuchenden BeanCounter Daten klar %s für {{%s}}";
 		["ASKP_Interface_Activated"]	= "Antworte auf Fragen nach Item-Marktwerten, die über den Chat gesendet wurden";
 		["ASKP_Interface_Each"]	= "(%s jedes)";
 		["ASKP_Interface_EnableSmartWords"]	= "SmartWords-Überwachung einschalten";
@@ -1331,10 +1342,21 @@ AuctioneerLocalizations = {
 	elGR = {
 
 		-- Section: Help
-		["AAMU_Help_VendorOptions"]	= "AAMU: Opcje sprzedawcy";
-		["AAMU_Help_WhatAutoMagic"]	= "Czym jest AutoMagic?";
+		["AAMU_Help_VendorOptions"]	= "AAMU: ";
+		["AAMU_Help_VendorOptionsAnswer"]	= "AUTOMAGIC θα πωλεί τα είδη που αγοράζονται για vendoring στον πωλητή αυτόματα. Έχει επίσης τη δυνατότητα της αυτόματης πώλησης όλα τα γκρίζα αντικείμενα ή στοιχεία σχετικά με τον κατάλογο πωλούν έθιμο.";
+		["AAMU_Help_WhatAutoMagic"]	= "Τι είναι το AutoMagic?";
+		["AAMU_Help_WhatAutoMagicAnswer"]	= "AUTOMAGIC είναι ένα έργο-σε-εξέλιξη. Στόχος του είναι να αυτοματοποιήσουν εργασίες που εκτελούνται σε εκπλειστηριαστές ότι μπορεί να είναι ένας πόνος να κάνει, αρκεί να είναι εντός των ορίων που προβλέπουν Blizzard. \ n \ nAutoMagic σήμερα θα αυτο-πωλήσουν οποιοδήποτε στοιχείο αγόρασε μέσω SearchUI για τους πωλητές, κάθε στοιχείο που είναι γκρι (αν είναι ενεργοποιημένη) ή σε οποιοδήποτε σημείο της αυτόματης πώλησης λίστα. Αν ενεργοποιηθεί, όταν ανοίγετε ένα παράθυρο έμπορος θα δείτε μια λίστα με τα σημεία πώλησης.";
+		["AAMU_Help_WhatMailGUI"]	= "Τι είναι το Mail GUI?";
+		["AAMU_Help_WhatMailGUIAnswer"]	= "Αυτό εμφανίζει ένα παράθυρο, όταν το γραμματοκιβώτιο ανοίγει που επιτρέπει την αυτόματη φόρτωση των στοιχείων στο παράθυρο στείλτε mail σε λόγους που έχουν αγοράσει από SearchUI. Μπορεί επίσης να χρησιμοποιήσετε το ItemSuggest ενότητα λόγων και όχι των λόγων που προβλέπονται SearchUI. Πολύ βολικό για τη μάζα αντικειμένων αλληλογραφίας αγόρασε για ένα επάγγελμα που έχει άλλο χαρακτήρα.";
 		["ADV_Help_CannotDeleteProfile"]	= "Wybrany profil nie może być usunięty";
 		["ADV_Help_InvalidProfileName"]	= "Nie można stworzyć nowego profilu: wpisz najpierw nazwę nowego profilu ";
+		["ADV_Help_WhatAccuracy"]	= "Τι είναι λάθος τιμή αγοράς;";
+		["ADV_Help_WhatAccuracyAnswer"]	= "Τιμή αγοράς λάθους σας επιτρέπει να ρυθμίσετε το ύψος του λάθους που θα είναι ανεκτή, ενώ οι τιμές της αγοράς πληροφορικής. Επειδή ο αλγόριθμος είναι εξαιρετικά περίπλοκη, μόνο μια εκτίμηση μπορεί να γίνει. Μειώνοντας τον αριθμό αυτό θα καταστήσει την εκτίμηση πιο ακριβή, αλλά θα απαιτήσει μεγαλύτερη ισχύ επεξεργασίας (και ενδέχεται να είναι χαμηλότερες για τους παλαιότερους υπολογιστές).";
+		["ADV_Help_WhatClickHooks"]	= "Τι είναι το κλικ-γάντζους?";
+		["ADV_Help_WhatClickHooksAnswer"]	= "Το κλικ γάντζοι σας επιτρέπουν να εκτελέσετε μια αναζήτηση για ένα αντικείμενο από Alt-δεξί κλικ είτε το στοιχείο σε τσάντες σας, ή μια σύνδεση στοιχείο στο παράθυρο συνομιλίας.";
+		["ADV_Help_WhatExactMatch"]	= "Τι είναι μια ακριβή αντιστοιχία?";
+		["ADV_Help_WhatExactMatchAnswer"]	= "Ορισμένα στοιχεία μπορεί να διαφέρουν ελαφρώς από το επίθεμα (για παράδειγμα: της Bear / Eagle / Ferret κλπ), ή την ακριβή στατιστικά στοιχεία (π.χ.: δύο στοιχεία τόσο της Bear, αλλά έχουν διαφορετικές στατιστικές). Μια ακριβή αντιστοιχία δεν θα ταιριάζει με τίποτα που δεν είναι 100% το ίδιο.";
+		["ADV_Help_WhatIsImage"]	= "Τι είναι ένας οίκος δημοπρασιών εικόνα?";
 
 	};
 
@@ -1568,6 +1590,8 @@ AuctioneerLocalizations = {
 		["ADV_HelpTooltip_ModTTShow"]	= "This option will hide Auctioneer's extra tooltip unless the Alt key is pressed.";
 		["ADV_HelpTooltip_MultiplyStack"]	= "Multiplies by current stack size if enabled";
 		["ADV_HelpTooltip_NewProfile"]	= "Create or overwrite a profile with the specified profile name. All settings will be reset to the default values.";
+		["ADV_HelpTooltip_PostClearOnClose"]	= "When the Auctionhouse closes, cancels any auction requests queued up to be posted";
+		["ADV_HelpTooltip_PostConfirmOnClose"]	= "When the Auctionhouse closes, presents a popup dialog asking if you really want to clear the posting queue";
 		["ADV_HelpTooltip_PreferredLanguage"]	= "Chooses the language used by Auctioneer. This will require a /console reloadui or relogin to take full effect.";
 		["ADV_HelpTooltip_ProcessPriority"]	= "Sets the processing priority of the scan data. Higher values take less time, but cause more lag.";
 		["ADV_HelpTooltip_ProgressBar"]	= "Displays a progress bar while Auctioneer is processing data.";
@@ -1767,6 +1791,9 @@ AuctioneerLocalizations = {
 		["ADV_Interface_ModTTShow"]	= "Only show Auctioneer's extra tooltip if Alt is pressed.";
 		["ADV_Interface_MultiplyStack"]	= "Multiply by Stack Size";
 		["ADV_Interface_NewProfile"]	= "New";
+		["ADV_Interface_PostClearOnClose"]	= "Clear the posting queue when the Auctionhouse is closed";
+		["ADV_Interface_PostConfirmOnClose"]	= "Ask before clearing the posting queue";
+		["ADV_Interface_PostingOptions"]	= "Posting Options";
 		["ADV_Interface_PreferredLanguage"]	= "Preferred Language";
 		["ADV_Interface_PreferredOutputFrame"]	= "Preferred Output Frame Number";
 		["ADV_Interface_ProcessingPriority"]	= "Processing priority: %d";
@@ -1882,6 +1909,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_NoteMinBidLessVendor"]	= "Note: Min Bid <= Vendor";
 		["APPR_Interface_NoteNoAuctionableItems"]	= "Note: No auctionable items";
 		["APPR_Interface_NoteNumbersRounded"]	= "If you like your numbers being rounded off to a certain division (eg: multiples of 0.25 = 0.25, 0.50, 0.75, etc), or at a certain stop value (always at 0.95, 0.99, etc) then you can activate this option here.The method of rounding can be either at a fixed stop value (eg 0.95) or at a given division interval (eg 0.25). You set the rounding position by setting the slider to the value you want the number to be rounded to. Finally, set the magnitude step position to the place where you want the rounding to step-up to the next place (eg. if this is set to 5, then 4g 72s 15c will round at the copper position, but 5g 72s 15c will round at the silver position).";
+		["APPR_Interface_NotInScan"]	= "Not seen in current scan";
 		["APPR_Interface_NotStackable"]	= "Item is not stackable";
 		["APPR_Interface_NumberAllFullStacks"]	= "Number: All full stacks (%d) = %d";
 		["APPR_Interface_NumberAllItems"]	= "Number: All items = %d";
@@ -2202,7 +2230,13 @@ AuctioneerLocalizations = {
 		["APPR_Help_TotalMinbidValue"]	= "Valor total en puja minima: %s";
 		["APPR_Help_WhatAppraiser"]	= "¿Que es Appraiser? ";
 		["APPR_Help_WhatAppraiserAnswer"]	= "Appraiser es una herramienta que le permite postear rapidamente subastas, y que recuerda sus ultimos precios posteados automaticamente. El interfaz de el Appraiser esta en tu ventana de la casa de subastas como una pestaña extra abajo de la ventana. Cuando tu seleccionas primero la ventana del Appraiser, se enseñaran todos los objetos subastables en el lado izquierdo de la pantalla. Cuando selecciones un objeto de la izquierda, veras la ventana de control arriba y las subastas actuales abajo. La ventana de control te permite especificar el tamaño del lote, para postear lote separados, y el numero de lotes que quieres subastar solo tienes que mover las barras de izquierda a derecha.";
-		["APPR_Help_WhatStartingBid"]	= "Que es la puja inicial?";
+		["APPR_Help_WhatStartingBid"]	= "Cual es la puja inicial?";
+		["APPR_Help_WhatStartingBidAnswer"]	= "La puja inicial es tambien conocida como la puja minima, es el precio que el primer pujante debe igualar o exceder para hacer la puja, desde ahi los proximos pujantes deben subir incrementando basado en la puja actual";
+		["ASAL_Help_StatSales"]	= "Cuales son las estadisticas de la venta?";
+		["ASAL_Help_StatSalesAnswer"]	= "Las estadisticas de las ventas son los numeros que son generados por el modulo de ventas de la base de datos del BeanCounter, promedia todos los preciosa para los items que tu has vendido";
+		["ASKP_Help_WhatAskPrice"]	= "Que es AskPrice y que hace?";
+		["ASKP_Help_WhatAskPriceAnswer"]	= "AskPrice es un modulo que permite a otros jugadores obtener los valores de los items enviando mensajes especiales a varios canales, o enviando esos mensajes drectamente a ti via susurro";
+		["ASKP_Help_WhatTriggers"]	= "Que son estos Triggers(desencadenadores) y como son usados?";
 		["WECN_Help_WhyGlobalPricesAnswer"]	= "Los precios específicos del servidor pueden ser útiles si tu servidor tiene precios que distan mucho del promedio, pero a menudo estos precios están basados en una cantidad de datos mucho menor, por lo que podrían ser disparatados para algunos items. Esta opción te permite forzar a la estadística de WOWEcon a usar precios globales, si así lo prefieres.";
 		["WECN_Help_WhyWOWEcon"]	= "Por qué querría mostrar el precio de WOWEcon en el tooltip?";
 
@@ -3058,7 +3092,10 @@ AuctioneerLocalizations = {
 		["ADV_HelpTooltip_MarketValueAccuracy"]	= "Permets de définir la précision du calculs des \"prix du marché\". Indique l'erreur maximum tolérée. Un nombre élevé diminuera le temps de traitement nécessaire (donc améliorera la fluidité de l'image pendant le calcul) au détriment de la précision.";
 		["ADV_HelpTooltip_MktPrice"]	= "Autorise l'affichage du Prix du Marché dans le menu d'aide contextuel. Maintenir la touche MAJ appuyée permetra aussi de voir les prix qui ont composés le Prix du Marché.";
 		["ADV_HelpTooltip_ModTTShow"]	= "Cette option va cacher la bulle d'aide supplémentaire d'Auctioneer sauf si la touche ALT est appuyée.";
+		["ADV_HelpTooltip_MultiplyStack"]	= "Multiplie par l'actuelle taille de la pile si elle est activée";
 		["ADV_HelpTooltip_NewProfile"]	= "Créer ou écraser un profil avec un nom de profil spécifique. Tout les réglages seront remis à zéro.";
+		["ADV_HelpTooltip_PostClearOnClose"]	= "Lorsque le Auctionhouse ferme, annule toute demande d'enchères faisaient la queue pour être affiché";
+		["ADV_HelpTooltip_PostConfirmOnClose"]	= "Lorsque le Auctionhouse ferme, présente une boîte de dialogue contextuelle vous demandant si vous voulez vraiment effacer la file d'attente annonce";
 		["ADV_HelpTooltip_PreferredLanguage"]	= "Sélectionne le langage qu'Auctionner utilisera. Requiert une \"/console reloadui\" ou une déco/reco pour prendre effet.";
 		["ADV_HelpTooltip_ProcessPriority"]	= "Définie la priorité attribuée au scanning des données. Une valeur plus élevée réduira le temps requis, mais augmentera le lag.";
 		["ADV_HelpTooltip_ProgressBar"]	= "Affiche une barre de progression quand Auctioneer traite les données.";
@@ -3253,9 +3290,14 @@ AuctioneerLocalizations = {
 		["ADV_Interface_General"]	= "Général";
 		["ADV_Interface_MarketValueAccuracy"]	= "Écart sur le prix du marché: %5.3f%%";
 		["ADV_Interface_MatchOrder"]	= "Suivre l'ordre";
+		["ADV_Interface_MktPriceOptions"]	= "Options du prix du marché";
 		["ADV_Interface_MktPriceShow"]	= "Afficher le prix du marché dans l'infobulle";
 		["ADV_Interface_ModTTShow"]	= "Afficher l'infobulle d'Auctioneer uniquement si Alt est enfoncé.";
+		["ADV_Interface_MultiplyStack"]	= "Multiplier par taille de la pile";
 		["ADV_Interface_NewProfile"]	= "Nouveau";
+		["ADV_Interface_PostClearOnClose"]	= "Désactivez la file d'attente d'affectation, lorsque les Auctionhouse est fermé";
+		["ADV_Interface_PostConfirmOnClose"]	= "Demandez avant d'effacer la file d'attente annonce";
+		["ADV_Interface_PostingOptions"]	= "Options d'affichage";
 		["ADV_Interface_PreferredLanguage"]	= "Langue préférée";
 		["ADV_Interface_PreferredOutputFrame"]	= "Cadre de sortie préféré";
 		["ADV_Interface_ProcessingPriority"]	= "Priorité du traitement: %d";
@@ -3302,6 +3344,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_AlternatePricingModelSelectBox"]	= "Modèle de prix alternatif à employer pour les évaluations";
 		["APPR_Interface_Appraiser"]	= "Évaluation";
 		["APPR_Interface_AppraiserAuctionPostingInterface"]	= "Évaluation: Interface de soumission d'enchère";
+		["APPR_Interface_AppraiserFrameColoration"]	= "Évaluateur cadre coloration";
 		["APPR_Interface_AppraiserOptions"]	= "Options d'évaluation";
 		["APPR_Interface_AuctionDetail"]	= "Détails de l'enchère:";
 		["APPR_Interface_Auctions"]	= "Enchères";
@@ -3370,6 +3413,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_NoteMinBidLessVendor"]	= "Note: Offre min <= Vendeur";
 		["APPR_Interface_NoteNoAuctionableItems"]	= "Note: Aucun objet à mettre en vente";
 		["APPR_Interface_NoteNumbersRounded"]	= "Si vous voulez que les nombres soient arrondis à la baisse selon une certaine division (ie: multiples de 0.25 = 0.25, 0.50, 0.75, etc), ou à une certaine valeur buttoir (toujours à 0.95, 0.99, etc) alors vous pouvez activer cette option. La méthode d'arrondi peut être soit à une valeur buttoir fixe (ex. 0.95) ou à un intervalle donné (ex. 0.25). Vous fixez l'arrondi en positionnant le curseur à la valeur à laquelle vous voulez que le nombre soit arrondi. Puis, fixez l'amplitude à l'endroit où vous souhaité l'arrondi (ex. si la valeur est fixée à 5, donc 4o 72a 15c est arrondi au niveau des pièces de cuivre, mais 5o 72a 15c seront arrondis aux pièces d'argent).";
+		["APPR_Interface_NotInScan"]	= "Pas vu en cours de numérisation";
 		["APPR_Interface_NotStackable"]	= "Article non empilable";
 		["APPR_Interface_NumberAllFullStacks"]	= "Nombre: Piles complètes (%d) = %d";
 		["APPR_Interface_NumberAllItems"]	= "Nombre: Tous les articles = %d";
@@ -3398,6 +3442,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_Seller"]	= "Vendeur";
 		["APPR_Interface_Show"]	= "Afficher:";
 		["APPR_Interface_ShowAppraisalTooltips"]	= "Afficher l'évaluation dans les infobulles";
+		["APPR_Interface_ShowAppraiserTab"]	= "Afficher l'onglet évaluateur à l'hôtel des ventes";
 		["APPR_Interface_ShowOwnAuctionsTooltips"]	= "Afficher ses propres enchères dans les infobulles";
 		["APPR_Interface_ShowTooltipControls"]	= "Afficher les infobulles par-dessus les contrôles";
 		["APPR_Interface_SimpleView"]	= "Vue simple";
@@ -4921,9 +4966,16 @@ AuctioneerLocalizations = {
 		["AAMU_HelpTooltip_AutoSellList"]	= "Zaznacz tę opcję aby zobaczyć konfigurację Auto-Sprzedaży.";
 		["AAMU_HelpTooltip_BeginnerTooltip"]	= "Pokazuj pomoc dla początkujących po najechaniu myszką.";
 		["AAMU_HelpTooltip_Chatspam"]	= "Pokazuj wiadomości w czacie z AutoMagic.";
+		["AAMU_HelpTooltip_DepositTooltip"]	= "Usuń koszty depozytu przedmiotu z tooltipa";
+		["AAMU_HelpTooltip_MailGUI"]	= "Pokaż okienko auto-mail przy skrzynce pocztowej";
 		["ADV_HelpTooltip_ProgressBar"]	= "Wyświetla pasek postępu gdy Auctioneer przetwarza dane.";
 		["ADV_Help_DeleteProfile"]	= "Usuń aktualnie wybrany profil.";
 		["ADV_Help_ProfileName"]	= "Wpisz nazwę profilu, który chcesz utworzyć.";
+		["BASC_HelpTooltip_MinimumQualityCommon"]	= "Common";
+		["BASC_HelpTooltip_MinimumQualityEpic"]	= "Epic";
+		["BASC_HelpTooltip_MinimumQualityJunk"]	= "Śmieć";
+		["BASC_HelpTooltip_MinimumQualityRare"]	= "Rare";
+		["BASC_HelpTooltip_MinimumQualityUncommon"]	= "Śmieć";
 
 		-- Section: Interface
 		["AAMU_Interface_AutoSellGrey"]	= "Pozwala AutoMagic automatycznie sprzedawać szare przedmioty, w dodatku do tych kupionych na sprzedaż do kupców.";
@@ -5485,6 +5537,7 @@ AuctioneerLocalizations = {
 		["ADV_Interface_General"]	= "Основные";
 		["ADV_Interface_MarketValueAccuracy"]	= "Погрешность рыночной цены: %5.3f%% ";
 		["ADV_Interface_MatchOrder"]	= "Порядок сортировки";
+		["ADV_Interface_MktPriceOptions"]	= "Настройка рыночных цен";
 		["ADV_Interface_MktPriceShow"]	= "Отображение Рыночных Цен в подсказке";
 		["ADV_Interface_ModTTShow"]	= "Показывать подсказку Аукционера только при нажатии Alt";
 		["ADV_Interface_NewProfile"]	= "Создать";
@@ -7180,6 +7233,8 @@ AuctioneerLocalizations = {
 		["ADV_HelpTooltip_ModTTShow"]	= "這選項將會隱藏拍賣助手本身額外的提示窗除非按下Alt鍵。";
 		["ADV_HelpTooltip_MultiplyStack"]	= "當啟用時將會乘上目前堆疊大小";
 		["ADV_HelpTooltip_NewProfile"]	= "建立或是覆寫此指定的設定檔名稱。所有設定值將會從目前的設定檔複製過去。";
+		["ADV_HelpTooltip_PostClearOnClose"]	= "當 Auctionhouse關閉，取消任何拍賣請求排隊張貼";
+		["ADV_HelpTooltip_PostConfirmOnClose"]	= "當 Auctionhouse關閉，提出了一個彈出的對話框，詢問您是否真的要清除張貼隊列";
 		["ADV_HelpTooltip_PreferredLanguage"]	= "選擇拍賣助手的語系。 若要使其作用需要重新讀取UI(/reloadui or /rl)或是重新登入。";
 		["ADV_HelpTooltip_ProcessPriority"]	= "設定掃描資料時的處理優先權。較高的數值會花費較少的時間，但造成較多的畫面延遲。";
 		["ADV_HelpTooltip_ProgressBar"]	= "當拍賣助手在處理資料時顯示處理棒條。";
@@ -7379,6 +7434,9 @@ AuctioneerLocalizations = {
 		["ADV_Interface_ModTTShow"]	= "如果按住ALT鍵則只顯示拍賣助手的額外的提示";
 		["ADV_Interface_MultiplyStack"]	= "乘上堆疊數量";
 		["ADV_Interface_NewProfile"]	= "新的";
+		["ADV_Interface_PostClearOnClose"]	= "隊列清除張貼在Auctionhouse關閉";
+		["ADV_Interface_PostConfirmOnClose"]	= "結算前詢問張貼隊列";
+		["ADV_Interface_PostingOptions"]	= "張貼選項";
 		["ADV_Interface_PreferredLanguage"]	= "偏好語言";
 		["ADV_Interface_PreferredOutputFrame"]	= "預設顯示頁";
 		["ADV_Interface_ProcessingPriority"]	= "處理優先級: %d";
@@ -7494,6 +7552,7 @@ AuctioneerLocalizations = {
 		["APPR_Interface_NoteMinBidLessVendor"]	= "注意:起標價 <= 商店賣出價";
 		["APPR_Interface_NoteNoAuctionableItems"]	= "注意:沒有可拍賣的物品";
 		["APPR_Interface_NoteNumbersRounded"]	= "如果你喜歡你的數字被約算為一個明確的比例(例如:0.25的倍數=0.25,0.50 ,0.75等),或者在一個固定值(總在0.95,0.99,等)那麼你可以選擇這個選項.約算的方法既可以為一個停止值(例如:0.95)也可以為一個給出的分部(例如:0.25).你可以通過拖動滑塊設定約算的大小來得到你想要的數位.最後,設置步長大小到你想要開始提升約算適值的位置(例如:如果它設定為5,則4金72銀15銅仍然在銅幣等級約算,但是5金72銀15銅將在銀幣等級約算 ).";
+		["APPR_Interface_NotInScan"]	= "沒有看到當前掃描";
 		["APPR_Interface_NotStackable"]	= "物品不可堆疊";
 		["APPR_Interface_NumberAllFullStacks"]	= "數量:所有滿的堆疊(%d) = %d";
 		["APPR_Interface_NumberAllItems"]	= "數量:所有物品 = %d";
