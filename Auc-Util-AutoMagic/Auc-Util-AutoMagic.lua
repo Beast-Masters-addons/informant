@@ -93,6 +93,7 @@ function lib.OnLoad()
 	print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
 
 	default("util.automagic.autovendor", false) -- DO NOT SET TRUE ALL AUTOMAGIC OPTIONS SHOULD BE TURNED ON MANUALLY BY END USER!!!!!!!
+	default("util.automagic.autostopafter12", true) --stops autovendor after 12 items are sold. Want it to be on
 	default("util.automagic.autosellgrey", false)
 	default("util.automagic.autocloseenable", false) -- Enables auto close of vendor window after autosale completion
 	default("util.automagic.showmailgui", false)
@@ -104,6 +105,7 @@ function lib.OnLoad()
 	default("util.automagic.uierrormsg", 0) --Keeps track of ui error msg's
 	default("util.automagic.deplength", 48)
 	default("util.automagic.overidebtmmail", false) -- Item AI for mail rule instead of BTM rule.
+	
 
 	default("util.automagic.displaybeginerTooltips", true)
 end
@@ -115,6 +117,28 @@ function lib.onEventDo(this, event)
 	if event == 'MAIL_SHOW' 			then lib.mailShow() 					end
 	if event == 'MAIL_CLOSED' 		then lib.mailClosed() 					end
 	if event == 'UI_ERROR_MESSAGE'	then set("util.automagic.uierrormsg", 1) 	end
+	if event == 'BAG_UPDATE'  then if lib.confirmsellui:IsVisible()  then lib.vendorAction() end	end --bags changed make sure vendor items are in order
+end
+
+--This will be used to sort our list's rather than the default scrollsheet method.
+function lib.CustomSort(data, sort, width, column, dir)
+		assert(column <= width)
+		assert(dir == -1 or dir == 1)
+		table.sort(sort, function(a,b)
+			local aPos = (a-1)*width+column
+			local bPos = (b-1)*width+column
+			local dataA, dataB = data[aPos], data[bPos]
+			local colorA, nameA = string.match(dataA, "^|cff(%x+)|Hitem.+|h%[(.*)%]|h|r")
+			local colorB, nameB = string.match(dataB, "^|cff(%x+)|Hitem.+|h%[(.*)%]|h|r")
+			if colorA and nameA and colorB and nameB then --hyperlink check
+				dataA = colorA..nameA
+				dataB = colorB..nameB
+			end
+			if dir < 0 then
+				return (dataA > dataB) or (dataA == dataB and a > b)
+			end
+				return (dataA < dataB) or (dataA == dataB and a < b)
+		end)
 end
 
 function lib.SetupConfigGui(gui)
@@ -143,8 +167,7 @@ function lib.SetupConfigGui(gui)
 		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.chatspam", _TRANS('AAMU_Interface_Chatspam')) --"Enable AutoMagic chat spam"
 		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_Chatspam')) --'Display chat messages from AutoMagic.'
 
-		gui:AddControl(id, "Header", 0, "") --Spacer for options
-		gui:AddControl(id, "Header", 0, "") --Spacer for options
+		gui:AddControl(id, "Note",       0, 1, nil, nil, " ")
 		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.depositTT", _TRANS('AAMU_Interface_DepositTooltip')) --"Disable deposit costs in the tooltip"
 		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_DepositTooltip')) --'Remove item deposit costs from the tooltip.'
 
@@ -155,11 +178,33 @@ function lib.SetupConfigGui(gui)
 		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autovendor", _TRANS('AAMU_Interface_Vendoring')) --"Enable AutoMagic vendoring (W A R N I N G: READ HELP!) "
 		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_Vendoring')) --'Enable the auto-vendor options.'
 
-		gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autosellgrey", _TRANS('AAMU_Interface_AutoSellGrey')) --"Allow AutoMagic to auto-sell grey items in addition to bought for vendor items"
-		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellGrey')) --'Auto-sell grey level items at the vendor.'
+		gui:AddControl(id, "Checkbox",		0, 4, "util.automagic.autostopafter12", _TRANS('AAMU_Interface_AutoStop12')) --"Pause after selling 12 items."
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoStop12')) --'This allows you to buy back an accidental sale, since the server saves the last 12 sales to the vendor'
 
+		gui:AddControl(id, "Subhead",     0,   "Which categories will be vendored?")
+
+		gui:AddControl(id, "Checkbox",		0, 4, 	"util.automagic.autosellgrey", _TRANS('AAMU_Interface_AutoSellGrey')) --"Auto-sell grey items quality items"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellGrey')) --'Auto-sell grey level items at the vendor.'
+		gui:AddControl(id, "Checkbox",		0, 6, 	"util.automagic.autosellgreynoprompt", _TRANS('AAMU_Interface_AutoNoPrompt')) --"...without confirmation prompt"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellGreyNoPrompt')) --'No confirmation window will be shown for vendoring grey (trash) items.'
+
+		gui:AddControl(id, "Checkbox",		0, 4, 	"util.automagic.autosellreason", _TRANS('AAMU_Interface_AutoSellReason')) --"Auto-sell items purchased using the vendor searcher"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellReason')) --'Auto-sell items purchased using the vendor searcher'
+		gui:AddControl(id, "Checkbox",		0, 6, 	"util.automagic.autosellreasonnoprompt", _TRANS('AAMU_Interface_AutoNoPrompt')) --"...without confirmation prompt"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellReasonNoPrompt')) --'No confirmation window will be shown for items with a purchased for vendor reason tag'
+
+		gui:AddControl(id, "Checkbox",		0, 4, "util.automagic.vendorunusablebop", _TRANS('AAMU_Interface_AutoSellBOP')) --"Auto-sell unusable soulbound gear"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellBOP')) --'Auto-sell unusable soulbound gear'
+		gui:AddControl(id, "Checkbox",		0, 6, 	"util.automagic.autosellbopnoprompt", _TRANS('AAMU_Interface_AutoNoPrompt')) --"...without confirmation prompt"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellBOPNoPrompt')) --'No confirmation window will be shown for selling soulbound items the players class cannot equip.'	
+		
+		gui:AddControl(id, "Checkbox",		0, 4, 	"util.automagic.autoselllist", _TRANS('AAMU_Interface_AutoSellListItems')) --"Auto-sell items on the always vendor list"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellListItems')) --'Auto-sell items on the always vendor list.'
+		gui:AddControl(id, "Checkbox",		0, 6, 	"util.automagic.autoselllistnoprompt", _TRANS('AAMU_Interface_AutoNoPrompt')) --"...without confirmation prompt"
+		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellListNoPrompt')) --'No confirmation window will be shown for items on the always vendor list'
+		
 		--gui:AddControl(id, "Checkbox",		0, 1, 	"util.automagic.autoclosemerchant", "Auto Merchant Window Close(Power user feature READ HELP)")
-		gui:AddControl(id, "Header", 0, "") --Spacer for options
+		gui:AddControl(id, "Note",       0, 1, nil, nil, " ")
 		gui:AddControl(id, "Button",     0, 1, "util.automagic.autosellgui", _TRANS('AAMU_Interface_AutoSellList')) --"Auto-Sell List"
 		gui:AddTip(id, _TRANS('AAMU_HelpTooltip_AutoSellList')) --'Check the box to view the Auto-Sell configuration GUI.'
 
@@ -181,9 +226,14 @@ function lib.buttonTooltips(self, text)
 end
 
 function lib.merchantShow()
+	private.eventframe:RegisterEvent("BAG_UPDATE")
 	if (get("util.automagic.autovendor")) then
+		--first lib.vendorAction call will sell all grays, bypassing promopt. Run lib.vendorAction to add anything remaining to the prompt window
+		if (get("util.automagic.autosellgreynoprompt")) then
+			lib.vendorAction(true)
+		end
 		lib.vendorAction()
---~ 		TODO: IMPLEMENT AUTO SELL. Commented out since we do not autosell at this moment so we can never open vendor
+
 --~ 		A better option is to auto close vendor when user hits confirm button window
 --~ 		if (get("util.automagic.autoclosemerchant")) then
 --~ 			if (get("util.automagic.chatspam")) then
@@ -196,6 +246,7 @@ end
 
 
 function lib.merchantClosed()
+	private.eventframe:UnregisterEvent("BAG_UPDATE")
 	if lib.confirmsellui:IsVisible() then lib.confirmsellui:Hide() end
 end
 
@@ -584,7 +635,8 @@ function lib.makeautosellgui()
 		{ "Vendor", "COIN", 70 },
 		{ "Appraiser", "COIN", 70 },
 	}, autosell.OnEnter, autosell.OnLeave, autosell.OnClickAutoSellSheet)
-
+	--use our custom sort method not scrollsheets
+	autosellframe.resultlist.sheet.CustomSort = lib.CustomSort
 	--Create the bag contents frame
 	autosellframe.baglist = CreateFrame("Frame", nil, autosellframe)
 	autosellframe.baglist:SetBackdrop({
@@ -610,6 +662,8 @@ function lib.makeautosellgui()
 		{ ('BTM Rule'), "TEXT", 70 },
 		{ "Appraiser", "COIN", 70 },
 	}, autosell.OnBagListEnter, autosell.OnLeave, autosell.OnClickBagSheet)
+	--use our custom sort method not scrollsheets
+	autosellframe.baglist.sheet.CustomSort = lib.CustomSort
 end
 lib.makeautosellgui()
 
@@ -618,6 +672,7 @@ lib.makeautosellgui()
 
 local tooltip = CreateFrame("GameTooltip")
 local eventframe = CreateFrame("Frame") -- used for Events and for timer (via Update)
+private.eventframe = eventframe
 local timercounter = 0
 local refreshlist
 
@@ -661,5 +716,6 @@ function lib.ClientItemCacheRefresh(link)
 	end
 	refreshlist[link] = true
 end
+
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")

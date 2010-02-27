@@ -41,8 +41,7 @@ if not AucAdvanced then return end
 
 if (not AucAdvanced.Scan) then AucAdvanced.Scan = {} end
 
--- Increment every time scandata format changes:
-local SCANDATA_VERSION = "1.2"
+local SCANDATA_VERSION = "A" -- must match Auc-ScanData INTERFACE_VERSION
 
 local lib = AucAdvanced.Scan
 local private = {}
@@ -63,48 +62,102 @@ local tonumber = tonumber
 local GetTime = GetTime
 
 private.isScanning = false
-local LclAucScanData = nil
-function private.LoadAuctionImage()
-	if (LclAucScanData) then return LclAucScanData end
-	local loaded, reason = LoadAddOn("Auc-ScanData")
-	if not loaded then
-		message("The Auc-ScanData storage module could not be loaded: "..reason)
-	elseif AucAdvanced.Modules
-	and AucAdvanced.Modules.Util
-	and AucAdvanced.Modules.Util.ScanData
-	and AucAdvanced.Modules.Util.ScanData.Unpack then
-		AucAdvanced.Modules.Util.ScanData.Unpack()
+
+function private.LoadScanData()
+	if not private.loadingScanData then
+		local _, _, _, enabled, load, reason = GetAddOnInfo("Auc-ScanData")
+		if not (enabled and load) then
+			private.loadingScanData = "fallback"
+			message("The Auc-ScanData storage module could not be loaded: "..(reason or "Unknown reason"))
+		elseif IsAddOnLoaded("Auc-ScanData") then
+			-- if another AddOn has force-loaded Auc-ScanData
+			private.loadingScanData = "loading"
+		else
+			private.loadingScanData = "block" -- prevents re-entry to this function during the LoadAddOn call
+			load, reason = LoadAddOn("Auc-ScanData")
+			if load then
+				private.loadingScanData = "loading"
+			elseif reason then
+				private.loadingScanData = "fallback"
+				message("The Auc-ScanData storage module could not be loaded: "..reason)
+			else
+				-- LoadAddOn sometimes returns nil, nil if called too early during game startup
+				-- assume it needs to be called again at a later stage
+				private.loadingScanData = nil
+			end
+		end
 	end
-
-	if (AucAdvancedData.ScanData) then
-		private.Print("Warning, Overwriting AucScanData with AucAdvancedData.ScanData")
-		AucScanData = AucAdvancedData.ScanData
-		if (loaded) then AucAdvancedData.ScanData = nil end
+	if private.loadingScanData == "loading" then
+		local ready, version
+		local scanmodule = AucAdvanced.Modules.Util.ScanData
+		if scanmodule and scanmodule.GetAddOnInfo then
+			ready, version = scanmodule.GetAddOnInfo()
+		end
+		if version ~= SCANDATA_VERSION then
+			private.loadingScanData = "fallback"
+			message("The Auc-ScanData storage module could not be loaded: ".."Incorrect version")
+		elseif ready then
+			-- install functions from Auc-ScanData
+			private.GetScanData = scanmodule.GetScanData
+			lib.ClearScanData = scanmodule.ClearScanData
+			-- cleanup
+			private.loadingScanData = nil
+			private.LoadScanData = nil
+			-- signal success
+			return private.GetScanData
+		end
 	end
-
-	if (not AucScanData) then
-		LoadAddOn("Auc-Scan-Simple")
-		private.Print("Warning, Overwriting AucScanData with AucAdvancedScanSimpleData")
-		AucScanData = AucAdvancedScanSimpleData
-		AucAdvancedScanSimpleData = nil
+	if private.loadingScanData == "fallback" then
+		-- cannot load Auc-ScanData, go to fallback image handler
+		local fallbackscandata = {}
+		private.GetScanData = function(serverKey)
+			local scandata = fallbackscandata[serverKey]
+			if scandata then return scandata end
+			local test = AucAdvanced.SplitServerKey(serverKey)
+			if not test then return end
+			scandata = {image = {}, scanstats = {ImageUpdated = time()}}
+			fallbackscandata[serverKey] = scandata
+			return scandata
+		end
+		-- cleanup
+		private.loadingScanData = nil
+		private.LoadScanData = nil
+		-- signal success
+		return private.GetScanData
 	end
-
-	if AucScanData and (not AucScanData.Version or AucScanData.Version < SCANDATA_VERSION) then
-		AucScanData = nil
-		private.Print("Note: ScanData format upgrade (to {{v"..SCANDATA_VERSION.."}}), please rescan auction house as soon as possible.")
-	end
-
-	if not AucScanData then AucScanData = {Version = SCANDATA_VERSION} end
-	if not AucScanData.scans then AucScanData.scans = {} end
-	if not loaded then AucAdvancedData.Scandata = AucScanData end
-	LclAucScanData = AucScanData
-
-	return LclAucScanData
 end
 
 function lib.GetImage()
-	local image = private.LoadAuctionImage()
-	return image
+	-- Deprecated
+	if private.LoadScanData then private.LoadScanData() end
+end
+
+function lib.LoadScanData()
+	if private.LoadScanData then private.LoadScanData() end
+end
+
+-- scandataTable = private.GetScanData(serverKey)
+-- parameter: serverKey (required)
+-- returns: scandataTable = {image = imageTable, scanstats = scanstatsTable} for the specified serverKey
+-- returns: nil if there is no data for serverKey (or if serverKey is invalid)
+-- CAUTION: the following is a stub function, which will be overloaded with the real function by LoadScanData
+function private.GetScanData(serverKey)
+	if private.LoadScanData then
+		local newfunc = private.LoadScanData()
+		if newfunc then
+			return newfunc(serverKey)
+		end
+	end
+end
+
+-- AucAdvanced.Scan.ClearScanData(serverKey)
+-- AucAdvanced.Scan.ClearScanData(realmName)
+-- AucAdvanced.Scan.ClearScanData("SERVER") -- all data for current server
+-- AucAdvanced.Scan.ClearScanData("FACTION") -- data for current faction (as determined by AucAdvanced.GetFaction())
+-- AucAdvanced.Scan.ClearScanData("ALL")
+-- CAUTION: the following is a stub function, which will be overloaded with the real function by LoadScanData
+function lib.ClearScanData(key)
+	private.Print("Scan Data cannot be cleared because {{Auc-ScanData}} is not loaded")
 end
 
 function lib.StartPushedScan(name, minLevel, maxLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex, GetAll, NoSummary)
@@ -138,6 +191,11 @@ function lib.StartPushedScan(name, minLevel, maxLevel, invTypeIndex, classIndex,
 end
 
 function lib.PushScan()
+	if private.isGetAll then
+		-- A GetAll scan cannot be Popped; do not allow it to be Pushed
+		private.Print("Warning: Scan cannot be Pushed because it is a GetAll scan")
+		return
+	end
 	if private.isScanning then
 		if (nLog) then
 			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("Scan %d (%s) Paused, next page to scan is %d"):format(private.curQuery.qryinfo.id, private.curQuery.qryinfo.sig, private.curQuery.qryinfo.page+1))
@@ -309,10 +367,12 @@ function lib.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex,
 				message(text)
 				return
 			end
+
 			AucAdvanced.API.BlockUpdate(true, false)
 			BrowseSearchButton:Hide()
-
 			lib.ProgressBars(GetAllProgressBar, 0, true)
+			private.isGetAll = true -- indicates that certain functions must take special action, and that the above changes need to be undone
+
 			private.LastGetAll = now
 		else
 			if not CanQuery then
@@ -337,11 +397,20 @@ function lib.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex,
 			-- private.curQuery will have been set if QueryAuctionItems succeeded
 			-- this should never fail? we checked CanSendAuctionQuery() earlier
 			message("Scan failed: unable to send query")
+			if private.isGetAll then
+				lib.ProgressBars(GetAllProgressBar, nil, false)
+				BrowseSearchButton:Show()
+				AucAdvanced.API.BlockUpdate(false)
+				private.isGetAll = nil
+			end
 			return
 		end
 		AuctionFrameBrowse.page = startPage
 		if (NoSummary) then
 			private.curQuery.qryinfo.nosummary = true
+		end
+		if GetAll then
+			private.curQuery.qryinfo.getall = true
 		end
 		private.isNoSummary = false
 
@@ -527,14 +596,13 @@ local idLists = {}
 function private.BuildIDList(scandata, serverKey)
 	local idList = idLists[serverKey]
 	if idList then return idList end
-	idList = {}
+	idList = {0} -- dummy entry ensures that list is never empty and that counting starts from 1
 	idLists[serverKey] = idList
 	local image = scandata.image
 	for i = 1, #image do
 		tinsert(idList, image[i][Const.ID])
 	end
 	table.sort(idList)
-	if not idList[1] then idList[1] = 0 end
 	return idList
 end
 
@@ -550,10 +618,11 @@ function private.GetNextID(idList)
 	return nextId
 end
 
+-- Library wrapper for private.GetScanData. Deals with parameter checking, warning messages and deprecation alerts
 function lib.GetScanData(serverKey, reserved)
-	local faction, realmName, deprecated
 	if serverKey then
-		realmName, faction = AucAdvanced.SplitServerKey(serverKey)
+		local deprecated
+		local realmName, faction = AucAdvanced.SplitServerKey(serverKey)
 		if not realmName then
 			if serverKey == "Alliance" or serverKey == "Horde" or serverKey == "Neutral" then
 				deprecated = true
@@ -574,38 +643,13 @@ function lib.GetScanData(serverKey, reserved)
 			end
 		end
 	else
-		serverKey, realmName, faction = GetFaction()
+		serverKey = GetFaction()
 	end
-
-	local AucScanData = private.LoadAuctionImage()
-	local realmdata = AucScanData.scans[realmName]
-	if not realmdata then
-		realmdata = {}
-		AucScanData.scans[realmName] = realmdata
-	end
-	local scandata = realmdata[faction]
-	if scandata then
-		if not scandata.scanstats then
-			scandata.scanstats = {ImageUpdated = scandata.time or time()}
-		end
-		if type(scandata.image) == "string" then
-			if AucAdvanced.Modules.Util.ScanData and AucAdvanced.Modules.Util.ScanData.Unpack then
-				AucAdvanced.Modules.Util.ScanData.Unpack(realmName)
-			else -- unknown/corrupted?
-				scandata.image = {}
-				scandata.scanstats.ImageUpdated = time()
-			end
-		end
-	else
-		scandata = {image = {}, scanstats = {ImageUpdated = time()}, time=time()}
-		realmdata[faction] = scandata
-	end
-	scandata.nextID = nil -- delete obsolete entry
-	return scandata
+	return private.GetScanData(serverKey)
 end
 
 function lib.GetScanStats(serverKey)
-	local scandata = lib.GetScanData(serverKey or GetFaction())
+	local scandata = private.GetScanData(serverKey or GetFaction())
 	if scandata then
 		return scandata.scanstats
 	end
@@ -613,7 +657,7 @@ end
 
 function lib.GetImageCopy(serverKey)
 	-- Create a fully independent copy of the image - intended for use by coroutines
-	local scandata = lib.GetScanData(serverKey or GetFaction())
+	local scandata = private.GetScanData(serverKey or GetFaction())
 	if scandata then
 		local image = scandata.image
 		local size = Const.LASTENTRY
@@ -625,10 +669,26 @@ function lib.GetImageCopy(serverKey)
 	end
 end
 
+function lib.GetImageSize(serverKey)
+	local scandata = private.GetScanData(serverKey or GetFaction())
+	if scandata then
+		return #scandata.image
+	end
+end
+
+function lib.GetImageItem(index, serverKey, reserved)
+	-- reserved flag for possible future expansion
+	local scandata = private.GetScanData(serverKey or GetFaction())
+	if scandata then
+		local item = scandata.image[index]
+		if item then return {unpack(item, 1, Const.LASTENTRY)} end
+	end
+end
+
 
 private.scandataIndex = {}
 private.prevQuery = {}
-private.queryResults = {}
+-- private.queryResults is nil initially
 -- private.prevQueryServerKey is nil initially
 
 function private.clearImageCaches(scanstats)
@@ -639,6 +699,7 @@ function private.clearImageCaches(scanstats)
 	end
 
 	private.prevQueryServerKey = nil
+	private.queryResults = nil -- not required but frees some memory
 end
 
 -- ensure home and neutral factions for current realm are always present
@@ -656,7 +717,7 @@ function private.SubImageCache(itemId, serverKey)
 
 	local itemResults = indexResults[itemId]
 	if not itemResults then
-		local scandata = lib.GetScanData(serverKey)
+		local scandata = private.GetScanData(serverKey)
 		if not scandata then return end
 		itemResults = {}
 		for pos, data in ipairs(scandata.image) do
@@ -679,14 +740,14 @@ function lib.QueryImage(query, serverKey, reserved, ...)
 	if serverKey == private.prevQueryServerKey then
 		local samequery = true
 		for k,v in pairs(prevQuery) do
-			if k ~= "page" and v ~= query[k] then
+			if v ~= query[k] then
 				samequery = false
 				break
 			end
 		end
 		if samequery then
 			for k,v in pairs(query) do
-				if k ~= "page" and v ~= prevQuery[k] then
+				if v ~= prevQuery[k] then
 					samequery = false
 					break
 				end
@@ -698,7 +759,8 @@ function lib.QueryImage(query, serverKey, reserved, ...)
 	end
 
 	-- reset results and save a copy of query
-	wipe(queryResults)
+	queryResults = {} -- cannot use wipe; needs to be a new table here {ADV-534}
+	private.queryResults = queryResults
 	wipe(prevQuery)
 	for k, v in pairs(query) do prevQuery[k] = v end
 	private.prevQueryServerKey = serverKey
@@ -708,7 +770,7 @@ function lib.QueryImage(query, serverKey, reserved, ...)
 	if query.itemId then
 		image = private.SubImageCache(query.itemId, serverKey)
 	else
-		local scandata = lib.GetScanData(serverKey)
+		local scandata = private.GetScanData(serverKey)
 		if scandata then
 			image = scandata.image
 		end
@@ -718,6 +780,11 @@ function lib.QueryImage(query, serverKey, reserved, ...)
 	local saneQueryLink
 	if query.link then
 		saneQueryLink = SanitizeLink(query.link)
+	end
+
+	local lowerName
+	if query.name then
+		lowerName = query.name:lower()
 	end
 
 	-- scan image to build a table of auctions that match query
@@ -741,9 +808,9 @@ function lib.QueryImage(query, serverKey, reserved, ...)
 			if query.quality and data[Const.QUALITY] ~= query.quality then break end
 			if query.invType and data[Const.IEQUIP] ~= query.invType then break end
 			if query.seller and data[Const.SELLER] ~= query.seller then break end
-			if query.name then
+			if lowerName then
 				local name = data[Const.NAME]
-				if not (name and name:lower():find(query.name:lower(), 1, true)) then break end
+				if not (name and name:lower():find(lowerName, 1, true)) then break end
 			end
 
 			local stack = data[Const.COUNT]
@@ -772,8 +839,8 @@ end
 private.CommitQueue = {}
 
 local CommitRunning = false
-Commitfunction = function()
-	local speed = AucAdvanced.Settings.GetSetting("scancommit.speed")/100
+local Commitfunction = function()
+	local speed = get("scancommit.speed")/100
 	speed = speed^2.5
 	local processingTime = speed * 0.1 + 0.015
 		-- Min (1): 0.02s (~50 fps)      --    Max (100): 0.12s  (~8 fps).   Default (50):  0.037s (~25 fps)
@@ -796,11 +863,11 @@ Commitfunction = function()
 		or TempcurQuery.name or TempcurQuery.isUsable or TempcurQuery.invType or TempcurQuery.quality) -- no restrictions, potentially a full scan
 
 	local serverKey = TempcurQuery.qryinfo.serverKey or GetFaction()
-	local scandata = lib.GetScanData(serverKey)
+	local scandata = private.GetScanData(serverKey)
 	assert(scandata, "Critical error: scandata does not exist for serverKey "..serverKey)
 	local idList = private.BuildIDList(scandata, serverKey)
 	local now = time()
-	if AucAdvanced.Settings.GetSetting("scancommit.progressbar") then
+	if get("scancommit.progressbar") then
 		lib.ProgressBars(CommitProgressBar, 0, true)
 	end
 	local oldCount = #scandata.image
@@ -849,7 +916,7 @@ Commitfunction = function()
 		end
 	end
 
-	
+
 	--[[ *** Stage 2: Merge new scan into ScanData *** ]]
 	lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "AucAdv: Starting Stage 2") -- change displayed text for reporting purposes
 	processStats("begin")
@@ -1006,17 +1073,17 @@ Commitfunction = function()
 	local printSummary, scanSize = false, ""
 	scanSize = TempcurQuery.qryinfo.scanSize
 	if scanSize=="Full" then
-		printSummary = private.getOption("scandata.summaryonfull");
+		printSummary = get("scandata.summaryonfull");
 	elseif scanSize=="Partial" then
-		printSummary = private.getOption("scandata.summaryonpartial")
+		printSummary = get("scandata.summaryonpartial")
 	else -- scanSize=="Micro"
-		printSummary = private.getOption("scandata.summaryonmicro")
+		printSummary = get("scandata.summaryonmicro")
 	end
 	if (TempcurQuery.qryinfo.nosummary) then
 		printSummary = false
 		scanSize = "NoSum-"..scansize
 	end
-	
+
 	if (nLog or printSummary) then
 		local scanTime = " "
 		local summaryLine
@@ -1138,10 +1205,6 @@ Commitfunction = function()
 	scanstats[1] = scandata.scanstats[0]
 	scanstats[0] = TempcurScanStats
 
-	-- old version timestamps (deprecated)
-	scandata.time = now
-	if wasUnrestricted and not wasIncomplete then scandata.LastFullScan = now end
-
 	-- Tell everyone that our stats are updated
 	TempcurQuery.qryinfo.finished = true
 	private.clearImageCaches(TempcurScanStats)
@@ -1159,7 +1222,7 @@ Commitfunction = function()
 	AucAdvanced.SendProcessorMessage("scanfinish", scanSize, TempcurQuery.qryinfo.sig, TempcurQuery.qryinfo, not wasIncomplete)
 end
 
-local CoCommit
+local CoCommit, CoStore
 
 local function CoroutineResume(...)
 	local status, result = coroutine.resume(...)
@@ -1170,6 +1233,7 @@ local function CoroutineResume(...)
 end
 
 function private.Commit(wasIncomplete, wasGetAll)
+	private.StopStorePage()
 	if not private.curScan then return end
 	tinsert(private.CommitQueue, {
 		Query = private.curQuery,
@@ -1238,7 +1302,7 @@ function private.ScanPage(nextPage, really)
 		private.verifyStart = nil
 	end
 end
-local CoStore
+
 function private.HasAllData()
 	local check = private.nextCheck
 	if not check then return true end
@@ -1273,6 +1337,7 @@ function private.HasAllData()
 	return false
 end
 
+--[[ Not currently used
 function private.NoDupes(pageData, compare)
 	if not pageData then return true end
 	for pos, pageItem in ipairs(pageData) do
@@ -1284,6 +1349,7 @@ function private.NoDupes(pageData, compare)
 	end
 	return true
 end
+--]]
 
 function lib.GetAuctionItem(list, i)
 	local itemLink = GetAuctionItemLink(list, i)
@@ -1352,14 +1418,19 @@ function lib.GetAuctionSellItem(minBid, buyoutPrice, runTime)
 	end
 end
 
-local Getallstarttime = GetTime()
-StorePageFunction = function()
+local StorePageFunction = function()
 	if (not private.curQuery) or (private.curQuery.name == "empty page") then
 		return
 	end
-	local now = GetTime()
 	private.sentQuery = false
 	local page = AuctionFrameBrowse.page
+	if not private.curScan then
+		private.curScan = {}
+	end
+	if not private.curPages then
+		private.curPages = {}
+	end
+	local curQuery, curScan, curPages = private.curQuery, private.curScan, private.curPages
 
 	local EventFramesRegistered = {}
 	local numBatchAuctions, totalAuctions = GetNumAuctionItems("list")
@@ -1373,34 +1444,33 @@ StorePageFunction = function()
 			frame:UnregisterEvent("AUCTION_ITEM_LIST_UPDATE")
 		end
 		private.verifyStart = 1
+		local now = GetTime()
 		private.nextCheck = now
 		private.scanDelay = now + 30
 		coroutine.yield()
 	end
-	if not private.curScan then
-		private.curScan = {}
-	end
-
 
 	--Update the progress indicator
-	now = GetTime()
-	local elapsed = now - private.scanStarted - private.totalPaused
+	local elapsed = GetTime() - private.scanStarted - private.totalPaused
 	--store queued scans to pass along on the callback, used by scanbutton and searchUI etc to display how many scans are still queued
 
 	--page, maxpages, name  lets a module know when a "scan" they have queued is actually in progress. scansQueued lets a module know how may scans are left to go
-	private.UpdateScanProgress(nil, totalAuctions, #private.curScan, elapsed, page+1, maxPages, private.curQuery) --page starts at 0 so we need to add +1
+	private.UpdateScanProgress(nil, totalAuctions, #curScan, elapsed, page+1, maxPages, curQuery) --page starts at 0 so we need to add +1
 
 	local curTime = time()
-	local getallspeed = AucAdvanced.Settings.GetSetting("GetAllSpeed") or 500
+	local getallspeed = get("GetAllSpeed") or 500
 
 
 	local storecount = 0
-	if (page > private.curQuery.qryinfo.page) then
+	if not private.breakStorePage and (page > curQuery.qryinfo.page) then
 
 		for i = 1, numBatchAuctions do
 			if isGetAll and ((i % getallspeed) == 0) then --only start yielding once the first page is done, so it won't affect normal scanning
 				lib.ProgressBars(GetAllProgressBar, 100*i/numBatchAuctions, true)
 				coroutine.yield()
+				if private.breakStorePage then
+					break
+				end
 			end
 
 			local itemData = lib.GetAuctionItem("list", i)
@@ -1422,22 +1492,18 @@ StorePageFunction = function()
 --			or totalAuctions <= 50
 --			or numBatchAuctions > 50 --if GetAll, we can be sure they aren't duplicates
 --			or legacyScanning() -- Is AucClassic scanning?
---			or private.NoDupes(private.curScan, itemData) then
-				tinsert(private.curScan, itemData)
+--			or private.NoDupes(curScan, itemData) then
+				tinsert(curScan, itemData)
 				storecount = storecount + 1
 			end
 		end
 
 		if (storecount > 0) then
-			if not private.curPages then
-				private.curPages = {}
-			end
-			private.curQuery.qryinfo.page = page
-			private.curPages[page] = true -- we have pulled this page
+			curQuery.qryinfo.page = page
+			curPages[page] = true -- we have pulled this page
 		end
 	end
 	if isGetAll then
-		lib.ProgressBars(GetAllProgressBar, 100, false)
 		local oldThis = this
 		for _, frame in pairs(EventFramesRegistered) do
 			frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
@@ -1452,64 +1518,68 @@ StorePageFunction = function()
 	end
 
 	-- Just updated the page if it was a new page, so record it as latest page.
-	if (page > private.curQuery.qryinfo.page) then
-		private.curQuery.qryinfo.page = page
+	if (page > curQuery.qryinfo.page) then
+		curQuery.qryinfo.page = page
 	end
 
 	--Send a Processor event to modules letting them know we are done with the page
-	AucAdvanced.SendProcessorMessage("pagefinished", pageNumber)
+	AucAdvanced.SendProcessorMessage("pagefinished", page)
+
+	-- Clear GetAll changes made by StartScan
+	if private.isGetAll then -- in theory private.isGetAll should be true iff (local) isGetAll is true -- unless total auctions <=50 (e.g. on PTR)
+		lib.ProgressBars(GetAllProgressBar, 100, false)
+		BrowseSearchButton:Show()
+		AucAdvanced.API.BlockUpdate(false)
+		private.isGetAll = nil
+	end
 
 	-- Send the next page query or finish scanning
-
-	if private.isScanning then
-		if isGetAll and (#(private.curScan) >= totalAuctions - 100) then
-			private.Commit(false, true)
-		elseif (page+1 < maxPages) then
+	if isGetAll then
+		if not private.breakStorePage then
+			private.Commit((#curScan < totalAuctions - 100), true)
+			-- Clear the getall output. We don't want to create a new query so use the hook
+			private.Hook.QueryAuctionItems("empty page", "", "", nil, nil, nil, nil, nil, nil)
+		end
+	elseif private.isScanning then
+		if (page+1 < maxPages) then
 			private.ScanPage(page + 1)
 		else
 			local incomplete = false
-			if (#(private.curScan) < totalAuctions - 10) then -- we just got scan size above, so they should be close.
+			if (#curScan < totalAuctions - 10) then -- we just got scan size above, so they should be close.
 				incomplete = true
 			end
 			private.Commit(incomplete, false)
 		end
-	elseif isGetAll and (#(private.curScan) > totalAuctions - 100) then
-		private.Commit(false, true)
-	elseif maxPages and maxPages > 0 then
-		-- while #private.curPages == maxPages seems a good effeciency gain, this could be a problem if say page 4 was looked at for a query that returns 2 pages.
+	elseif (maxPages == page+1) then
 		local incomplete = false
-		if not private.curPages then
-			private.curPages = {}
-		end
-		if (private.curPages) then
-			for i = 0, maxPages-1 do
-				if not private.curPages[i] then
-					incomplete = true
-				end
+		for i = 0, maxPages-1 do
+			if not curPages[i] then
+				incomplete = true
+				break
 			end
-		else
-			incomplete = true
 		end
-		if (maxPages == page+1) then
-			private.Commit(incomplete, false)
-		end
-	end
-	BrowseSearchButton:Show()
-	if isGetAll then
-		isGetAll = false
-		AucAdvanced.API.BlockUpdate(false)
-		-- Clear the getall output. We don't want to create a new query so use the hook
-		private.Hook.QueryAuctionItems("empty page", "", "", nil, nil, nil, nil, nil, nil)
+		private.Commit(incomplete, false)
 	end
 end
 
---CoStore = coroutine.create(StorePageFunction)
+function private.StopStorePage(silent)
+	if not CoStore or coroutine.status(CoStore) ~= "suspended" then return end
+	-- flag to break out of the loop, or prevent the loop being entered, within the coroutine
+	private.breakStorePage = true
+	while coroutine.status(CoStore) == "suspended" do
+		CoroutineResume(CoStore)
+	end
+	private.breakStorePage = nil
+	if not silent then
+		message("Warning: GetAll scan is incomplete because it was interrupted")
+	end
+end
 
 function lib.StorePage()
-	if CoStore and coroutine.status(CoStore) ~= "dead" then
-		CoroutineResume(CoStore)
-	else
+	if not CoStore or coroutine.status(CoStore) == "dead" then
 		CoStore = coroutine.create(StorePageFunction)
+		CoroutineResume(CoStore)
+	elseif coroutine.status(CoStore) == "suspended" then
 		CoroutineResume(CoStore)
 	end
 end
@@ -1630,7 +1700,7 @@ function private.NewQueryTable(name, minLevel, maxLevel, invTypeIndex, classInde
 	local scanSize = false, ""
 	if ((not query.class) and (not query.subclass) and (not query.minUseLevel)
 			and (not query.maxUseLevel)
-			and (not query.name) and (not query.isUsable) 
+			and (not query.name) and (not query.isUsable)
 			and (not query.invType) and (not query.quality)) then
 		qryinfo.scanSize = "Full"
 	elseif (query.name and query.class and query.subclass and query.quality) then
@@ -1765,7 +1835,7 @@ function QueryAuctionItems(name, minLevel, maxLevel, invTypeIndex, classIndex, s
 			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("Sending new query %d (%s)"):format(query.qryinfo.id, query.qryinfo.sig))
 		end
 	end
-	
+
 
 	private.sentQuery = true
 	lib.lastReq = GetTime()
@@ -1777,6 +1847,11 @@ function QueryAuctionItems(name, minLevel, maxLevel, invTypeIndex, classIndex, s
 end
 
 function lib.SetPaused(pause)
+	if private.isGetAll then
+		-- A GetAll scan cannot be Popped or Pushed
+		private.Print("Scan cannot be paused/unpaused because it is a GetAll scan")
+		return
+	end
 	if pause then
 		if private.isPaused then return end
 		lib.PushScan()
@@ -1872,7 +1947,18 @@ end
 
 function lib.Interrupt()
 	if private.curQuery and not AuctionFrame:IsVisible() then
-		if private.isScanning then
+		if private.isGetAll then
+			-- GetAll cannot be pushed/popped so we have to commit here instead
+			private.Commit(true, true)
+			private.sentQuery = false
+			if private.isGetAll then
+				-- If the StorePage function didn't run, we need to cleanup here instead
+				lib.ProgressBars(GetAllProgressBar, nil, false)
+				BrowseSearchButton:Show()
+				AucAdvanced.API.BlockUpdate(false)
+				private.isGetAll = nil
+			end
+		elseif private.isScanning then
 			private.unexpectedClose = true
 			lib.PushScan()
 		else
@@ -1890,6 +1976,14 @@ function lib.Abort()
 end
 
 function private.ResetAll()
+	private.StopStorePage(true)
+	if private.isGetAll then
+		-- Fallback in case private.isGetAll and related actions were not cleared during processing
+		lib.ProgressBars(GetAllProgressBar, nil, false)
+		BrowseSearchButton:Show()
+		AucAdvanced.API.BlockUpdate(false)
+		private.isGetAll = nil
+	end
 	local oldquery = private.curQuery
 	private.curQuery = nil
 	private.curScan = nil
@@ -1912,10 +2006,6 @@ function private.ResetAll()
 	private.Pausing = nil
 	--Hide the progress indicator
 	private.UpdateScanProgress(false, nil, nil, nil, nil, nil, oldquery)
-end
---Did not have a way of easily retrieving options for corescan  Kandoko
-function private.getOption(option)
-	return AucAdvanced.Settings.GetSetting(option)
 end
 
 -- In the absence of a proper API function to do it, it's necessary to inspect an item's tooltip to
@@ -2082,6 +2172,7 @@ function lib.AHClosed()
 end
 
 function lib.Logout()
+	AucAdvancedData.Scandata = nil -- delete obsolete data. it's here because CoreScan doesn't have an OnLoad processor
 	private.Commit(true, false)
 	if CoCommit then
 		while coroutine.status(CoCommit) == "suspended" do

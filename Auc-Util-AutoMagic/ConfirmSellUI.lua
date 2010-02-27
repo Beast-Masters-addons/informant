@@ -41,8 +41,8 @@ local selecteddata = {}
 function lib.ASCPrompt()
 	if next(lib.vendorlist) then
 		lib.confirmsellui:Show()
-		lib.ASCRefreshSheet()
 	end
+	lib.ASCRefreshSheet() --Always refresh the sheet or it can appear we have items left in GUI after the autosell function
 end
 
 ---------------------------------------------------------
@@ -50,7 +50,16 @@ end
 ---------------------------------------------------------
 -- lib.vendorlist[key] = { link, sig, count, bag, slot, reason }
 function lib.ASCConfirmContinue()
+	lib.confirmsellui:Hide() --hide gui before selling so our bag update events are not registered
+	local count = 0
 	for key, itemdata in pairs(lib.vendorlist) do
+		count = count +1
+		--if stop after 12 then recheck whats left to vendor and re-prompt for a new round. 
+		if get("util.automagic.autostopafter12") and count > 12 then --stop after 12 sells so use can buy back a accidental sale
+			lib.vendorAction()
+			return
+		end
+		
 		local _, iID = decode( itemdata[1] ) --check if item is to be ignored
 		if not get("util.automagic.vidignored"..iID) then --will be nil if not on ignore list
 			
@@ -62,7 +71,6 @@ function lib.ASCConfirmContinue()
 		end
 		lib.vendorlist[key] = nil
 	end
-	lib.confirmsellui:Hide()
 end
 
 function lib.ASCRemoveItem()
@@ -189,7 +197,6 @@ function lib.makeconfirmsellui()
 	lib.confirmsellui:EnableMouse(true)
 	lib.confirmsellui:SetMovable(true)
 	lib.confirmsellui:SetClampedToScreen(true)
-
 	-- Make highlightable drag bar
 	lib.confirmsellui.Drag = CreateFrame("Button", "", lib.confirmsellui)
 	lib.confirmsellui.Drag:SetPoint("TOPLEFT", lib.confirmsellui, "TOPLEFT", 10,-5)
@@ -228,13 +235,13 @@ function lib.makeconfirmsellui()
 	lib.confirmsellui.resultlist:SetPoint("BOTTOM", lib.confirmsellui, "BOTTOM", 0, 30)
 
 	lib.confirmsellui.resultlist.sheet = ScrollSheet:Create(lib.confirmsellui.resultlist, {
-		{ ('Item:'), "TOOLTIP", 170 },
+		{ ('Item:'), "TOOLTIP", 170, { DESCENDING=false, DEFAULT=true }  },
 		{ "Vendor", "COIN", 70 },
 		{ "Appraiser", "COIN", 70 },
 		{ "Selling for", "TEXT", 70 },
-		{ "Will be Sold", "TEXT", 100,  { DESCENDING=true, DEFAULT=true } },
+		{ "Will be Sold", "TEXT", 100},
 	})
-
+	lib.confirmsellui.resultlist.sheet:EnableVerticalScrollReset(false)
 	lib.confirmsellui.resultlist.sheet:EnableSelect(true)
 	
 	--After we have finished creating the scrollsheet and all saved settings have been applied set our event processor
@@ -249,7 +256,9 @@ function lib.makeconfirmsellui()
 			lib.ASCSelect()
 		end
 	end
-
+	--use our custom sort method not scrollsheets
+	lib.confirmsellui.resultlist.sheet.CustomSort = lib.CustomSort
+	
 	-- Continue with sales button
 	lib.confirmsellui.continueButton = CreateFrame("Button", nil, lib.confirmsellui, "OptionsButtonTemplate")
 	lib.confirmsellui.continueButton:SetPoint("BOTTOMRIGHT", lib.confirmsellui, "BOTTOMRIGHT", -18, 10)
