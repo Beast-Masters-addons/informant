@@ -283,7 +283,7 @@ CommitProgressBar.text = CommitProgressBar:CreateFontString(nil, "OVERLAY", "Gam
 CommitProgressBar.text:SetPoint("CENTER", CommitProgressBar, "CENTER")
 CommitProgressBar.text:SetJustifyH("CENTER")
 CommitProgressBar.text:SetJustifyV("CENTER")
-CommitProgressBar.text:SetText("AucAdv: Processing")
+CommitProgressBar.text:SetText("Auctioneer: Processing")
 CommitProgressBar.text:SetTextColor(1,1,1)
 
 local GetAllProgressBar = CreateFrame("STATUSBAR", "$parentHealthBar", UIParent, "TextStatusBar")
@@ -307,7 +307,7 @@ GetAllProgressBar.text = GetAllProgressBar:CreateFontString(nil, "OVERLAY", "Gam
 GetAllProgressBar.text:SetPoint("CENTER", GetAllProgressBar, "CENTER")
 GetAllProgressBar.text:SetJustifyH("CENTER")
 GetAllProgressBar.text:SetJustifyV("CENTER")
-GetAllProgressBar.text:SetText("AucAdv: Scanning")
+GetAllProgressBar.text:SetText("Auctioneer: Scanning")
 GetAllProgressBar.text:SetTextColor(1,1,1)
 
 --controls the display, anchor, and text of our progress bars
@@ -618,29 +618,23 @@ function private.GetNextID(idList)
 	return nextId
 end
 
--- Library wrapper for private.GetScanData. Deals with parameter checking, warning messages and deprecation alerts
+-- Library wrapper for private.GetScanData. Deprecated function
 function lib.GetScanData(serverKey, reserved)
+	AucAdvanced.API.ShowDeprecationAlert(nil, "Direct access to the ScanData image is deprecated. Instead QueryImage, GetImageCopy or GetImageItem should be used")
 	if serverKey then
-		local deprecated
 		local realmName, faction = AucAdvanced.SplitServerKey(serverKey)
 		if not realmName then
 			if serverKey == "Alliance" or serverKey == "Horde" or serverKey == "Neutral" then
-				deprecated = true
 				faction = serverKey
 			else
 				error("Invalid serverKey passed to GetScanData")
 			end
 			if reserved then
 				realmName = reserved
-				deprecated = true
 			else
 				realmName = GetRealmName()
 			end
 			serverKey = realmName.."-"..faction
-			if deprecated then -- temporary deprecation alert: only triggered by incorrect parameters for the time being
-				AucAdvanced.API.ShowDeprecationAlert("AucAdvanced.Scan.GetScanData(serverKey)",
-					"Converted to use serverKey. Additionally this function is deprecated altogether outside Auctioneer Core")
-			end
 		end
 	else
 		serverKey = GetFaction()
@@ -692,10 +686,16 @@ private.prevQuery = {}
 -- private.prevQueryServerKey is nil initially
 
 function private.clearImageCaches(scanstats)
-	local serverKey = scanstats.query.qryinfo.serverKey
-	local cache = private.scandataIndex[serverKey]
-	if cache then
-		wipe(cache)
+	local serverKey = scanstats and scanstats.serverKey
+	if serverKey then
+		local cache = private.scandataIndex[serverKey]
+		if cache then
+			wipe(cache)
+		end
+	else -- no serverKey provided: affects multiple serverKeys (or unknown source), clear all caches
+		for _, cache in pairs(private.scandataIndex) do
+			wipe(cache)
+		end
 	end
 
 	private.prevQueryServerKey = nil
@@ -888,7 +888,7 @@ local Commitfunction = function()
 		local link = data[Const.LINK]
 		progresscounter = progresscounter + 1
 		if GetTime() - lastPause >= processingTime then
-			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "AucAdv: Processing Stage 1")
+			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
 			coroutine.yield()
 			lastPause = GetTime()
 		end
@@ -918,13 +918,13 @@ local Commitfunction = function()
 
 
 	--[[ *** Stage 2: Merge new scan into ScanData *** ]]
-	lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "AucAdv: Starting Stage 2") -- change displayed text for reporting purposes
+	lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Starting Stage 2") -- change displayed text for reporting purposes
 	processStats("begin")
 	for index, data in ipairs(TempcurScan) do
 		local itemPos
 		progresscounter = progresscounter + 4
 		if GetTime() - lastPause >= processingTime then
-			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "AucAdv: Processing Stage 2")
+			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 2")
 			coroutine.yield()
 			lastPause = GetTime()
 		end
@@ -982,7 +982,7 @@ local Commitfunction = function()
 		local data = scandata.image[pos]
 		progresscounter = progresscounter + progressstep
 		if GetTime() - lastPause >= processingTime then
-			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "AucAdv: Processing Stage 3")
+			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
 			coroutine.yield()
 			lastPause = GetTime()
 		end
@@ -1035,7 +1035,7 @@ local Commitfunction = function()
 
 
 	--[[ *** Stage 4: Reports *** ]]
-	lib.ProgressBars(CommitProgressBar, 100, true, "AucAdv: Processing Finished")
+	lib.ProgressBars(CommitProgressBar, 100, true, "Auctioneer: Processing Finished")
 	processStats("complete")
 
 	local currentCount = #scandata.image
@@ -1166,6 +1166,8 @@ local Commitfunction = function()
 	end
 
 	local TempcurScanStats = {
+		source = "scan",
+		serverKey = serverKey,
 		scanCount = scanCount,
 		oldCount = oldCount,
 		sameCount = sameCount,
@@ -1207,9 +1209,7 @@ local Commitfunction = function()
 
 	-- Tell everyone that our stats are updated
 	TempcurQuery.qryinfo.finished = true
-	private.clearImageCaches(TempcurScanStats)
 	AucAdvanced.SendProcessorMessage("scanstats", TempcurScanStats)
-	AucAdvanced.Buy.FinishedSearch(TempcurQuery)
 
 	--Hide the progress indicator
 	lib.ProgressBars(CommitProgressBar, nil, false)
@@ -1977,13 +1977,13 @@ end
 
 function private.ResetAll()
 	private.StopStorePage(true)
-	if private.isGetAll then
-		-- Fallback in case private.isGetAll and related actions were not cleared during processing
-		lib.ProgressBars(GetAllProgressBar, nil, false)
-		BrowseSearchButton:Show()
-		AucAdvanced.API.BlockUpdate(false)
-		private.isGetAll = nil
-	end
+
+	-- Fallback in case private.isGetAll and related actions were not cleared during processing
+	lib.ProgressBars(GetAllProgressBar, nil, false)
+	BrowseSearchButton:Show()
+	AucAdvanced.API.BlockUpdate(false)
+	private.isGetAll = nil
+
 	local oldquery = private.curQuery
 	private.curQuery = nil
 	private.curScan = nil
@@ -2101,8 +2101,11 @@ local ItemUsableCached = {
 
 	RegisterChatString = function(this, chatString)
 		local pattern = chatString
-		pattern = string.gsub(pattern, "(%%s)", "(.+)")
-		pattern = string.gsub(pattern, "(%%d)", "(.+)")
+		pattern = gsub(pattern, "%%s", ".+")
+		pattern = gsub(pattern, "%%d", ".+")
+		pattern = gsub(pattern, "%%%d+%$s", ".+")
+		pattern = gsub(pattern, "%%%d+%$d", ".+")
+		pattern = gsub(pattern, "|3%-%d+%(%%s%)", ".+")
 		tinsert(this.patterns, pattern)
 	end,
 
@@ -2178,6 +2181,12 @@ function lib.Logout()
 		while coroutine.status(CoCommit) == "suspended" do
 			CoroutineResume(CoCommit)
 		end
+	end
+end
+
+function lib.Processor(event, ...)
+	if event == "scanstats" then
+		private.clearImageCaches(...)
 	end
 end
 

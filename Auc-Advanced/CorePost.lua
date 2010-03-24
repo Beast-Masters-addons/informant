@@ -59,6 +59,9 @@ local debugPrint = AucAdvanced.Debug.DebugPrint
 local _TRANS = AucAdvanced.localizations
 local DecodeSig -- to be filled with AucAdvanced.API.DecodeSig when it has loaded
 
+local floor = floor
+local type = type
+
 -- Tooltip Scanning locals for speed, to be filled in near end of file
 local ScanTip
 local ScanTip2
@@ -94,6 +97,7 @@ local ErrorText = {
 	NoBlank = "Requires a free bag slot that can hold a new stack of this item for posting",
 	FailRetry = "Posting failed too many times",
 	FailTimeout = "Timed out while waiting for posted item to clear from bags",
+	FailSlot = "Unable to place item in the Auction slot",
 }
 lib.ErrorText = ErrorText
 
@@ -258,7 +262,14 @@ function lib.PostAuction(sig, size, bid, buyout, duration, multiple)
 		return nil, "InvalidBid"
 	elseif type(buyout) ~= "number" or (buyout < bid and buyout ~= 0) then
 		return nil, "InvalidBuyout"
-	elseif duration ~= 720 and duration ~= 1440 and duration ~= 2880 then
+	--duration used to be passed as a time instead of the 1 2 3 value added in WOW patch 3.3.  So check and convert if needed
+	elseif duration == 720 then
+		duration = 1
+	elseif duration == 1440 then
+		duration = 2
+	elseif duration == 2880 then
+		duration = 3
+	elseif duration < 1 or duration > 3 then
 		return nil, "InvalidDuration"
 	end
 
@@ -556,21 +567,36 @@ end
 
 --[[
     GetDepositCost(item, duration, faction, count)
-    You must pass item where item is -- itemID or "itemString" or "itemName" or "itemLink" --but faction duration(12, 24, or 48)[defaults to 24], faction("home" or "neutral")[defaults to home]
-    and count(stacksize)[defaults to 1] are optional
+    item: itemID or "itemString" or "itemName" or "itemLink" [Required]
+	duration: 12, 24, or 48 [defaults to 24]
+	faction: "home" or "neutral" or "Neutral" [defaults to home]
+    count: <stacksize> [defaults to 1]
 ]]
 function GetDepositCost(item, duration, faction, count)
-	-- Die if unable to complete function
-	if not (item and GetSellValue) then return end
+	if not item then return end
+	--[[
+	Deposit Cost = RoundDown(VendorPrice * FactionMultiplier * StackSize, 3) * DurationMultiplier
+	FactionMultiplier = (0.15 for Home, 0.75 for Neutral)
+	DurationMultiplier = (1 for 12hrs, 2 for 24hrs, 4 for 48hrs)
+	However as there is no lua function for "round down to the nearest multiple of 3",
+	we shall implement this by dividing the FactionMultiplier by 3 (0.05 and 0.25)
+	using 'floor' to round down to the nearest integer
+	and then multiplying the DurationMultiplier by 3 (3, 6 and 12)
+	--]]
 
 	-- Set up function defaults if not specifically provided
-	if duration == 12 then duration = 1 elseif duration == 48 then duration = 4 else duration = 2 end
-	if faction == "neutral" or faction == "Neutral" then faction = .75 else faction = .15 end
+	if duration == 12 then duration = 3 elseif duration == 48 then duration = 12 else duration = 6 end
+	if faction == "neutral" or faction == "Neutral" then faction = .25 else faction = .05 end
 	count = count or 1
 
-	local gsv = GetSellValue(item)
+	local _,_,_,_,_,_,_,_,_,_,gsv = GetItemInfo(item)
+	if not gsv and GetSellValue then
+		-- if item is not in local cache, fallback to GetSellValue
+		-- some people may still be using a GetSellValue provider with a saved price database
+		gsv = GetSellValue(item)
+	end
 	if gsv then
-		return math.floor(faction * gsv * count) * duration
+		return floor(faction * gsv * count) * duration
 	end
 end
 
@@ -643,8 +669,35 @@ function private.ProcessPosts(source)
 			return
 		end
 		local link = GetContainerItemLink(bag,slot)
+		if GetAuctionSellItemInfo() then
+			-- auction slot is already occupied, try to clear it
+			ClickAuctionSellItemButton()
+			ClearCursor()
+			if GetAuctionSellItemInfo() then
+				-- it's locked, wait for it to clear
+				return
+			end
+		end
+
 		PickupContainerItem(bag, slot)
+		if not CursorHasItem() then
+			-- failed to pick up from bags, probably due to some unfinished operation; wait for another cycle
+			return
+		end
+
 		ClickAuctionSellItemButton()
+		if not GetAuctionSellItemInfo() then
+			-- failed to drop item in auction slot, probably because item is not auctionable (but was missed by our checks)
+			local _, itemCount = GetContainerItemInfo(bag,slot)
+			local msg = ("Unable to create auction for %s x%d: %s"):format(link, itemCount, ErrorText["FailSlot"])
+			debugPrint(msg, "CorePost", "Posting Failure", "Warning")
+			private.QueueRemove()
+			private.Wait(POST_ERROR_PAUSE)
+			AucAdvanced.SendProcessorMessage("postresult", false, request[REQ_ID], request, "FailSlot")
+			message(msg)
+			return
+		end
+
 		StartAuction(request[REQ_BID], request[REQ_BUYOUT], request[REQ_DURATION])
 		ClickAuctionSellItemButton()
 		if (CursorHasItem()) then -- Didn't auction successfully
