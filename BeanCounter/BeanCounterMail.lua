@@ -67,19 +67,11 @@ local reportTotalMail, reportAHMail, reportReadMail, reportAlreadyReadMail = 0, 
 
 local registeredAltaholicHook = false
 local registeredInboxFrameHook = false
-local Refreshed = false
 function private.mailMonitor(event,arg1)
 	if (event == "MAIL_INBOX_UPDATE") then
 		private.updateInboxStart()
-		
-
+			
 	elseif (event == "MAIL_SHOW") then
-		--Since Altoholic has an option to read mail this is a workaround for it. We call our read function before
-		if Altoholic and not registeredAltaholicHook and Altoholic.Mail.Scan then
-			registeredAltaholicHook = true
-			Stubby.RegisterFunctionHook("Altoholic.Mail.Scan", -10, private.updateInboxStart)
-		end
-		
 		private.inboxStart = {} --clear the inbox list, if we errored out this should give us a fresh start.
 		if not registeredInboxFrameHook then --make sure we only ever register this hook once
 			registeredInboxFrameHook = true
@@ -89,81 +81,30 @@ function private.mailMonitor(event,arg1)
 		--We cannot use mail show since the GetInboxNumItems() returns 0 till the first "MAIL_INBOX_UPDATE"
 
 	elseif (event == "MAIL_CLOSED") then
-		InboxCloseButton:Show()
-		InboxFrame:Show()
-		MailFrameTab2:Show()
-		private.MailGUI:Hide()
+		private.HideMailGUI()
 		private.sumDatabase() --Sum total fo DB for the display on browse pane
 	end
 end
 
-function private.updateInboxStart()
-	Refreshed = true --used to restart the coroutine if we get new mail.
-	private.coroutineResume()
-end
-
-private.lastCheckedMail = GetTime()
-function private.coroutineResume()
-	local status, result
-	--if coroutine.status(private.processInboxCO) ~= "dead" then
-	if coroutine.status(private.processInboxCO) == "suspended" then
-		if GetTime() > private.lastCheckedMail + (get("util.beacounter.headertime")/100) then
-			--print("resumed on updated Co")
-			status, result = coroutine.resume(private.processInboxCO)
-			if not status and result then
-				print("Error occurred in coroutine: "..result, nil, debugstack())
-			end
-		end
-	elseif coroutine.status(private.processInboxCO) == "dead" then
-		if Refreshed then
-			--print("created on update Co", Refreshed)
-			private.processInboxCO = coroutine.create(private.updateInbox)
-			coroutine.resume(private.processInboxCO)
+--[[Watch who reads the mail. and what they read. Use this to play nicely with altaholic and other addons]]
+private.mailReadOveride = {}
+function private.PreGetInboxTextHook(n, ...)
+	if n and n > 0 then
+		local _, _, sender, subject, money, _, daysLeft, _, wasRead, _, _, _ = GetInboxHeaderInfo(n)
+		if sender and subject and not wasRead then
+			--print("they read", n, sender, subject)
+			private.mailReadOveride[n] = sender..n
+		elseif wasRead then
+			--print("Already read", n, sender, subject) 
 		end
 	end
+	return private.GetInboxText(n, ...)
 end
---Mailbox Snapshots
-function private.updateInbox()
-	if not Refreshed then return end --dont process unless we have opened teh mail and the inbox is ready
+--hook and replace GetInboxText()
+private.GetInboxText = GetInboxText
+GetInboxText = private.PreGetInboxTextHook
 
-	reportTotalMail = GetInboxNumItems()
-	for n = 1,GetInboxNumItems() do
-			private.lastCheckedMail = GetTime()
-			local _, _, sender, subject, money, _, daysLeft, _, wasRead, _, _, _ = GetInboxHeaderInfo(n)
-			if sender and subject and not wasRead then --record unread messages, so we know what indexes need to be added
-				local auctionHouse --A, H, N flag for which AH the trxn came from
-				if sender ==_BC('MailAllianceAuctionHouse') then
-					auctionHouse = "A"
-				elseif sender == _BC('MailHordeAuctionHouse') then
-					auctionHouse = "H"
-				elseif sender == _BC('MailNeutralAuctionHouse') then
-					auctionHouse = "N"
-				end
-				if auctionHouse then
-					reportAHMail = reportAHMail + 1
-					private.HideMailGUI(true)
-					wasRead = wasRead or 0 --its nil unless its has been read
-					local itemLink = GetInboxItemLink(n, 1)
-					local _, _, stack, _, _ = GetInboxItem(n)
-					local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, retrieved, startTime = private.getInvoice(n,sender, subject)
-					tinsert(private.inboxStart, {["n"] = n, ["sender"]=sender, ["subject"]=subject,["money"]=money, ["read"]=wasRead, ["age"] = daysLeft,
-							["invoiceType"] = invoiceType, ["itemName"] = itemName, ["Seller/buyer"] = playerName, ['bid'] = bid, ["buyout"] = buyout,
-							["deposit"] = deposit, ["fee"] = consignment, ["retrieved"] = retrieved, ["startTime"] = startTime, ["itemLink"] = itemLink, ["stack"] = stack, ["auctionHouse"] = auctionHouse,
-							})
-					GetInboxText(n) --read message
-				end
-				reportReadMail = reportReadMail + 1
-			end
-		--print(n)
-		coroutine.yield()
-	end
-	Refreshed = nil
-	private.mailBoxColorStart()
-end
---inbox check coroutine
-private.processInboxCO = coroutine.create(private.updateInbox)
-
---New function to hide/unhide mail GUI. Needed for coroutine
+--New function to hide/unhide mail GUI.
 local HideMailGUI
 function private.HideMailGUI( hide )
 	if hide then
@@ -179,8 +120,42 @@ function private.HideMailGUI( hide )
 		InboxFrame:Show()
 		MailFrameTab2:Show()
 		private.MailGUI:Hide()
-		private.sumDatabase() --Sum total fo DB for the display on browse pane
+		private.wipeSearchCache() --clear the search cache, we are updating data so it is now outdated
 	end
+end
+--Mailbox Snapshots
+function private.updateInboxStart()
+	reportTotalMail = GetInboxNumItems()
+	for n = reportTotalMail, 1, -1 do
+		local _, _, sender, subject, money, _, daysLeft, _, wasRead, _, _, _ = GetInboxHeaderInfo(n)
+		if sender and subject and (not wasRead or private.mailReadOveride[n]) then
+			local auctionHouse --A, H, N flag for which AH the trxn came from
+			if sender ==_BC('MailAllianceAuctionHouse') then
+				auctionHouse = "A"
+			elseif sender == _BC('MailHordeAuctionHouse') then
+				auctionHouse = "H"
+			elseif sender == _BC('MailNeutralAuctionHouse') then
+				auctionHouse = "N"
+			end
+			if auctionHouse then
+				private.HideMailGUI(true)
+				reportAHMail = reportAHMail + 1
+				wasRead = wasRead or 0 --its nil unless its has been read
+				local itemLink = GetInboxItemLink(n, 1)
+				local _, _, stack, _, _ = GetInboxItem(n)
+				local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, retrieved, startTime = private.getInvoice(n,sender, subject)
+				tinsert(private.inboxStart, {["n"] = n, ["sender"]=sender, ["subject"]=subject,["money"]=money, ["read"]=wasRead, ["age"] = daysLeft,
+						["invoiceType"] = invoiceType, ["itemName"] = itemName, ["Seller/buyer"] = playerName, ['bid'] = bid, ["buyout"] = buyout,
+						["deposit"] = deposit, ["fee"] = consignment, ["retrieved"] = retrieved, ["startTime"] = startTime, ["itemLink"] = itemLink, ["stack"] = stack, ["auctionHouse"] = auctionHouse,
+						})
+				private.GetInboxText(n) --read message
+			end
+			reportReadMail = reportReadMail + 1
+		end
+		private.lastCheckedMail = GetTime() --this keeps us from hiding the mail UI to early and causing flicker
+	end
+	private.mailReadOveride = {}
+	private.wipeSearchCache() --clear the search cache, we are updating data so it is now outdated
 end
 
 function private.getInvoice(n, sender, subject)
@@ -199,46 +174,47 @@ function private.getInvoice(n, sender, subject)
 	return
 end
 
+private.lastCheckedMail = GetTime()
 function private.mailonUpdate()
-	private.coroutineResume() --check mail read coroutine and restart if necessary
-
-	local count = 1
 	local total = #private.inboxStart
-	for i, data in pairs(private.inboxStart) do
-		--update mail GUI Count
-		if count <= total then
-			private.CountGUI:SetText("Recording: "..count.." of "..total.." items")
-			count = count + 1
-		end
+	if total > 0 then
+		for i = total, 1, -1 do -- in pairs(private.inboxStart) do
+			--update mail GUI Count
+			local count = #private.inboxStart
+			private.CountGUI:SetText("Recording: "..total-count.." of "..total.." items")
+					
+			local data = private.inboxStart[i]
+			if not data.retrieved then --Send non invoiceable mails through
+				tinsert(private.reconcilePending, data)
+				--private.inboxStart[i] = nil
+				tremove(private.inboxStart, i)
+				--debugPrint("not a invoice mail type", i)
 
-		local tbl = private.inboxStart[i]
-		if not data.retrieved then --Send non invoiceable mails through
-			tinsert(private.reconcilePending, data)
-			private.inboxStart[i] = nil
-			--debugPrint("not a invoice mail type")
+			elseif  data.retrieved == "failed" then
+				tinsert(private.reconcilePending, data)
+				--private.inboxStart[i] = nil
+				tremove(private.inboxStart, i)
+				--debugPrint("data.retrieved == failed", i)
 
-		elseif  data.retrieved == "failed" then
-			tinsert(private.reconcilePending, data)
-			private.inboxStart[i] = nil
-			--debugPrint("data.retrieved == failed")
+			elseif  data.retrieved == "yes" then
+				tinsert(private.reconcilePending, data)
+				--private.inboxStart[i] = nil
+				tremove(private.inboxStart, i)
+				--debugPrint("data.retrieved == yes", i)
 
-		elseif  data.retrieved == "yes" then
-			tinsert(private.reconcilePending, data)
-			private.inboxStart[i] = nil
-			--debugPrint("data.retrieved == yes")
-
-		elseif  time() - data.startTime > get("util.beacounter.invoicetime") then --time exceded so fail it and process on next update
-			debugPrint("time to retrieve invoice exceeded, most likely waiting on players name if this is blank>..", tbl["Seller/buyer"])
-			tbl["retrieved"] = "failed" --time to get invoice exceded
-		else
-			--debugPrint("Invoice retieve attempt",tbl["subject"])
-			tbl["invoiceType"], tbl["itemName"], tbl["Seller/buyer"], tbl['bid'], tbl["buyout"] , tbl["deposit"] , tbl["fee"], tbl["retrieved"], _ = private.getInvoice(data.n, data.sender, data.subject)
+			elseif  time() - data.startTime > get("util.beacounter.invoicetime") then --time exceded so fail it and process on next update
+				debugPrint("time to retrieve invoice exceeded, most likely waiting on players name if this is blank>..", data["Seller/buyer"], i)
+				data["retrieved"] = "failed" --time to get invoice exceded
+			else
+				--debugPrint("Invoice retieve attempt",data["subject"])
+				data["invoiceType"], data["itemName"], data["Seller/buyer"], data['bid'], data["buyout"] , data["deposit"] , data["fee"], data["retrieved"], _ = private.getInvoice(data.n, data.sender, data.subject)
+			end
 		end
 	end
-	if (#private.inboxStart == 0) and (HideMailGUI == true) and (private.lastCheckedMail + 2 < GetTime() ) then --time delay added to prevent possible flicker
-		debugPrint("Total Mail in inbox:{{", reportTotalMail, "}}Had alredy been read:{{", reportAlreadyReadMail, "}}Mails to read:{{",reportReadMail, "}}Mail from AH:{{", reportAHMail, "}}")
+	if (#private.inboxStart == 0) and (HideMailGUI == true) and (private.lastCheckedMail + 1 < GetTime() ) then --time delay added to prevent possible flicker
+		--debugPrint("Total Mail in inbox:{{", reportTotalMail, "}}Had alredy been read:{{", reportAlreadyReadMail, "}}Mails to read:{{",reportReadMail, "}}Mail from AH:{{", reportAHMail, "}}")
 		reportTotalMail, reportAHMail, reportReadMail = 0, 0, 0
-		private.HideMailGUI( false )
+		private.HideMailGUI( )
 		private.mailBoxColorStart() --delay recolor system till we have had a chance to read the mail
 	end
 
@@ -439,14 +415,13 @@ function private.findStackCancelledAuctions(key, itemID, itemLink, returnedStack
 		end
 	end
 end
-
  --No need to reconcile, all needed data has been provided in the invoice We do need to clear entries so outbid has less to wade through
 function private.sortCompletedBidsBuyouts( i )
 	local itemID = lib.API.decodeLink(private.reconcilePending[i]["itemLink"])
 	local reason = private.findCompletedBids(itemID, private.reconcilePending[i]["Seller/buyer"], private.reconcilePending[i]["bid"], private.reconcilePending[i]["itemLink"])
 	if itemID then
 		--For a Won Auction money, deposit, fee are always 0  so we can use them as placeholders for BeanCounter Data
-		local value = private.packString(private.reconcilePending[i]["stack"], private.reconcilePending[i]["money"], "", private.reconcilePending[i]["fee"], private.reconcilePending[i]["buyout"], private.reconcilePending[i]["bid"], private.reconcilePending[i]["Seller/buyer"], private.reconcilePending[i]["time"], reason, private.reconcilePending[i]["auctionHouse"])
+		local value = private.packString(private.reconcilePending[i]["stack"], private.reconcilePending[i]["money"], deposite, private.reconcilePending[i]["fee"], private.reconcilePending[i]["buyout"], private.reconcilePending[i]["bid"], private.reconcilePending[i]["Seller/buyer"], private.reconcilePending[i]["time"], reason, private.reconcilePending[i]["auctionHouse"])
 		if private.reconcilePending[i]["auctionHouse"] == "A" or private.reconcilePending[i]["auctionHouse"] == "H" then
 			private.databaseAdd("completedBidsBuyouts", private.reconcilePending[i]["itemLink"], nil, value)
 		else
@@ -454,7 +429,7 @@ function private.sortCompletedBidsBuyouts( i )
 		end
 		--debugPrint("databaseAdd completedBidsBuyouts", itemID, private.reconcilePending[i]["itemLink"])
 	else
-		debugPrint("Failure for completedBidsBuyouts", itemID, private.reconcilePending[i]["itemLink"], "index", private.reconcilePending[i].n)
+		debugPrint("Failure for completedBidsBuyouts", itemID, private.reconcilePending[i]["itemLink"], value, "index", private.reconcilePending[i].n)
 	end
 
 	tremove(private.reconcilePending,i)
@@ -518,18 +493,22 @@ end
 --Hook, take money event, if this still has an unretrieved invoice we delay X sec or invoice retrieved
 local inboxHookMessage = false --Stops spam of the message.
 function private.PreTakeInboxMoneyHook(funcArgs, retVal, index, ignore)
-	if #private.inboxStart > 0 and not inboxHookMessage then
-		print("Please allow BeanCounter time to reconcile the mail box")
-		inboxHookMessage = true
+	if #private.inboxStart > 0 or HideMailGUI then
+		if not inboxHookMessage then
+			print("Please allow BeanCounter time to reconcile the mail box")
+			inboxHookMessage = true
+		end
 		return "abort"
 	end
 end
 
 --Hook, take item event, if this still has an unretrieved invoice we delay X sec or invoice retrieved
 function private.PreTakeInboxItemHook( ignore, retVal, index)
-	if #private.inboxStart > 0 and not inboxHookMessage then
-		print("Please allow BeanCounter time to reconcile the mail box")
-		inboxHookMessage = true
+	if #private.inboxStart > 0 or HideMailGUI then
+		if not inboxHookMessage then
+			print("Please allow BeanCounter time to reconcile the mail box")
+			inboxHookMessage = true
+		end
 		return "abort"
 	end
 end
