@@ -132,32 +132,51 @@ function lib.OnLoad()
         DEFAULT_CHAT_FRAME:AddMessage(mess,1.0,0.0,0.0)
     end
 
-    local sideIcon
     if LibStub then
-        local SlideBar = LibStub:GetLibrary("SlideBar", true)
-        if SlideBar then
-			local embedded = false
-			for _, module in ipairs(AucAdvanced.EmbeddedModules) do
-				if module == "Auc-Util-Glypher" then
-					embedded = true
-				end
+		local LibDataBroker = LibStub:GetLibrary("LibDataBroker-1.1", true)
+		local embedded = false
+		for _, module in ipairs(AucAdvanced.EmbeddedModules) do
+			if module == "Auc-Util-Glypher" then
+				embedded = true
 			end
-			if embedded then
-				sideIcon = SlideBar.AddButton("Glypher", "Interface\\AddOns\\Auc-Advanced\\Modules\\Auc-Util-Glypher\\Images\\Glypher")
-			else
-            	sideIcon = SlideBar.AddButton("Glypher", "Interface\\AddOns\\Auc-Util-Glypher\\Images\\Glypher")
+		end
+		local sideIcon, sideIconE
+		if embedded then
+			sideIcon = "Interface\\AddOns\\Auc-Advanced\\Modules\\Auc-Util-Glypher\\Images\\Glypher"
+			sideIconE = "Interface\\AddOns\\Auc-Advanced\\Modules\\Auc-Util-Glypher\\Images\\GlypherE" 
+		else
+			sideIcon = "Interface\\AddOns\\Auc-Util-Glypher\\Images\\Glypher"
+			sideIconE = "Interface\\AddOns\\Auc-Util-Glypher\\Images\\GlypherE" 
+		end
+			
+		private.LDBButton = LibDataBroker:NewDataObject("Auc-Util-Glypher", {
+					type = "launcher",
+					icon = sideIcon,
+					OnClick = function(self, button) private.SlideBarClick(self, button) end,
+				})
+		
+		function private.LDBButton:OnTooltipShow()
+			self:AddLine("Auc-Util-Glypher",  1,1,0.5, 1)
+			self:AddLine("Open the glypher gui",  1,1,0.5, 1)
+		end
+		--we use a slight hack to LDB to animate our icon on Enter as well as tooltip display. The Tooltip will be hidden by slidebar but will show for other addons
+		function private.LDBButton:OnEnter()
+			if self.icon and type(self.icon) == "table" then
+				self.icon:SetTexture(sideIconE)
 			end
-            sideIcon:RegisterForClicks("LeftButtonUp","RightButtonUp") --What type of click you want to respond to
-            sideIcon:SetScript("OnClick", private.SlideBarClick) --same function that the addons current minimap button calls
-            sideIcon.tip = {
-            "Auc-Util-Glypher",
-            "Open the glypher gui",
-            --"{{Click}} Open the glypher gui",
-            --"{{Right-Click}} BUTTON MOUSEOVER CLICK DESCRIPTION IF WANTED",--remove lines if not wanted
-            }
-        end
-    end
-    private.sideIcon = sideIcon
+			GameTooltip:SetOwner(self, "ANCHOR_NONE")
+			GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
+			GameTooltip:ClearLines()
+			private.LDBButton.OnTooltipShow(GameTooltip)
+			GameTooltip:Show()
+		end
+		function private.LDBButton:OnLeave()
+			if self.icon and type(self.icon) == "table" then
+				self.icon:SetTexture(sideIcon)
+			end
+			GameTooltip:Hide()
+		end
+	end	
 end
 
 function lib.CommandHandler(command, ...)
