@@ -35,6 +35,7 @@ Auc-Stat-iLevel/iLevel.lua -text
 Auc-Util-AHWindowControl/Auc-Util-AHWindowControl.lua svneol=native#text/lua
 Auc-Util-AHWindowControl/Auc-Util-AHWindowControl.toc svneol=native#text/toc
 Auc-Util-AHWindowControl/Embed.xml svneol=native#text/xml
+Auc-Util-Appraiser/Images/BatchPostTriangle.blp -text
 Auc-Util-AskPrice/AskPrice.lua svneol=native#text/lua
 Auc-Util-AskPrice/ChatThrottleLib/Changelog-ChatThrottleLib-v20.txt -text
 Auc-Util-AskPrice/ChatThrottleLib/ChatThrottleLib.lua svneol=native#text/lua
