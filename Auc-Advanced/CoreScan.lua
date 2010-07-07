@@ -262,74 +262,99 @@ function lib.PopScan()
 	end
 end
 
-local CommitProgressBar = CreateFrame("STATUSBAR", "$parentHealthBar", UIParent, "TextStatusBar")
-CommitProgressBar:SetWidth(300)
-CommitProgressBar:SetHeight(18)
-CommitProgressBar:SetPoint("CENTER", UIParent, "CENTER", -5,5)
-CommitProgressBar:SetBackdrop({
-  bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
-  edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
-  tile=1, tileSize=10, edgeSize=10,
-  insets={left=1, right=1, top=1, bottom=1}
-})
-
-CommitProgressBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-CommitProgressBar:SetStatusBarColor(0.6,0,0,0.4)
-CommitProgressBar:SetMinMaxValues(0,100)
-CommitProgressBar:SetValue(50)
-CommitProgressBar:Hide()
-
-CommitProgressBar.text = CommitProgressBar:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-CommitProgressBar.text:SetPoint("CENTER", CommitProgressBar, "CENTER")
-CommitProgressBar.text:SetJustifyH("CENTER")
-CommitProgressBar.text:SetJustifyV("CENTER")
-CommitProgressBar.text:SetText("Auctioneer: Processing")
-CommitProgressBar.text:SetTextColor(1,1,1)
-
-local GetAllProgressBar = CreateFrame("STATUSBAR", "$parentHealthBar", UIParent, "TextStatusBar")
-GetAllProgressBar:SetWidth(300)
-GetAllProgressBar:SetHeight(18)
-GetAllProgressBar:SetPoint("CENTER", UIParent, "CENTER", -5,5)
-GetAllProgressBar:SetBackdrop({
-  bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
-  edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
-  tile=1, tileSize=10, edgeSize=10,
-  insets={left=1, right=1, top=1, bottom=1}
-})
-
-GetAllProgressBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-GetAllProgressBar:SetStatusBarColor(0.6,0,0,0.4)
-GetAllProgressBar:SetMinMaxValues(0,100)
-GetAllProgressBar:SetValue(50)
-GetAllProgressBar:Hide()
-
-GetAllProgressBar.text = GetAllProgressBar:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-GetAllProgressBar.text:SetPoint("CENTER", GetAllProgressBar, "CENTER")
-GetAllProgressBar.text:SetJustifyH("CENTER")
-GetAllProgressBar.text:SetJustifyV("CENTER")
-GetAllProgressBar.text:SetText("Auctioneer: Scanning")
-GetAllProgressBar.text:SetTextColor(1,1,1)
+--[[Generate the progress bars we will use to display state data.
+These are generic bars that will be assigned to display as needed.]]
 
 --controls the display, anchor, and text of our progress bars
-function lib.ProgressBars(self, value, show, text)
-	--setup parent so we can display even if AH is closed
-	if AuctionFrame:IsShown() then
-		self:SetParent(AuctionFrame)
-		self:SetPoint("TOPRIGHT", AuctionFrame, "TOPRIGHT", -5, 5)
-	else
-		self:SetParent(UIParent)
+lib.availableBars = {} --temp just to access teh table while in game
+local availableBars = lib.availableBars
+local NumGenericBars = 0
+local function newBar()
+	local bar = CreateFrame("STATUSBAR", nil, UIParent, "TextStatusBar")
+	bar:SetWidth(300)
+	bar:SetHeight(18)
+	bar:SetBackdrop({
+				bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
+				edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
+				tile=1, tileSize=10, edgeSize=10,
+				insets={left=1, right=1, top=1, bottom=1}
+			})
+	
+	bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	bar:SetStatusBarColor(0.6,0,0,0.6)
+	bar:SetMinMaxValues(0,100)
+	bar:SetValue(50)
+	bar:Hide()
+	
+	bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	bar.text:SetPoint("CENTER", bar, "CENTER")
+	bar.text:SetJustifyH("CENTER")
+	bar.text:SetJustifyV("CENTER")
+	bar.text:SetTextColor(1,1,1)
+		
+	if NumGenericBars < 1 then
+		bar:SetPoint("CENTER", UIParent, "CENTER", -5,5)
+	else--attach to previous bar
+		bar:SetPoint("BOTTOM", lib["GenericProgressBar"..NumGenericBars], "TOP", 0, 0)
 	end
+	NumGenericBars = NumGenericBars + 1
+	lib["GenericProgressBar"..(NumGenericBars)] = bar
+end
+--create 1 bar to start
+newBar()
+function lib.ProgressBars(name, value, show, text, options)
+	--setup parent so we can display even if AH is closed
+	if AuctionFrame and AuctionFrame:IsShown() then
+		AucAdvanced.Scan.GenericProgressBar1:SetParent(AuctionFrame)
+		AucAdvanced.Scan.GenericProgressBar1:SetPoint("TOPRIGHT", AuctionFrame, "TOPRIGHT", -5, 5)
+	else
+		AucAdvanced.Scan.GenericProgressBar1:SetParent(UIParent)
+	end
+	--find a generic bar available for use
+	local ID
+	if not availableBars[name] then
+		ID = #availableBars + 1
+		availableBars[ID] = name
+		availableBars[name] =  ID
+	else
+		ID = availableBars[name]
+	end
+	--do we need more bars than what we currently have available?
+	if not AucAdvanced.Scan["GenericProgressBar"..ID] then
+		newBar()
+	end
+	
+	local self = AucAdvanced.Scan["GenericProgressBar"..ID]
 	--turn bar on/off
 	if show then
 		self:Show()
 	else
+		--hiding so free up this generic bar and drop all  other active bars by 1 place
 		self:Hide()
-	end
-	--prevent overlap
-	if CommitProgressBar:IsShown() then
-		GetAllProgressBar:SetPoint("TOPRIGHT", AuctionFrame, "TOPRIGHT", -5, 23) --set our point above commitbar
-	else
-		GetAllProgressBar:SetPoint("TOPRIGHT", AuctionFrame, "TOPRIGHT", -5, 5) --set our point to the auctionframe
+		self.text:SetText("") --Remove any text so we are ready for next use
+		self:SetStatusBarColor(0.6, 0, 0, 0.6) --light red color
+		self.text:SetTextColor(1, 1, 1, 1)
+		--remove  bar being hidden
+		table.remove(availableBars, ID)
+		availableBars[name] = nil
+		--rearrange remaining bars
+		for i = 1, NumGenericBars do
+			local name = availableBars[i]
+			if name then
+				availableBars[name] = i
+			else
+				AucAdvanced.Scan["GenericProgressBar"..i]:Hide()
+			end
+		end
+		
+		for i,v in ipairs(availableBars) do
+			if type(i) == "string" and availableBars[i] > 1 and availableBars[i] > IDRemoved then
+				AucAdvanced.Scan["GenericProgressBar"..availableBars[i]]:Hide()
+				--reduce by 1
+				availableBars[i] = v-1
+			end
+		end
+		return
 	end
 	--update progress
 	if value then
@@ -339,6 +364,29 @@ function lib.ProgressBars(self, value, show, text)
 	if text then
 		self.text:SetText(text)
 	end
+	--[[options is a table that contains, "tweaks" ie text or bar color changes
+	Nothing below this line will be processed unless an options table is passed]]
+	if not options or type(options) ~= "table" then return end
+		
+	--change bars color
+	local barColor = options.barColor
+	if barColor then
+		local r, g, b, a = barColor[1],barColor[2], barColor[3], barColor[4]
+		if r and g and b then
+			a = a or 0.6
+			self:SetStatusBarColor(r, g, b, a)
+		end
+	end
+	--change text color
+	local textColor = options.textColor
+	if textColor then
+		local r, g, b, a = textColor[1],textColor[2], textColor[3], textColor[4]
+		if r and g and b then
+			a = a or 1
+			self.text:SetTextColor(r, g, b, a)
+		end
+	end
+
 end
 
 function lib.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex, GetAll, NoSummary)
@@ -370,7 +418,7 @@ function lib.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex,
 
 			AucAdvanced.API.BlockUpdate(true, false)
 			BrowseSearchButton:Hide()
-			lib.ProgressBars(GetAllProgressBar, 0, true)
+			lib.ProgressBars("GetAllProgressBar", 0, true, "Auctioneer: Scanning")
 			private.isGetAll = true -- indicates that certain functions must take special action, and that the above changes need to be undone
 
 			private.LastGetAll = now
@@ -398,7 +446,7 @@ function lib.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex,
 			-- this should never fail? we checked CanSendAuctionQuery() earlier
 			message("Scan failed: unable to send query")
 			if private.isGetAll then
-				lib.ProgressBars(GetAllProgressBar, nil, false)
+				lib.ProgressBars("GetAllProgressBar", nil, false)
 				BrowseSearchButton:Show()
 				AucAdvanced.API.BlockUpdate(false)
 				private.isGetAll = nil
@@ -868,7 +916,7 @@ local Commitfunction = function()
 	local idList = private.BuildIDList(scandata, serverKey)
 	local now = time()
 	if get("scancommit.progressbar") then
-		lib.ProgressBars(CommitProgressBar, 0, true)
+		lib.ProgressBars("CommitProgressBar", 0, true)
 	end
 	local oldCount = #scandata.image
 	local scanCount = #TempcurScan
@@ -888,7 +936,7 @@ local Commitfunction = function()
 		local link = data[Const.LINK]
 		progresscounter = progresscounter + 1
 		if GetTime() - lastPause >= processingTime then
-			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
 			coroutine.yield()
 			lastPause = GetTime()
 		end
@@ -918,13 +966,13 @@ local Commitfunction = function()
 
 
 	--[[ *** Stage 2: Merge new scan into ScanData *** ]]
-	lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Starting Stage 2") -- change displayed text for reporting purposes
+	lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Starting Stage 2") -- change displayed text for reporting purposes
 	processStats("begin")
 	for index, data in ipairs(TempcurScan) do
 		local itemPos
 		progresscounter = progresscounter + 4
 		if GetTime() - lastPause >= processingTime then
-			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 2")
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 2")
 			coroutine.yield()
 			lastPause = GetTime()
 		end
@@ -982,7 +1030,7 @@ local Commitfunction = function()
 		local data = scandata.image[pos]
 		progresscounter = progresscounter + progressstep
 		if GetTime() - lastPause >= processingTime then
-			lib.ProgressBars(CommitProgressBar, 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
 			coroutine.yield()
 			lastPause = GetTime()
 		end
@@ -1035,7 +1083,7 @@ local Commitfunction = function()
 
 
 	--[[ *** Stage 4: Reports *** ]]
-	lib.ProgressBars(CommitProgressBar, 100, true, "Auctioneer: Processing Finished")
+	lib.ProgressBars("CommitProgressBar", 100, true, "Auctioneer: Processing Finished")
 	processStats("complete")
 
 	local currentCount = #scandata.image
@@ -1212,7 +1260,7 @@ local Commitfunction = function()
 	AucAdvanced.SendProcessorMessage("scanstats", TempcurScanStats)
 
 	--Hide the progress indicator
-	lib.ProgressBars(CommitProgressBar, nil, false)
+	lib.ProgressBars("CommitProgressBar", nil, false)
 	private.UpdateScanProgress(false, nil, nil, nil, nil, nil, TempcurQuery)
 	lib.PopScan()
 	CommitRunning = false
@@ -1466,7 +1514,7 @@ local StorePageFunction = function()
 
 		for i = 1, numBatchAuctions do
 			if isGetAll and ((i % getallspeed) == 0) then --only start yielding once the first page is done, so it won't affect normal scanning
-				lib.ProgressBars(GetAllProgressBar, 100*i/numBatchAuctions, true)
+				lib.ProgressBars("GetAllProgressBar", 100*i/numBatchAuctions, true)
 				coroutine.yield()
 				if private.breakStorePage then
 					break
@@ -1527,7 +1575,7 @@ local StorePageFunction = function()
 
 	-- Clear GetAll changes made by StartScan
 	if private.isGetAll then -- in theory private.isGetAll should be true iff (local) isGetAll is true -- unless total auctions <=50 (e.g. on PTR)
-		lib.ProgressBars(GetAllProgressBar, 100, false)
+		lib.ProgressBars("GetAllProgressBar", 100, false)
 		BrowseSearchButton:Show()
 		AucAdvanced.API.BlockUpdate(false)
 		private.isGetAll = nil
@@ -1965,7 +2013,7 @@ function lib.Interrupt()
 			private.sentQuery = false
 			if private.isGetAll then
 				-- If the StorePage function didn't run, we need to cleanup here instead
-				lib.ProgressBars(GetAllProgressBar, nil, false)
+				lib.ProgressBars("GetAllProgressBar", nil, false)
 				BrowseSearchButton:Show()
 				AucAdvanced.API.BlockUpdate(false)
 				private.isGetAll = nil
@@ -1991,7 +2039,7 @@ function private.ResetAll()
 	private.StopStorePage(true)
 
 	-- Fallback in case private.isGetAll and related actions were not cleared during processing
-	lib.ProgressBars(GetAllProgressBar, nil, false)
+	lib.ProgressBars("GetAllProgressBar", nil, false)
 	BrowseSearchButton:Show()
 	AucAdvanced.API.BlockUpdate(false)
 	private.isGetAll = nil

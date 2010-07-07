@@ -40,19 +40,15 @@ local frame
 
 local NUM_ITEMS = 12
 
-local function SigFromLink(link)
-	local itype, id, suffix, factor, enchant, seed = AucAdvanced.DecodeLink(link)
-	if itype=="item" then
-		if enchant ~= 0 then
-			return ("%d:%d:%d:%d"):format(id, suffix, factor, enchant)
-		elseif factor ~= 0 then
-			return ("%d:%d:%d"):format(id, suffix, factor)
-		elseif suffix ~= 0 then
-			return ("%d:%d"):format(id, suffix)
-		end
-		return tostring(id)
+local SigFromLink = AucAdvanced.API.GetSigFromLink
+local GetDistribution -- to be filled in when ScanData loads
+
+-- Check to see if we are embedded or not
+local embedded = false
+for _, module in ipairs(AucAdvanced.EmbeddedModules) do
+	if module == "Auc-Util-Appraiser" then
+		embedded = true
 	end
-	-- returns nil
 end
 
 function private.CreateFrames()
@@ -71,13 +67,19 @@ function private.CreateFrames()
 	frame.valuecache = {}
 
 	function frame.GenerateList(repos)
-		if not (frame.salebox and frame.salebox:IsVisible()) then return end --If we don't have Appraiser open, we don't need to run this. It will run when we go to Appraiser
-		local n = #(frame.list)
-		for i=1, n do
-			frame.list[i] = nil
+		-- repos = flag to force reposition of scroller
+		if not frame:IsVisible() then return end --If we don't have Appraiser open, we don't need to run this. It will run when we go to Appraiser tab
+		local ItemList = frame.list
+		wipe(ItemList)
+		if not GetDistribution then
+			-- ScanData is load-on-demand; check each time until it loads, then store the reference for GetDistribution
+			local scandata = AucAdvanced.GetModule("Util", "ScanData")
+			if scandata then
+				GetDistribution = scandata.GetDistribution
+			end
 		end
 
-		for bag=0,4 do
+		for bag=0, NUM_BAG_FRAMES do
 			for slot=1,GetContainerNumSlots(bag) do
 				local link = GetContainerItemLink(bag,slot)
 				if link then
@@ -90,35 +92,30 @@ function private.CreateFrames()
 						local sig = SigFromLink(link)
 						if sig then
 							local texture, itemCount, locked, special, readable = GetContainerItemInfo(bag,slot)
-							if special == -1 then special = true else special = false end
 							if not itemCount or itemCount < 0 then itemCount = 1 end
 							local found = false
-							for i = 1, #(frame.list) do
-								if frame.list[i] then
-									if frame.list[i][1] == sig then
-										frame.list[i][6] = frame.list[i][6] + itemCount
-										found = true
-										break
-									end
+							for i = 1, #ItemList do
+								local item = ItemList[i]
+								if item[1] == sig then
+									item[6] = item[6] + itemCount
+									found = true
+									break
 								end
 							end
 
 							if not found then
-								local ignore = not not AucAdvanced.Settings.GetSetting('util.appraiser.item.'..sig..".ignore")
+								local ignore = AucAdvanced.Settings.GetSetting('util.appraiser.item.'..sig..".ignore")
 
 								if frame.showHidden or (not ignore) or isDirect then
 									local name, _,rarity,_,_,_,_, stack = GetItemInfo(link)
+									local item = {sig, name, texture, rarity, stack, itemCount, link}
+									if ignore then
+										item.ignore = true
+									end
+									table.insert(ItemList, item)
 
-									table.insert(frame.list, {
-										sig,name,texture,rarity,stack,itemCount,link,
-										ignore=ignore
-									} )
-
-									if AucAdvanced.Modules.Util
-									and AucAdvanced.Modules.Util.ScanData
-									and AucAdvanced.Modules.Util.ScanData.GetDistribution
-									and not frame.cache[sig] then
-										local exact, suffix, base, colorDist = AucAdvanced.Modules.Util.ScanData.GetDistribution(link)
+									if GetDistribution and not frame.cache[sig] then
+										local exact, suffix, base, colorDist = GetDistribution(link)
 										frame.cache[sig] = { exact, suffix, base, {} }
 										for k,v in pairs(colorDist.exact) do
 											frame.cache[sig][4][k] = v
@@ -133,6 +130,7 @@ function private.CreateFrames()
 		end
 
 		if frame.showAuctions then
+			local auctionStart = #ItemList + 1
 			for auc=1, GetNumAuctionItems("owner") do
 				local name, texture, count, quality, canUse, level, minBid, minIncrement, buyoutPrice, bidAmount, highBidder, owner  = GetAuctionItemInfo("owner", auc)
 				local link = GetAuctionItemLink("owner", auc)
@@ -140,9 +138,10 @@ function private.CreateFrames()
 				local sig = SigFromLink(link)
 				if sig then
 					local found = false
-					for i = 1, #(frame.list) do
-						if frame.list[i][1] == sig and frame.list[i].auction then
-							frame.list[i][6] = frame.list[i][6] + count
+					for i = auctionStart, #ItemList do
+						local item = ItemList[i]
+						if item[1] == sig then
+							item[6] = item[6] + count
 							found = true
 							break
 						end
@@ -151,16 +150,17 @@ function private.CreateFrames()
 					if not found then
 						local name, _,rarity,_,_,_,_, stack = GetItemInfo(link)
 
-						table.insert(frame.list, {
+						local item = {
 							sig,name,texture,rarity,stack,count,link,
 							auction=true
-						} )
+						}
+						if AucAdvanced.Settings.GetSetting('util.appraiser.item.'..sig..".ignore") then
+							item.ignore = true
+						end
+						table.insert(ItemList, item)
 
-						if AucAdvanced.Modules.Util
-						and AucAdvanced.Modules.Util.ScanData
-						and AucAdvanced.Modules.Util.ScanData.GetDistribution
-						and not frame.cache[sig] then
-							local exact, suffix, base, colorDist = AucAdvanced.Modules.Util.ScanData.GetDistribution(link)
+						if GetDistribution and not frame.cache[sig] then
+							local exact, suffix, base, colorDist = GetDistribution(link)
 							frame.cache[sig] = { exact, suffix, base, {} }
 							for k,v in pairs(colorDist.exact) do
 								frame.cache[sig][4][k] = v
@@ -171,49 +171,97 @@ function private.CreateFrames()
 			end
 		end
 
-		table.sort(frame.list, private.sortItems)
+		table.sort(ItemList, private.sortItems)
 
-		local pos = 0
-		n = #frame.list
-		if (n <= NUM_ITEMS) then
+		local listLen = #ItemList
+		-- find the current (or next) selected item and update stored details
+		local pos
+		local item
+		local sig = frame.selected
+		if sig then
+			local selected = frame.selectedItem
+			local wasAuction = selected and selected.auction
+			for i = 1, listLen do
+				local itm = ItemList[i]
+				if itm[1] == sig then
+					pos = i
+					item = itm
+					if not wasAuction or item.auction then
+						break
+					end
+				end
+			end
+		end
+		if not item then
+			local selected = frame.selectedItem
+			if selected then
+				if selected[7] == frame.selectedRawLink then -- we had a raw link and it matches last selected item
+					item = selected -- note that this item is not included in ItemList
+					item[6] = AucAdvanced.Post.CountAvailableItems(sig) -- re-count available items
+					sig = item[1]
+					-- pos remains nil
+				elseif AucAdvanced.Settings.GetSetting("util.appraiser.reselect") then
+					for i = 1, listLen do
+						local itm = ItemList[i]
+						if itm.ignore then -- don't auto-select ignored item
+							break -- stop now because all items after first ignored item will also be ignored
+						end
+						if not private.sortItems(itm, selected) then -- we want first itm >= selected (see defn of sortItems in AprSettings.lua)
+							if not itm.auction then -- don't auto-select auction item
+								pos = i
+								item = itm
+								sig = item[1]
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		if item then
+			frame.DisplaySelectedItem(item, sig, pos)
+		else
+			frame.ClearSelectedItem()
+		end
+		-- set scroller
+		if listLen <= NUM_ITEMS then
 			frame.scroller:Hide()
 			frame.scroller:SetMinMaxValues(0, 0)
 			frame.scroller:SetValue(0)
 		else
-			frame.scroller:Show()
-			frame.scroller:SetMinMaxValues(0, n-NUM_ITEMS)
-			-- Find the current item
-			for i = 1, n do
-				if frame.list[i][1] == frame.selected then
-					pos = i
-					break
+			frame.scroller:SetMinMaxValues(0, listLen-NUM_ITEMS)
+			if repos then
+				if pos then
+					frame.scroller:SetValue(max(0, min(listLen-NUM_ITEMS+1, pos-(NUM_ITEMS/2))))
+				else
+					frame.scroller:SetValue(0)
 				end
 			end
+			frame.scroller:Show()
 		end
-		if (repos) then
-			frame.scroller:SetValue(math.max(0, math.min(n-NUM_ITEMS+1, pos-(NUM_ITEMS/2))))
-		end
+		-- redraw list buttons
 		frame:SetScroll()
 
 		return pos
 	end
 
-	private.empty = {}
 	function frame.SelectItem(obj, button, rawlink)
 		local item,sig,pos
 
 		if obj then
-			assert(not rawlink)
 			if not obj.id then obj = obj:GetParent() end
-			pos = math.floor(frame.scroller:GetValue())
-			local id = obj.id
-			pos = math.min(pos + id, #frame.list)
-			item = frame.list[pos]
-			sig = item and item[1] or nil
-			if button and sig == frame.selected then
-				sig = nil
+			pos = floor(frame.scroller:GetValue()) + obj.id
+			if button and pos == frame.selectedPos then
 				pos = nil
+			else
+				item = frame.list[pos]
+				if item then
+					sig = item[1]
+				else
+					pos = nil
+				end
 			end
+			frame.selectedRawLink = nil
 		elseif rawlink then
 			sig = SigFromLink(rawlink)
 			if not sig then return end
@@ -227,93 +275,97 @@ function private.CreateFrames()
 			if not item then
 				local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
 					itemEquipLoc, itemTexture = GetItemInfo(rawlink)
-				local myCount = GetItemCount(rawlink)
+				local myCount = AucAdvanced.Post.CountAvailableItems(sig)
 				item = {
 					sig, itemName, itemTexture, itemRarity, itemStackCount, myCount, rawlink
 				}
 			end
+			frame.selectedRawLink = rawlink -- rawlinked item should stay selected until manually deselected
 		end
-		
-		-- SHIFT CLICK HANDLER - Added by GhostfromTexas May 16, 2010 for APPR-170
-		if IsShiftKeyDown() then
-			if ChatFrameEditBox and ChatFrameEditBox:IsVisible() then
-			   ChatFrameEditBox:Insert(item[7]);
-			end
-			return -- do not continue after this point
-		end
-		
-		frame.selected = sig
-		frame.selectedPos = pos
-		frame.selectedObj = obj
-		frame.selectedPostable = item and not (item.auction or item[6]<1)
-		frame.SetScroll()
 
-		frame.salebox.sig = sig
 		if sig then
-			local _,_,_, hex = GetItemQualityColor(item[4])
-			frame.salebox.icon:SetNormalTexture(item[3])
-			frame.salebox.name:SetText(hex.."["..item[2].."]|r")
-			if item.auction then
-				frame.salebox.info:SetText(_TRANS('APPR_Interface_HaveUpAuction'):format(item[6]) )--You have %s up for auction
-			else
-				frame.salebox.info:SetText(_TRANS('APPR_Interface_HaveAvailableAuction'):format(item[6]) )--You have %s available to auction
-			end
-			frame.salebox.info:SetTextColor(1,1,1, 0.8)
-			frame.salebox.link = item[7]
-			frame.salebox.stacksize = item[5]
-			frame.salebox.count = item[6]
+			frame.DisplaySelectedItem(item, sig, pos)
 
-			frame.UpdateImage()
-			frame.InitControls()
 			--Also pass this search to BeanCounter's frame
 			if BeanCounter and BeanCounter.API.search and BeanCounter.API.isLoaded then
 				BeanCounter.API.search(item[7], nil, nil, 50)
 			end
 		else
-			frame.salebox.name:SetText(_TRANS('APPR_Interface_NoItemSelected') )--No item selected
-			frame.salebox.name:SetTextColor(0.5, 0.5, 0.7)
-			if not AucAdvanced.Settings.GetSetting("util.appraiser.classic") then
-				frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemLeft') )--Select an item to the left to begin auctioning...
-			else
-				frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemAuctioning') )--Select an item to begin auctioning...
-			end
-			frame.salebox.info:SetTextColor(0.5, 0.5, 0.7)
-			frame.imageview.sheet:SetData(private.empty)
-			frame.UpdateDisplay()
+			frame.ClearSelectedItem()
 		end
+		frame.SetScroll()
 
-		--[[if not (frame.direct and item and item[7] and frame.direct == item[7]) then
-			frame.direct = nil
-			frame.GenerateList()
-		end]]
 	end
 
-	function frame.Reselect(posted)
-		local reselect = (frame.selected == posted[1])
-		local reselectenabled = AucAdvanced.Settings.GetSetting("util.appraiser.reselect")
-		frame.GenerateList()
-		if reselect then
-			if reselectenabled then
-				frame.SelectItem(frame.selectedObj)
-			else
-				frame.selected = nil
-				frame.selectedPos = nil
-				frame.salebox.sig = nil
-				frame.salebox.name:SetText(_TRANS('APPR_Interface_NoItemSelected') )--No item selected
-				frame.salebox.name:SetTextColor(0.5, 0.5, 0.7)
-				if not AucAdvanced.Settings.GetSetting("util.appraiser.classic") then
-					frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemLeft') )--Select an item to the left to begin auctioning...
-				else
-					frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemAuctioning') )--Select an item to begin auctioning...
-				end
-				frame.salebox.info:SetTextColor(0.5, 0.5, 0.7)
-				frame.imageview.sheet:SetData(private.empty)
-				frame.UpdatePricing()
-				frame.UpdateDisplay()
-			end
+	private.empty = {}
+	function frame.ClearSelectedItem()
+		frame.selected = nil
+		frame.selectedPos = nil
+		frame.selectedItem = nil
+		frame.selectedPostable = nil
+		frame.salebox.sig = nil
+		frame.salebox.name:SetText(_TRANS('APPR_Interface_NoItemSelected') )--No item selected
+		frame.salebox.name:SetTextColor(0.5, 0.5, 0.7)
+		if not AucAdvanced.Settings.GetSetting("util.appraiser.classic") then
+			frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemLeft') )--Select an item to the left to begin auctioning...
+		else
+			frame.salebox.info:SetText(_TRANS('APPR_Interface_SelectItemAuctioning') )--Select an item to begin auctioning...
+		end
+		frame.salebox.info:SetTextColor(0.5, 0.5, 0.7)
+		frame.imageview.sheet:SetData(private.empty)
+		--frame.UpdatePricing()
+		frame.UpdateDisplay()
+	end
+
+	function frame.DisplaySelectedItem(item, sig, pos)
+		frame.selected = sig
+		frame.selectedPos = pos
+		frame.selectedItem = item
+		frame.selectedPostable = not (item.auction or item[6]<1)
+		frame.salebox.sig = sig
+		local _,_,_, hex = GetItemQualityColor(item[4])
+		frame.salebox.icon:SetNormalTexture(item[3])
+		frame.salebox.name:SetText(hex.."["..item[2].."]|r")
+		if item.auction then
+			frame.salebox.info:SetText(_TRANS('APPR_Interface_HaveUpAuction'):format(item[6]) )--You have %s up for auction
+		else
+			frame.salebox.info:SetText(_TRANS('APPR_Interface_HaveAvailableAuction'):format(item[6]) )--You have %s available to auction
+		end
+		frame.salebox.info:SetTextColor(1,1,1, 0.8)
+		frame.salebox.link = item[7]
+		frame.salebox.stacksize = item[5]
+		frame.salebox.count = item[6]
+
+		frame.UpdateImage()
+		frame.InitControls()
+	end
+
+	function frame.SelectNext()
+		-- select next postable item
+		local pos, item
+		pos = frame.selectedPos
+		if not pos then return end
+		repeat
+			pos = pos + 1
+			item = ItemList[pos]
+		until not item or (item[6] > 0 and not item.auction)
+		if item then
+			frame.DisplaySelectedItem(item, item[1], pos)
+		else
+			frame.ClearSelectedItem()
 		end
 	end
 
+	function private.SelectNextOnPost(postresult)
+		--[[ todo: add settings option to enable this feature
+		local sig = postresult.sig or postresult[1]
+		if sig == frame.selected then
+			frame.SelectNext()
+		end
+		--]]
+	end
+
+	-- this function is not used - can it be removed? (along with the supporting code for frame.direct in GenerateList)
 	function frame.DirectSelect(link)
 		if frame.direct == link then return end
 		frame.direct = link
@@ -457,6 +509,8 @@ function private.CreateFrames()
 		frame.salebox.stack:SetMinMaxValues(1, frame.salebox.stacksize)
 		frame.salebox.stack:SetValue(curStack)
 		frame.salebox.stackentry:SetNumber(curStack)
+		frame.valuecache.stack = frame.salebox.stack:GetValue()
+		frame.valuecache.stackentry = frame.salebox.stackentry:GetNumber()
 
 		local defStack = AucAdvanced.Settings.GetSetting("util.appraiser.number")
 		if defStack == "maxplus" then
@@ -484,6 +538,8 @@ function private.CreateFrames()
 		else
 			frame.salebox.numberentry:SetNumber(curNumber)
 		end
+		frame.valuecache.number = frame.salebox.number:GetAdjustedValue()
+		frame.valuecache.numberentry = frame.salebox.numberentry:GetText()
 
 		-- Only post above number of items, no more. (ie. keep track of current auctions)
 		local curNumberOnly = AucAdvanced.Settings.GetSetting('util.appraiser.item.'..frame.salebox.sig..".numberonly")
@@ -523,7 +579,6 @@ function private.CreateFrames()
 		frame.salebox.model.value = curModel
 		frame.salebox.model:UpdateValue()
 		frame.valuecache.model = curModel
-		--frame.SetPriceFromModel(curModel)
 
 		frame.UpdatePricing()
 		frame.UpdateDisplay()
@@ -566,11 +621,8 @@ function private.CreateFrames()
 			frame.CheckUpdates()
 		end
 		if frame.scanstatsEvent then
-			frame.scanstatsEvent = false
 			frame.GenerateList()
-			frame.UpdatePricing()
-			frame.UpdateDisplay()
-			frame.UpdateImage()
+			frame.scanstatsEvent = false
 		end
 	end
 
@@ -581,19 +633,11 @@ function private.CreateFrames()
 	function frame.CheckUpdates()
 		frame.updated = nil
 		if not frame.salebox.sig then return end
+
 		local stack = frame.salebox.stack:GetValue()
 		local stackentry = frame.salebox.stackentry:GetNumber()
 		local number = frame.salebox.number:GetAdjustedValue()
 		local numberentry = frame.salebox.numberentry:GetText()
-		local numberonly = frame.salebox.numberonly:GetChecked()
-		local duration = frame.salebox.duration:GetValue()
-		local matcher = frame.salebox.matcher:GetChecked()
-		local ignore = frame.salebox.ignore:GetChecked()
-		local bulk = frame.salebox.bulk:GetChecked()
-		local bid = MoneyInputFrame_GetCopper(frame.salebox.bid)
-		local buy = MoneyInputFrame_GetCopper(frame.salebox.buy)
-		local model = frame.salebox.model.value
-
 		if stack ~= frame.valuecache.stack then
 			frame.valuecache.stack = stack
 			frame.valuecache.stackentry = stack
@@ -643,6 +687,8 @@ function private.CreateFrames()
 			frame.valuecache.numberentry = frame.salebox.numberentry:GetText()
 			frame.valuecache.number = frame.salebox.number:GetAdjustedValue()
 		end
+
+		local numberonly = frame.salebox.numberonly:GetChecked()
 		if numberonly ~= frame.valuecache.numberonly then
 			frame.valuecache.numberonly = numberonly
 			if numberonly then
@@ -652,6 +698,8 @@ function private.CreateFrames()
 			end
 			AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".numberonly", numberonly)
 		end
+
+		local ignore = frame.salebox.ignore:GetChecked()
 		if ignore ~= frame.valuecache.ignore then
 			frame.valuecache.ignore = ignore
 			if ignore then
@@ -662,6 +710,8 @@ function private.CreateFrames()
 			AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".ignore", ignore)
 			frame.GenerateList()
 		end
+
+		local bulk = frame.salebox.bulk:GetChecked()
 		if bulk ~= frame.valuecache.bulk then
 			frame.valuecache.bulk = bulk
 			if bulk then
@@ -670,7 +720,16 @@ function private.CreateFrames()
 				bulk = "off"
 			end
 			AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".bulk", bulk)
+
+			frame.GenerateList()
+
 		end
+
+		local duration = frame.salebox.duration:GetValue()
+		local matcher = frame.salebox.matcher:GetChecked()
+		local bid = MoneyInputFrame_GetCopper(frame.salebox.bid)
+		local buy = MoneyInputFrame_GetCopper(frame.salebox.buy)
+		local model = frame.salebox.model.value
 		if duration ~= frame.valuecache.duration then
 			frame.valuecache.duration = duration
 			AucAdvanced.Settings.SetSetting("util.appraiser.item."..frame.salebox.sig..".duration", private.durations[duration][1])
@@ -910,11 +969,7 @@ function private.CreateFrames()
 					extra = "  |cffffaa40" .. _TRANS('APPR_Interface_NumberGreaterAvailable') --(Number > Available)
 				end
 				frame.salebox.stack.label:SetText(_TRANS('APPR_Interface_StackSize'):format(curSize)..extra)--Stack size: %d
-				if frame.salebox.stacksize > 1 then
-					frame.salebox.number:SetAdjustedRange(maxStax, -2, -1)
-				else
-					frame.salebox.number:SetAdjustedRange(maxStax, -2, -1)
-				end
+				frame.salebox.number:SetAdjustedRange(maxStax, -2, -1)
 				if (curNumber >= -2 and curNumber < 0) then
 					if (curNumber == -2) then
 						frame.salebox.number.label:SetText(_TRANS('APPR_Interface_NumberAllFullStacks'):format(maxStax, fullPop))--Number: All full stacks (%d) = %d
@@ -1249,17 +1304,19 @@ function private.CreateFrames()
 	end
 
 	function frame.PostAuctions(obj)
+
 		local postType = obj.postType
 		if postType == "single" then
 			frame.PostBySig(frame.salebox.sig)
 		elseif postType == "batch" then
-			if not IsModifierKeyDown() then
+			if not IsModifierKeyDown() and GetMouseButtonClicked() ~= "RightButton" then
 				message(_TRANS('APPR_Interface_BatchButtonCombination') )--This button requires you to press a combination of keys when clicked.\nSee help printed in the chat frame for further details.
 				print(_TRANS('APPR_Help_BatchPostHelp1') )--The batch post mechanism will allow you to perform automated actions on all the items in your inventory marked for batch posting.
 				print(_TRANS('APPR_Help_BatchPostHelp2') )--You must hold down one of the following keys when you click the button:
 				print("  ".._TRANS('APPR_Help_BatchPostHelp3') )--- Alt = Auto-refresh all batch postable items.
 				print("  ".._TRANS('APPR_Help_BatchPostHelp4') )--- Shift = List all auctions that would be posted without actually posting them.
-				print("  ".._TRANS('APPR_Help_BatchPostHelp5') )--- Control+Alt+Shift = Auto-post all batch postable items.
+				print("  ".._TRANS('APPR_Help_BatchPostHelp5') )--- RightClick = Auto-post all batch postable items.
+				print("  ".._TRANS('APPR_Help_BatchPostHelp6') )--- Alt+RightClick on an item to toggle batch post on/off
 				return
 			end
 
@@ -1268,7 +1325,9 @@ function private.CreateFrames()
 			local c = IsControlKeyDown()
 
 			local mode
-			if a and c and s then mode = "autopost" end
+
+			-- Keeping old ability for Ctrl+Alt+Shift for users used to using this modifer setup.
+			if (a and c and s) or (GetMouseButtonClicked() == "RightButton") then mode = "autopost" end
 			if a and not c and not s then mode = "refresh" end
 			if not a and not c and s then mode = "list" end
 
@@ -1469,19 +1528,22 @@ function private.CreateFrames()
 
 
 	function frame.SetScroll(...)
-		local pos = math.floor(frame.scroller:GetValue())
+		local pos = floor(frame.scroller:GetValue())
 		for i = 1, NUM_ITEMS do
 			local item = frame.list[pos+i]
 			local button = frame.items[i]
 			if item then
 				local curIgnore = item.ignore
+				local curAuction = item.auction
+				local curBulk = AucAdvanced.Settings.GetSetting('util.appraiser.item.'..item[1]..".bulk") or false
 
 				button.icon:SetTexture(item[3])
+				button.icon:SetDrawLayer("ARTWORK");
 				button.icon:SetDesaturated(curIgnore)
 
 				local _,_,_, hex = GetItemQualityColor(item[4])
 				local stackX = "x "
-				if item.auction then
+				if curAuction then
 					stackX = ""
 				end
 
@@ -1490,10 +1552,17 @@ function private.CreateFrames()
 					stackX = hex..stackX
 				end
 
+				if curBulk then
+				    button.batchTex:Show();
+				else
+				    button.batchTex:Hide();
+				end
+
 				button.name:SetText(hex.."["..item[2].."]|r")
+
 				button.size:SetText(stackX..item[6])
 
-				if item.auction then
+				if curAuction then
 					button.size:SetAlpha(0.7)
 				else
 					button.size:SetAlpha(1)
@@ -1507,21 +1576,28 @@ function private.CreateFrames()
 						info = AucAdvanced.Modules.Util.ScanData.Colored(true, dist, nil, true)	-- use shortened format
 					end
 				end
+
 				button.info:SetText(info)
-				button:Show()
-				button.bg:SetVertexColor(1,1,1)
-				if (item[1] == frame.selected) then
-					button.bg:SetAlpha(0.6)
-				elseif curIgnore then
-					button.bg:SetAlpha(0.1)
-				elseif item.auction then
-					button.bg:SetVertexColor(0.3,0.1,1)	-- very dark red
-					button.bg:SetAlpha(0.3)
+
+				local background = button.bg
+				local alpha = 0.2
+
+				if curAuction then
+					background:SetVertexColor(0.9,0.3,0) -- very dark red
 				else
-					button.bg:SetAlpha(0.2)
+					background:SetVertexColor(1,1,1)
 				end
 
-				button.bg:SetDesaturated(curIgnore)
+				if (item[1] == frame.selected) then
+					alpha = 0.6
+				elseif curIgnore then
+					alpha = 0.1
+    			end
+
+				background:SetAlpha(alpha)
+				background:SetDesaturated(curIgnore)
+
+				button:Show()
 			else
 				button:Hide()
 			end
@@ -1535,14 +1611,14 @@ function private.CreateFrames()
 		end
 	end
 
-	frame.DoTooltip = function ()
-		if not this.id then this = this:GetParent() end
-		if this.id then --we're mousing over the itemlist
-			local id = this.id
+	frame.DoTooltip = function(self)
+		if not self.id then self = self:GetParent() end
+		if self.id then --we're mousing over the itemlist
+			local id = self.id
 			local pos = math.floor(frame.scroller:GetValue())
 			local item = frame.list[pos + id]
 			if item then
-				local name = item[2]
+				--local name = item[2]
 				local link = item[7]
 				local count = item[6]
 				GameTooltip:SetOwner(frame.itembox, "ANCHOR_NONE")
@@ -1554,7 +1630,7 @@ function private.CreateFrames()
 			if frame.salebox.sig then
 				local link = frame.salebox.link
 				local count = frame.salebox.count
-				local _,name = strsplit("[",(strsplit("]",frame.salebox.name:GetText()))) --isolates the text between the []
+				--local _,name = strsplit("[",(strsplit("]",frame.salebox.name:GetText()))) --isolates the text between the []
 				GameTooltip:SetOwner(frame.salebox.icon, "ANCHOR_NONE")
 				AucAdvanced.ShowItemLink(GameTooltip, link, count)
 				GameTooltip:ClearAllPoints()
@@ -1652,23 +1728,50 @@ function private.CreateFrames()
 	frame.itembox.showText:SetHeight(frame.itembox.showAuctions:GetHeight())
 
 	frame.items = {}
+	local function itemButtonClick(self, button)
+		-- when adding new mod-key combinations, rearrange lines in the the nested 'if' structure as appropriate
+		local item = frame.list[floor(frame.scroller:GetValue()) + self.id]
+
+		if IsShiftKeyDown() and not IsControlKeyDown() then
+			if IsAltKeyDown() then -- shift/alt
+				if item then
+					if GetMouseButtonClicked() == "LeftButton" then
+						frame.PostBySig(item[1])
+					end
+					return
+				end
+			else -- shift
+				if item then
+					if ChatFrameEditBox and ChatFrameEditBox:IsVisible() and GetMouseButtonClicked() == "LeftButton" then
+						ChatFrameEditBox:Insert(item[7])
+					end
+					return
+				end
+			end
+		elseif GetMouseButtonClicked() == "RightButton" then
+			if IsAltKeyDown() then -- Alt+RightClick
+				 local curBulk = AucAdvanced.Settings.GetSetting('util.appraiser.item.'..item[1]..".bulk") or false
+
+				 if curBulk then
+				 	AucAdvanced.Settings.SetSetting("util.appraiser.item."..item[1]..".bulk", false)
+				 else
+				 	AucAdvanced.Settings.SetSetting("util.appraiser.item."..item[1]..".bulk", true)
+				 end
+				 frame.GenerateList() -- refresh the list and frame after toggling the bulk option.
+				 return
+			end
+		end
+
+		frame.SelectItem(self, button)
+	end
+	local function itemIconClick(self, button)
+		return itemButtonClick(self:GetParent(), button) -- go up one level, then tailcall
+	end
 	for i=1, NUM_ITEMS do
 		local item = CreateFrame("Button", nil, frame.itembox)
 		frame.items[i] = item
-		item:SetScript("OnClick", function(obj, button)
-			if IsShiftKeyDown() and IsAltKeyDown() then
-				local pos = math.floor(frame.scroller:GetValue())
-				local id = obj.id
-				pos = math.min(pos + id, #frame.list)
-				local sig = nil
-				if frame.list[pos] then
-					sig = frame.list[pos][1]
-				end
-				frame.PostBySig(sig)
-			else
-				frame.SelectItem(obj, button)
-			end
-		end)
+
+		item:SetScript("OnClick", itemButtonClick)
 		if (i == 1) then
 			item:SetPoint("TOPLEFT", frame.itembox, "TOPLEFT", 5,-8 )
 		else
@@ -1679,25 +1782,13 @@ function private.CreateFrames()
 
 		item.id = i
 
+		item:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+
 		item.iconbutton = CreateFrame("Button", nil, item)
 		item.iconbutton:SetHeight(26)
 		item.iconbutton:SetWidth(26)
 		item.iconbutton:SetPoint("LEFT", item, "LEFT", 3,0)
-		item.iconbutton:SetScript("OnClick", function(obj, button)
-			if IsShiftKeyDown() and IsAltKeyDown() then
-				obj = obj:GetParent()
-				local pos = math.floor(frame.scroller:GetValue())
-				local id = obj.id
-				pos = math.min(pos + id, #frame.list)
-				local sig = nil
-				if frame.list[pos] then
-					sig = frame.list[pos][1]
-				end
-				frame.PostBySig(sig)
-			else
-				frame.SelectItem(obj, button)
-			end
-		end)
+		item.iconbutton:SetScript("OnClick", itemIconClick)
 		item.iconbutton:SetScript("OnEnter", frame.DoTooltip)
 		item.iconbutton:SetScript("OnLeave", frame.UndoTooltip)
 
@@ -1705,6 +1796,23 @@ function private.CreateFrames()
 		item.icon:SetPoint("TOPLEFT", item.iconbutton, "TOPLEFT", 0,0)
 		item.icon:SetPoint("BOTTOMRIGHT", item.iconbutton, "BOTTOMRIGHT", 0,0)
 		item.icon:SetTexture("Interface\\InventoryItems\\WoWUnknownItem01")
+
+
+    	-- This section is for the Batch Post texture that shows up when an item has the batch post option set
+		item.batchTex = item.iconbutton:CreateTexture()
+
+		if embedded then
+			item.batchTex:SetTexture("Interface\\AddOns\\Auc-Advanced\\Modules\\Auc-Util-Appraiser\\Images\\BatchPostTriangle")
+		else
+			item.batchTex:SetTexture("Interface\\AddOns\\Auc-Util-Appraiser\\Images\\BatchPostTriangle")
+		end
+
+		item.batchTex:SetPoint("TOP", item.icon, "TOP", 0,-15)
+		item.batchTex:SetPoint("LEFT", item.icon, "LEFT", 10,0)
+		item.batchTex:SetPoint("RIGHT", item.icon, "RIGHT", -3,0)
+		item.batchTex:SetPoint("BOTTOM", item.icon, "BOTTOM", 0,2)
+		item.batchTex:SetDrawLayer("OVERLAY")
+		item.batchTex:Hide()
 
 		item.name = item:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 		item.name:SetJustifyH("LEFT")
@@ -1742,8 +1850,8 @@ function private.CreateFrames()
 	scroller:SetWidth(20)
 	scroller:SetOrientation("VERTICAL")
 	scroller:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
-	scroller:SetMinMaxValues(1, 30)
-	scroller:SetValue(1)
+	scroller:SetMinMaxValues(0, 0)
+	scroller:SetValue(0)
 	scroller:SetBackdrop({
 		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
@@ -1752,6 +1860,7 @@ function private.CreateFrames()
 	})
 	scroller:SetBackdropColor(0, 0, 0, 0.8)
 	scroller:SetScript("OnValueChanged", frame.SetScroll)
+	scroller:Hide()
 	frame.scroller = scroller
 
 	frame.itembox:EnableMouseWheel(true)
@@ -2163,7 +2272,8 @@ function private.CreateFrames()
 	frame.gobatch:SetText(_TRANS('APPR_Interface_BatchPost') )--Batch post
 	frame.gobatch:SetWidth(80)
 	frame.gobatch:SetScript("OnClick", frame.PostAuctions)
-	frame.gobatch:SetScript("OnEnter", function() return frame.SetButtonTooltip(_TRANS('APPR_HelpTooltip_RefreshesCurrentBatch') ) end)--Alt: Refreshes batch post items Shift: Lists current batch post items Ctrl+Alt+Shift: Posts batch post items
+	frame.gobatch:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	frame.gobatch:SetScript("OnEnter", function() return frame.SetButtonTooltip(_TRANS('APPR_HelpTooltip_RefreshesCurrentBatch') ) end)--Alt: Refreshes batch post items Shift: Lists current batch post items RightClick: Posts batch post items Alt+RightClick: Toggles an item's batch post option on/off
 	frame.gobatch:SetScript("OnLeave", function() return GameTooltip:Hide() end)
 	frame.gobatch.postType = "batch"
 	frame.gobatch:Enable()
@@ -2531,8 +2641,8 @@ function private.CreateFrames()
 		AucAdvanced.AddTab(frame.ScanTab, frame)
 	end
 
-	function frame.ScanTab.OnClick(_, _, index)
-		if not index then index = this:GetID() end
+	function frame.ScanTab.OnClick(self)
+		local index = self:GetID()
 		local tab = getglobal("AuctionFrameTab"..index)
 		if (tab and tab:GetName() == "AuctionFrameTabUtilAppraiser") then
 			AuctionFrameTopLeft:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Bid-TopLeft")
@@ -2563,7 +2673,7 @@ function private.CreateFrames()
 	frame.salebox.numberentry:SetPoint("LEFT", frame.salebox.number, "RIGHT", 10, 0)
 	frame.salebox.numberentry:SetNumeric(false)
 	frame.salebox.numberentry:SetHeight(16)
-	frame.salebox.numberentry:SetWidth(30)
+	frame.salebox.numberentry:SetWidth(32)
 	frame.salebox.numberentry:SetNumber(0)
 	frame.salebox.numberentry:SetAutoFocus(false)
 	frame.salebox.numberentry:SetScript("OnEnter", function() return frame.SetButtonTooltip(_TRANS('APPR_HelpTooltip_SetNumberStacksPosted') ) end)--Set the number of stacks to be posted
@@ -2592,7 +2702,7 @@ function private.CreateFrames()
 	frame.salebox.stackentry:SetNumeric(true)
 	frame.salebox.stackentry:SetNumber(0)
 	frame.salebox.stackentry:SetHeight(16)
-	frame.salebox.stackentry:SetWidth(30)
+	frame.salebox.stackentry:SetWidth(32)
 	frame.salebox.stackentry:SetAutoFocus(false)
 	frame.salebox.stackentry:SetScript("OnEnter", function() return frame.SetButtonTooltip(_TRANS('APPR_HelpTooltip_SetNumberPerStack') ) end)--Set the number of items per posted stack
 	frame.salebox.stackentry:SetScript("OnLeave", function() return GameTooltip:Hide() end)

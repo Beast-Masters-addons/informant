@@ -45,35 +45,46 @@ end
 -------------------------------------------------------------------------------
 -- Called before StartAuction()
 -------------------------------------------------------------------------------
-local itemLinkMulti, nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti --these store the last auction for the new Multi auction processor added in wow 3.3.3
+local nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti --these store the last auction for the new Multi auction processor added in wow 3.3.3
 function private.preStartAuctionHook(_, _, minBid, buyoutPrice, runTime, count, stackNumber)
 	--REMOVE 3.3.3 we dont use this count value it is multistack related not the actual stack value being created only name is still used
 	local name, texture, countDepreciated, quality, canUse, price = GetAuctionSellItemInfo() 
 	--debugPrint("1",minBid, buyoutPrice,"Prehook Fired, starting auction creation", name, count)
-	
+
 	--REMOVE 3.3.3 Shim  we will get the count passed via the function hook. This is just to let bean work in 3.3.2 and 3.3.3
+	--Still needed for compatibility with auction addons that dont passs a count/not multisell aware
 	if not count then count = countDepreciated end --REMOVE
 	if (name and count) then
-		--Look in the bags find the locked item so we can get the itemlink
-		local itemLink
+		--Look in the bags find the locked item so we can get the itemlink, we also check if this is a multipost can this stack cover it
+		local itemLink, selectedStackCount
 		for bagID = 0, 4 do
 			local bagSlots = GetContainerNumSlots(bagID)
 			for  slot = 1, bagSlots do
-				local  _, _, locked, _, _ = GetContainerItemInfo(bagID, slot)
+				local  _, selectedStack, locked, _, _ = GetContainerItemInfo(bagID, slot)
 				if locked then
 					itemLink = GetContainerItemLink(bagID, slot)
+					selectedStackCount = selectedStack or 0
+					break
 				end
 			end
 		end
-				
-		local deposit = CalculateAuctionDeposit(runTime)
+	
+		local deposit = CalculateAuctionDeposit (runTime, count)
+		debugPrint(itemLink, "deposit", deposit, "for", count, "x", stackNumber, "for", runTime, "minutes") 
+		
 		--TEMP PATCH to fix run time changes till I can change teh mail lua to work with new system
 		if runTime == 1 then runTime = 720 end
 		if runTime == 2 then runTime = 1440 end
 		if runTime == 3 then runTime = 2880 end
 		
-		itemLinkMulti, nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti = itemLink, name, count, minBid, buyoutPrice, runTime, deposit
-		private.addPendingPost(itemLink, name, count, minBid, buyoutPrice, runTime, deposit)
+		nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti = name, count, minBid, buyoutPrice, runTime, deposit
+		--Multipost is used when more than 1 stack is posted or when the selected stack is too small to post the stacksize
+		if stackNumber and (stackNumber > 1 or count > selectedStackCount) then
+			debugPrint("Using the multipost route stackNumber=", stackNumber, "count=", count , "selectedStackCount=", selectedStackCount)
+			private.multipostStart(itemLink, count, stackNumber, selectedStackCount)
+		else
+			private.addPendingPost(itemLink, name, count, minBid, buyoutPrice, runTime, deposit)
+		end
 	end
 end
 
@@ -151,9 +162,11 @@ end
 -- Called when the Multi auction feature is used in patch 3.3.3
 --------------------------------------------------------------------------------
 function private.onMultiPost(current, total)
-	if current > 1 then --first has already been handled by the function hook. We add each additional post here
-		--print("added", current, "of", total, itemLinkMulti, nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti)
-		private.addPendingPost(itemLinkMulti, nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti)
+	if private.multipostScan2 and #private.multipostScan2 > 0 then
+		local link = private.multipostScan2[1]
+		debugPrint(#private.multipostScan2, "added", current, "of", total, link, nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti)
+		private.addPendingPost(link, nameMulti, countMulti, minBidMulti, buyoutPriceMulti, runTimeMulti, depositMulti)
+		table.remove (private.multipostScan2, 1)
 	end
 end
 
@@ -177,3 +190,91 @@ private.postEventFrame:SetScript("OnEvent", private.postEvent)
 --private.postEventFrame:RegisterEvent("AUCTION_MULTISELL_START")
 private.postEventFrame:RegisterEvent("AUCTION_MULTISELL_UPDATE")
 --private.postEventFrame:RegisterEvent("AUCTION_MULTISELL_FAILURE")
+
+function private.multipostStart(itemLink, count, stack, selectedStackCount)
+	--print(itemLink, count, stack, selectedStackCount)
+	private.multipostScan2 = {}
+	
+	local itemID = lib.API.decodeLink(itemLink)
+	local total = count * stack
+	
+	--check if user selected stack is large enough to post the item. Multipost will use the selected stack if possible or a bag scan if not
+	if selectedStackCount >= total then
+		private.multipostScan1 = { {count =  selectedStackCount, link = itemLink} }
+		private.convertToStacks(count) --convert it into a stacks table
+	else --ignore user selection and scan bags
+		private.bagSnapshot( itemID, total)
+		--for i,v in ipairs(private.multipostScan1) do
+		--	print(v.count,v.link)
+		--end
+		private.convertToStacks(count)
+		for i,v in ipairs(private.multipostScan2) do
+			debugPrint("|CFFF0AA00",i,v)
+		end
+		--now we have a formatted table
+		--If there is only 1 stack to post but the stack choosen is too small we need to force it throu No Multipost events for this situation
+		if count > selectedStackCount and stack == 1 then
+			--in this case multipost never fires a event
+			private.onMultiPost(1, 1)
+		end
+	end
+end
+private.multipostScan1 = {}
+private.multipostScan2 = {}
+function private.convertToStacks(postsize)
+	local currentStack = private.multipostScan1[1]
+	--print(currentStack.count)
+	local nextStack = private.multipostScan1[2]
+	--if greater or equal we subtract from current stack
+	if currentStack.count >= postsize then
+		--print("--ok send out this itemlink")
+		table.insert(private.multipostScan2, currentStack.link)
+		--subtract count used
+		currentStack.count = currentStack.count - postsize
+		--is this 0 now
+		if nextStack and currentStack.count == 0 then
+			table.remove(private.multipostScan1, 1)
+		end
+		
+	elseif nextStack then --count is too low so borrow from next stack
+		local diff = postsize - currentStack.count --this is how many we need to get a stack
+		--is next stack large enough?
+		if nextStack.count - diff > 0 then
+			nextStack.count = nextStack.count - diff --subtract from next
+			currentStack.count = currentStack.count + diff --add to current stack
+		else
+			currentStack.count = currentStack.count + nextStack.count --add what we can
+			table.remove(private.multipostScan1, 2) --this stack has been destroyed so remove
+		end
+	else--should only hit here when all data has proccessed
+		--print("finsihed with dataset")
+		return
+	end
+	--if we still have data then we need to process it
+	private.convertToStacks(postsize)
+end
+
+function private.bagSnapshot( itemBeingPosted, totalQuanity)
+	private.multipostScan1 = {}
+	local counter = 0
+	local  stop
+	for bagID = 0, 4 do
+		local slots = GetContainerNumSlots(bagID)
+		for slot = 1, slots do
+			local link = GetContainerItemLink(bagID, slot)
+			local texture, itemCount, locked, quality, readable = GetContainerItemInfo(bagID, slot)
+			local itemID, _, ID = lib.API.decodeLink(link)
+			
+			
+			if link and itemID == itemBeingPosted then
+				table.insert(private.multipostScan1, 1, {count =  itemCount, link = link})
+				counter = counter + itemCount
+				--print(link, "|CFFFFFAAA", ID, slot,  itemCount, totalQuanity, counter)
+				if counter >= totalQuanity then
+					BeanCounterAccountDB = private.multipostScan1
+					break
+				end
+			end
+		end
+	end
+end
