@@ -32,6 +32,8 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 if not AucAdvanced then return end
+local coremodule = AucAdvanced.GetCoreModule("CoreConfig")
+if not coremodule then return end -- Someone has explicitely broken us
 
 AucAdvanced.Config = {}
 local lib = AucAdvanced.Config

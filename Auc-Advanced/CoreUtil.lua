@@ -35,20 +35,23 @@ if not AucAdvanced then return end
 
 local lib = AucAdvanced
 local private = {}
+local coremodule = AucAdvanced.GetCoreModule("CoreUtil")
+if not coremodule then return end -- Someone has explicitely broken us
 local tooltip = LibStub("nTipHelper:1")
+local Const = lib.Const
 
 -- "Module" functions for CoreUtil
 -- installed in private table, called via CoreModule
 
 --[[ OnLoad is not currently needed
-function private.OnLoad(addon)
+function coremodule.OnLoad(addon)
 	if addon == "auc-advanced" then
-
+		private.FactionOnLoad()
 	end
 end
 --]]
 
-function private.Processor(event, subevent)
+function coremodule.Processor(event, subevent)
 	if event == "auctionopen" then
 		private.isAHOpen = true
 	elseif event == "auctionclose" then
@@ -59,6 +62,19 @@ function private.Processor(event, subevent)
 		private.modulecache = nil
 		private.resetPriceModels()
 	end
+end
+coremodule.Processors = {}
+function coremodule.Processors.auctionopen(event, subevent)
+	private.isAHOpen = true
+end
+function coremodule.Processors.auctionclose(event, subevent)
+	private.isAHOpen = false
+end
+function coremodule.Processors.newmodule(event, subevent)
+	-- resetting caches here allows us to respond to modules that are not created by lib.NewModule,
+	-- as long as they correctly send a "newmodule" message when created
+	private.modulecache = nil
+	private.resetPriceModels()
 end
 
 --Localization via babylonian
@@ -231,7 +247,7 @@ function lib.ShowItemLink(...) return tooltip:ShowItemLink(...) end
 function lib.BreakHyperlink(...) return tooltip:BreakHyperlink(...) end
 lib.breakHyperlink = lib.BreakHyperlink
 
-do
+do -- Faction and ServerKey related functions
 	local splitcache = {}
 	local localizedfactions = {
 		["Alliance"] = FACTION_ALLIANCE,
@@ -250,46 +266,70 @@ do
 		end
 		return split[1], split[2], split[3]
 	end
-end
 
-function lib.GetFaction()
-	local realmName = GetRealmName()
-	local factionGroup = lib.GetFactionGroup()
-	if not factionGroup then return end
-
-	if (factionGroup == "Neutral") then
-		AucAdvanced.cutRate = 0.15
-		AucAdvanced.depositRate = 0.25
-	else
-		AucAdvanced.cutRate = 0.05
-		AucAdvanced.depositRate = 0.05
-	end
-	AucAdvanced.curFaction = realmName.."-"..factionGroup
-	return AucAdvanced.curFaction, realmName, factionGroup
-end
-
-private.PlayerFaction = UnitFactionGroup("player")
-private.factions = {}
-function lib.GetFactionGroup()
-	local factionGroup = "Faction" --Save only "Faction" or "Neutral", as non-neutral zones should always display the home faction's data
-
-	if private.isAHOpen or not AucAdvanced.Settings.GetSetting("alwaysHomeFaction") then
-		local currentZone = GetMinimapZoneText()
-		if private.factions[currentZone] then
-			factionGroup = private.factions[currentZone]
-		else
-			SetMapToCurrentZone()
-			local map = GetMapInfo()
-			if ((map == "Tanaris") or (map == "Winterspring") or (map == "Stranglethorn")) then
-				factionGroup = "Neutral"
-			end
-			private.factions[currentZone] = factionGroup
+	local lookupfaction = {
+		["alliance"] = "Alliance",
+		[FACTION_ALLIANCE:lower()] = "Alliance",
+		["horde"] = "Horde",
+		[FACTION_HORDE:lower()] = "Horde",
+		["neutral"] = "Neutral",
+		[COMBATLOG_FILTER_STRING_NEUTRAL_UNITS:lower()] = "Neutral", -- again, this may not be the correct context? see above
+	}
+	-- Used to check user text input for some form of a faction name; returns standardized form if found
+	-- Possible results are "Alliance", "Horde", "Neutral" or nil if not found
+	-- *** need to confirm this does really work correctly on non-English clients, particularly Russian and Chinese ***
+	function lib.IsFaction(faction)
+		if type(faction) == "string" then
+			return lookupfaction[faction:lower()]
 		end
 	end
-	if factionGroup == "Faction" then
-		factionGroup = private.PlayerFaction
+
+	function lib.GetFaction()
+		local factionGroup = lib.GetFactionGroup()
+		if not factionGroup then return end
+		if factionGroup ~= lib.curFactionGroup then
+			local curFaction
+			if (factionGroup == "Neutral") then
+				lib.cutRate = 0.15
+				lib.depositRate = 0.25 -- deprecated
+				curFaction = Const.ServerKeyNeutral
+			else
+				lib.cutRate = 0.05
+				lib.depositRate = 0.05 -- deprecated
+				curFaction = Const.ServerKeyHome
+			end
+			lib.curFaction = curFaction -- deprecated (it's a serverKey, so calling it curFaction is confusing)
+			lib.curFactionGroup = factionGroup
+			lib.curServerKey = curFaction
+		end
+		return lib.curServerKey, Const.PlayerRealm, factionGroup
 	end
-	return factionGroup
+
+	local zonefactions = {}
+	function lib.GetFactionGroup()
+		if private.isAHOpen or not lib.Settings.GetSetting("alwaysHomeFaction") then
+			local currentZone = GetMinimapZoneText()
+			local factionGroup = zonefactions[currentZone]
+			if not factionGroup then
+				SetMapToCurrentZone()
+				local map = GetMapInfo()
+				if ((map == "Tanaris") or (map == "Winterspring") or (map == "Stranglethorn")) then
+					factionGroup = "Neutral"
+				else
+					factionGroup = Const.PlayerFaction
+				end
+				zonefactions[currentZone] = factionGroup
+			end
+			return factionGroup
+		end
+		return Const.PlayerFaction
+	end
+
+	--[[
+	function private.FactionOnLoad()
+		-- localizations will now be available
+	end
+	--]]
 end
 
 function private.relevelFrame(frame)
@@ -417,12 +457,11 @@ local function replicate(source, depth, history)
 	return dest
 end
 local function empty(item)
-	if type(item) ~= 'table' then return end
-	for k,v in pairs(item) do item[k] = nil end
+	if type(item) == 'table' then wipe(item) end
 end
 local function fill(item, ...)
 	if type(item) ~= 'table' then return end
-	if (#item > 0) then empty(item) end
+	wipe(item)
 	local n = select('#', ...)
 	for i = 1,n do item[i] = select(i, ...) end
 end
@@ -571,101 +610,75 @@ function lib.GetAllModules(having, findSystem, findEngine)
 	return modules
 end
 
---[[ CoreModule
-	A dummy module representing the core of Auc-Advanced
-	Used to catch messages and pass them on to elements of the core
---]]
-local coremodule = {
-	libType = "Util",
-	libName = "CoreModule",
-	GetName = function() return "CoreModule" end,
-	}
-
-function private.MakeCoreModuleFunction(func, newcore, nest)
-	local xname = "_"..func
-	local base
-	if nest then
-		if not coremodule[nest] then
-			coremodule[nest] = {}
-		end
-		base = coremodule[nest]
-	else
-		base = coremodule
-	end
-	if not base[func] then
-		base[func] = function(...)
-			for _, core in ipairs(base[xname]) do
-				core[func](...)
-			end
-		end
-		base[xname] = {}
-	end
-	tinsert(base[xname], newcore)
-end
-
--- called from CoreMain's private OnLoad function
-function lib.CoreModuleOnLoad(addon)
-	-- work from temporary tables; easy to modify if new core elements or new functions need to be added
-	local cores = {private, lib.API, lib.Buy, lib.Config, lib.Const, lib.Post, lib.Scan, lib.Settings}
-	local funcs = {"OnLoad", "Processor", "CommandHandler"}
-	local nested = {
-		ScanProcessors = {"begin", "update", "leave", "create", "delete", "complete", "placebid", "newauc", "aucsold"},
-	}
-	local tables = {"LoadTriggers"}
-
-	-- install the functions and supporting values
-	for _, core in ipairs(cores) do
-		for _, func in ipairs(funcs) do
-			if core[func] then
-				private.MakeCoreModuleFunction(func, core)
-			end
-		end
-		for nest, subfuncs in pairs(nested) do
-			if core[nest] then
-				for _, func in ipairs(subfuncs) do
-					if core[nest][func] then
-						private.MakeCoreModuleFunction(func, core, nest)
-					end
-				end
-			end
-		end
-		for _, tab in ipairs(tables) do
-			if core[tab] then
-				if not coremodule[tab] then
-					coremodule[tab] = {}
-				end
-				for k, v in pairs(core[tab]) do
-					coremodule[tab][k] = v
-				end
-			end
-		end
-	end
-
-	-- install as a Module
-	lib.Modules.Util.CoreModule = coremodule
-	lib.SendProcessorMessage("newmodule", "Util", "CoreModule")
-
-	-- do OnLoad
-	if coremodule.OnLoad then
-		coremodule.OnLoad(addon)
-	end
-
-	-- delete the initialization code as we only need it once
-	lib.CoreModuleOnLoad = nil
-	private.MakeCoreModuleFunction = nil
-end
 
 --[[ End of CoreModule ]]--
 
-function lib.SendProcessorMessage(...)
-	local modules = AucAdvanced.GetAllModules("Processor")
-	local good, msg
-	for pos, engineLib in ipairs(modules) do
-		good,msg=pcall(engineLib.Processor, ...)
-		if not good then
-			lib.Debug.DebugPrint(msg, "SendProcessorMessage", "Processor Error", 0, "Debug")
+local spmArray = {}
+function lib.SendProcessorMessage(spmMsg, ...)
+	local spmp = spmArray[spmMsg]
+	if (spmp) then
+		for i=1,#spmp do
+			local x = spmp[i]
+			local f = x.Func
+--if (nLog) then nLog.AddMessage("Auctioneer", "Coreutil", N_INFO, ("SendProcessorMessage Called %s For %s"):format(x.Name, spmMsg), ("SendProcessorMessage Called %s For %s"):format(x.Name, spmMsg)) end
+
+			good,msg=pcall(f, spmMsg, ...)
+			if not good then
+				lib.Debug.DebugPrint(msg, "SendProcessorMessage", "Processor Error in "..(x.Name or "??"), 0, "Debug")
+			end
+		end
+	else
+		spmp = {}
+		spmArray[spmMsg] = spmp
+
+		local modules = AucAdvanced.GetAllModules("Processors")
+		local good, msg
+		for pos, engineLib in ipairs(modules) do
+			local f = engineLib.Processors[spmMsg]
+			if f then
+				local x = {}
+				x.Name = engineLib.GetName()
+				if (spmMsg=="tooltip") then
+					local f1 = f
+					x.Func = function(spmMsg, ...)
+						-- TODO: Make these defaults configurable
+						tooltip:SetColor(0.3, 0.9, 0.8)
+						tooltip:SetMoneyAsText(false)
+						tooltip:SetEmbed(false)
+						f1(spmMsg, ...)
+					end
+				else
+					x.Func = f
+				end
+				table.insert(spmp, x)
+--if (nLog) then nLog.AddMessage("Auctioneer", "Coreutil", N_INFO, ("SendProcessorMessage Called %s For %s (using Processors)"):format(x.Name, spmMsg), ("SendProcessorMessage Called %s For %s"):format(x.Name, spmMsg)) end
+				good,msg=pcall(f, spmMsg, ...)
+				if not good then
+					lib.Debug.DebugPrint(msg, "SendProcessorMessage", "Processor Error in "..(x.Name or "??"), 0, "Debug")
+				end
+			end
+		end
+
+		modules = AucAdvanced.GetAllModules("Processor")
+		local good, msg
+		for pos, engineLib in ipairs(modules) do
+			if (not engineLib.Processors) then
+				local x = {}
+				x.Name = engineLib.GetName()
+				x.Func = engineLib.Processor
+				lib.Debug.DebugPrint("Module Using Deprecated Processor to recieve "..(spmMsg or "Unknown").." processor messages.", "SendProcessorMessage", "Deprecated Function Seen in "..(x.Name or "??"), 0, "Warning")
+				table.insert(spmp, x)
+				good,msg=pcall(engineLib.Processor, spmMsg, ...)
+				if not good then
+					lib.Debug.DebugPrint(msg, "SendProcessorMessage", "Processor Error in "..(x.Name or "??"), 0, "Debug")
+				end
+			end
 		end
 	end
+end
+
+function lib.ResetSPMArray()
+	spmArray = {}
 end
 
 -- Returns the tooltip helper
