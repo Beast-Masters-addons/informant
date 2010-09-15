@@ -52,14 +52,31 @@ local aucPrint,decode,_,_,replicate,_,get,set,default,debugPrint,fill = AucAdvan
 local Const = AucAdvanced.Const
 local highlight = "|cffff7f3f"
 
+local ErrorText = {
+	NoPrice = "No price provided",
+	PriceInteger = "Price must be a whole number",
+	PriceLow = "Price must be at least 1c",
+	MoneyLow = "You do not have enough money",
+	PriceMinBid = "Price cannot be less than the minimum bid",
+	PriceBuyout = "Price cannot be more that the buyout",
+	OwnAuction = "You cannot bid on your own auction",
+	InvalidLink = "Link is invalid",
+	InvalidSeller = "Seller name is invalid",
+	InvalidCount = "Count is invalid",
+	InvalidMinbid = "Minimum bid is invalid",
+	InvalidBuyout = "Buyout is invalid",
+	NoItem = "Unable to retrieve info for this item",
+}
+lib.ErrorText = ErrorText
+
 private.BuyRequests = {}
 private.PendingBids = {}
-private.Searching = false
-private.lastPrompt = false
+--private.Searching = nil
+--private.lastPrompt = nil
 private.lastQueue = 0
 function private.QueueReport()
 	local queuelen = #private.BuyRequests
-	local prompt = private.Prompt:IsShown()
+	local prompt = private.CurRequest
 	if queuelen ~= private.lastQueue or prompt ~= private.lastPrompt then
 		private.lastQueue = queuelen
 		private.lastPrompt = prompt
@@ -79,6 +96,17 @@ function private.QueueRemove(index)
 		local removed = tremove(private.BuyRequests, index)
 		private.QueueReport()
 		return removed
+	end
+end
+function private.QueueFind(key, value, lastindex)
+	-- search the queue for a request where the entry [key] matches value, and return the index
+	-- lastindex is optional, used to continue a search from after the last item found
+	lastindex = lastindex or 0
+	for index = lastindex + 1, #private.BuyRequests do
+		local request = private.BuyRequests[index]
+		if request[key] == value then
+			return index
+		end
 	end
 end
 
@@ -109,7 +137,7 @@ function lib.CancelBuyQueue(prompt)
 	if prompt and private.Prompt:IsShown() then
 		private.HidePrompt(true) -- silent
 	end
-	private.Searching = false
+	private.Searching = nil
 	wipe(private.BuyRequests)
 	private.QueueReport()
 end
@@ -130,18 +158,18 @@ end
 	If item cannot be found on Auctionhouse, will output a warning message to chat
 ]]
 local function QueueBuyErrorHelper(link, reason)
-	aucPrint(format("Auctioner: Unable to buy %s : %s", link, reason))
-	return false, reason -- note: under development: the specific return strings may be changed
+	aucPrint(format("%sAuctioner: Unable to buy |r%s%s: %s", highlight, link, highlight, ErrorText[reason] or "Unknown")) -- need to highlight before and after the link
+	return false, reason
 end
 function lib.QueueBuy(link, seller, count, minbid, buyout, price, reason, nosearch)
-	if type(link) ~= "string" then return QueueBuyErrorHelper("\""..tostring(link).."\"", "Invalid link") end
-	if seller ~= nil and type(seller) ~= "string" then return QueueBuyErrorHelper(link, "Invalid seller") end
+	if type(link) ~= "string" then return QueueBuyErrorHelper("\""..tostring(link).."\"", "InvalidLink") end
+	if seller ~= nil and type(seller) ~= "string" then return QueueBuyErrorHelper(link, "InvalidSeller") end
 	count = tonumber(count)
-	if not count or count < 1 then return QueueBuyErrorHelper(link, "Invalid count") end
+	if not count or count < 1 then return QueueBuyErrorHelper(link, "InvalidCount") end
 	minbid = tonumber(minbid)
-	if not minbid or minbid < 0 then return QueueBuyErrorHelper(link, "Invalid minbid") end -- it is sometimes possible for auctions to report minbid == 0
+	if not minbid or minbid < 0 then return QueueBuyErrorHelper(link, "InvalidMinbid") end -- it is sometimes possible for auctions to report minbid == 0
 	buyout = tonumber(buyout)
-	if not buyout or buyout < 0 then return QueueBuyErrorHelper(link, "Invalid buyout") end
+	if not buyout or buyout < 0 then return QueueBuyErrorHelper(link, "InvalidBuyout") end
 	price = tonumber(price)
 	local canbuy, problem = lib.CanBuy(price, seller, minbid, buyout)
 	if not canbuy then return QueueBuyErrorHelper(link, problem) end
@@ -173,7 +201,7 @@ function lib.QueueBuy(link, seller, count, minbid, buyout, price, reason, nosear
 	else
 		-- calculate and store values needed for searching
 		local name, _, quality, _, minlevel, classname, subclassname = GetItemInfo(link)
-		if not name then return QueueBuyErrorHelper(link, "Unable to retrieve info for this item")
+		if not name then return QueueBuyErrorHelper(link, "NoItem")
 		end
 		request.itemname = name:lower()
 		request.uselevel = minlevel or 0
@@ -198,19 +226,19 @@ end
 ]]
 function lib.CanBuy(price, seller, minbid, buyout)
 	if type(price) ~= "number" then
-		return false, "no price given"
+		return false, "NoPrice"
 	elseif floor(price) ~= price then
-		return false, "price must be an integer"
+		return false, "PriceInteger"
 	elseif price < 1 then
-		return false, "price cannot be less than 1"
+		return false, "PriceLow"
 	elseif GetMoney() < price then
-		return false, "not enough money"
+		return false, "MoneyLow"
 	elseif minbid and price < minbid then
-		return false, "price below minimum bid"
+		return false, "PriceMinBid"
 	elseif buyout and buyout > 0 and price > buyout then
-		return false, "price higher than buyout"
-	elseif seller and AucAdvancedConfig["users."..GetRealmName().."."..seller] then
-		return false, "own auction"
+		return false, "PriceBuyout"
+	elseif seller and AucAdvancedConfig["users."..Const.PlayerRealm.."."..seller] then
+		return false, "OwnAuction"
 	end
 	return true
 end
@@ -240,7 +268,7 @@ function private.PushSearch()
 		end
 	end
 
-	private.Searching = true
+	private.Searching = request.querysig
 	AucAdvanced.Scan.StartScan(request.itemname, request.uselevel, request.uselevel, nil, request.classindex, request.subclassindex, nil, request.quality)
 end
 
@@ -261,24 +289,17 @@ function private.FinishedSearch(scanstats)
 			elseif request.foundInvalid then
 				-- we found a possible matching auction, but our bid price was too low
 				-- probably means someone else bid on the auction first
-				aucPrint("Auctioneer: Requested bid price on auction of "..request.link.." is too low") -- todo: think of a better way of phrasing this ...
+				aucPrint("Auctioneer: Bid price too low for auction of "..request.link)
 			else
 				aucPrint("Auctioneer: Auction for "..request.link.." no longer exists")
 			end
 			private.QueueRemove(index)
 		end
 	end
-	private.Searching = false
+	private.Searching = nil
 end
 
 function private.PromptPurchase(thisAuction)
-	if type(thisAuction.price) ~= "number" then
-		aucPrint(highlight.."Cancelling bid: invalid price: "..type(thisAuction.price)..":"..tostring(thisAuction.price))
-		return
-	elseif type(thisAuction.index) ~= "number" then
-		aucPrint(highlight.."Cancelling bid: invalid index: "..type(thisAuction.index)..":"..tostring(thisAuction.index))
-		return
-	end
 	AucAdvanced.Scan.SetPaused(true)
 	private.CurRequest = thisAuction
 	private.Prompt:Show()
@@ -311,33 +332,35 @@ end
 function lib.ScanPage(startat)
 	if #private.BuyRequests == 0 then return end
 	if private.CurRequest then return end
-	local batch = GetNumAuctionItems("list")
-	if startat and startat < batch then
-		batch = startat
-	end
-	for ind = batch, 1, -1 do
-		local link = GetAuctionItemLink("list", ind)
-		link = AucAdvanced.SanitizeLink(link)
-		for pos = #private.BuyRequests, 1, -1 do -- must check in reverse order as there are table removes inside the loop
-			local BuyRequest = private.BuyRequests[pos]
-			if link == BuyRequest.link then
-				local price = BuyRequest.price
-				local brSeller = BuyRequest.sellername
-				local name, texture, count, _, _, _, minBid, minIncrement, buyout, curBid, ishigh, owner = GetAuctionItemInfo("list", ind)
-				if (not owner or brSeller == "" or owner == brSeller)
-				and (count == BuyRequest.count)
-				and (minBid == BuyRequest.minbid)
-				and (buyout == BuyRequest.buyout) then --found the auction we were looking for
-					if ishigh and (not buyout or buyout <= 0 or price < buyout) then
-						BuyRequest.foundHigh = true
-					elseif price >= curBid + minIncrement or price == buyout then
-						BuyRequest.index = ind
-						BuyRequest.texture = texture
-						private.QueueRemove(pos)
-						private.PromptPurchase(BuyRequest)
-						return
-					else
-						BuyRequest.foundInvalid = true
+	if AuctionFrame and AuctionFrame:IsShown() then
+		local batch = GetNumAuctionItems("list")
+		if startat and startat < batch then
+			batch = startat
+		end
+		for ind = batch, 1, -1 do
+			local link = GetAuctionItemLink("list", ind)
+			link = AucAdvanced.SanitizeLink(link)
+			for pos = #private.BuyRequests, 1, -1 do
+				local BuyRequest = private.BuyRequests[pos]
+				if link == BuyRequest.link then
+					local price = BuyRequest.price
+					local brSeller = BuyRequest.sellername
+					local name, texture, count, _, _, _, minBid, minIncrement, buyout, curBid, ishigh, owner = GetAuctionItemInfo("list", ind)
+					if (not owner or brSeller == "" or owner == brSeller)
+					and (count == BuyRequest.count)
+					and (minBid == BuyRequest.minbid)
+					and (buyout == BuyRequest.buyout) then --found the auction we were looking for
+						if ishigh and (not buyout or buyout <= 0 or price < buyout) then
+							BuyRequest.foundHigh = true
+						elseif price >= curBid + minIncrement or price == buyout then
+							BuyRequest.index = ind
+							BuyRequest.texture = texture
+							private.QueueRemove(pos)
+							private.PromptPurchase(BuyRequest)
+							return
+						else
+							BuyRequest.foundInvalid = true
+						end
 					end
 				end
 			end
@@ -367,17 +390,18 @@ end
 --Cancels the current auction
 --Also sends out a Callback with a callback string of "<link>;<price>;<count>"
 function private.CancelPurchase()
-	private.Searching = false
 	local CallBackString = strjoin(";", tostringall(private.CurRequest.link, private.CurRequest.price, private.CurRequest.count))
 	AucAdvanced.SendProcessorMessage("bidcancelled", CallBackString)
 	private.HidePrompt()
+	if private.Searching and not private.QueueFind("querysig", private.Searching) then
+		private.Searching = nil
+	end
 	--scan the page again for other auctions
 	lib.ScanPage()
 end
 
 function private.PerformPurchase()
 	if not private.CurRequest then return end
-	private.Searching = false
 	--first, do some Sanity Checking
 	local index = private.CurRequest.index
 	local price = private.CurRequest.price
@@ -417,8 +441,7 @@ function private.PerformPurchase()
 
 	private.CurRequest.reason = private.Prompt.Reason:GetText() or ""
 	--Add bid to list of bids we're watching for
-	local pendingBid = replicate(private.CurRequest)
-	tinsert(private.PendingBids, pendingBid)
+	tinsert(private.PendingBids, private.CurRequest)
 	--register for the Response events if this is the first pending bid
 	local doRegister = #private.PendingBids == 1
 	if doRegister then
@@ -434,6 +457,9 @@ function private.PerformPurchase()
 
 	--get ready for next bid action
 	private.HidePrompt()
+	if private.Searching and not private.QueueFind("querysig", private.Searching) then
+		private.Searching = nil
+	end
 	lib.ScanPage(index-1)--check the page for any more auctions
 end
 
@@ -470,7 +496,7 @@ end
 
 function private.ActivateEvents()
 	-- Called when a new auction is queued, or when the Auctionhouse is opened
-	if not private.isActivated and #private.BuyRequests > 0 then
+	if not private.isActivated and #private.BuyRequests > 0 and AuctionFrame and AuctionFrame:IsShown() then
 		private.isActivated = true
 		private.updateFrame:Show() -- start timer
 		private.updateFrame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
@@ -479,7 +505,7 @@ end
 
 function private.DeactivateEvents()
 	-- Called when there are no items left in the buy requests list, or when the Auctionhouse is closed
-	private.Searching = false
+	private.Searching = nil
 	if private.isActivated then
 		private.isActivated = nil
 		private.updateFrame:Hide() -- stop timer

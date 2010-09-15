@@ -55,6 +55,7 @@ local wipe = wipe
 local ceil,floor,max,abs = ceil,floor,max,abs
 local tostring,tonumber,strjoin,strsplit,format = tostring,tonumber,strjoin,strsplit,format
 local GetItemInfo = GetItemInfo
+local time = time
 -- GLOBALS: nLog, N_NOTICE, N_WARNING, N_ERROR
 
 
@@ -379,10 +380,11 @@ function lib.IsValidAlgorithm(algorithm, itemLink)
 	return false
 end
 
-private.algorithmstack = {}
+--store the last data request and just return a cache value for the next 5 secs (5 secs is just arbitrary)
+local LastAlgorithmSig, LastAlgorithmTime, LastAlgorithmPrice, LastAlgorithmSeen, LastAlgorithmArray
 function lib.GetAlgorithmValue(algorithm, itemLink, serverKey, reserved)
 	if (not algorithm) then
-        if nLog then nLog.AddMessage("Auctioneer", "API", N_ERROR, "Incorrect Usage", "No pricing algorithm supplied to GetAlgorithmValue") end
+		if nLog then nLog.AddMessage("Auctioneer", "API", N_ERROR, "Incorrect Usage", "No pricing algorithm supplied to GetAlgorithmValue") end
 		return
 	end
 	if type(itemLink) == "number" then
@@ -394,16 +396,22 @@ function lib.GetAlgorithmValue(algorithm, itemLink, serverKey, reserved)
 		return
 	end
 
-    if reserved then
-        lib.ShowDeprecationAlert("AucAdvanced.API.GetAlgorithmValue(algorithm, itemLink, serverKey)",
-            "The 'faction' and 'realm' parameters are deprecated in favor of the new 'serverKey' parameter. Use this instead."
-        );
+	if reserved then
+		lib.ShowDeprecationAlert("AucAdvanced.API.GetAlgorithmValue(algorithm, itemLink, serverKey)",
+		"The 'faction' and 'realm' parameters are deprecated in favor of the new 'serverKey' parameter. Use this instead."
+		);
 
-        serverKey = reserved.."-"..serverKey;
-    end
-    serverKey = serverKey or GetFaction()
+		serverKey = reserved.."-"..serverKey;
+	end
+	serverKey = serverKey or GetFaction()
 
 	local saneLink = SanitizeLink(itemLink)
+	--check if this was just retrieved and return that value
+	local algosig = strjoin(":", algorithm, saneLink, serverKey)
+	if algosig == LastAlgorithmSig and LastAlgorithmTime + 5 > time() then
+		return LastAlgorithmPrice, LastAlgorithmSeen, LastAlgorithmArray
+	end
+
 	local modules = AucAdvanced.GetAllModules()
 	for pos, engineLib in ipairs(modules) do
 		if engineLib.GetName() == algorithm and (engineLib.GetPrice or engineLib.GetPriceArray) then
@@ -411,21 +419,8 @@ function lib.GetAlgorithmValue(algorithm, itemLink, serverKey, reserved)
 			and not engineLib.IsValidAlgorithm(saneLink) then
 				return
 			end
-			local algosig = strjoin(":", algorithm, saneLink, serverKey)
-			for pos, history in ipairs(private.algorithmstack) do
-				if (history == algosig) then
-					-- We are looping
-					local origAlgo = private.algorithmstack[1]
-					local endSize = #(private.algorithmstack)+1
-					while (#(private.algorithmstack)) do
-						tremove(private.algorithmstack)
-					end
-					error(("Cannot solve price algorithm for: %s. (Recursion at level %d->%d: %s)"):format(origAlgo, algosig, endSize, pos))
-				end
-			end
-
+			
 			local price, seen, array
-			tinsert(private.algorithmstack, algosig)
 			if (engineLib.GetPriceArray) then
 				array = engineLib.GetPriceArray(saneLink, serverKey)
 				if (array) then
@@ -435,7 +430,9 @@ function lib.GetAlgorithmValue(algorithm, itemLink, serverKey, reserved)
 			else
 				price = engineLib.GetPrice(saneLink, serverKey)
 			end
-			tremove(private.algorithmstack, -1)
+			LastAlgorithmSig = algosig
+			LastAlgorithmTime = time()
+			LastAlgorithmPrice, LastAlgorithmSeen, LastAlgorithmArray = price, seen, array
 			return price, seen, array
 		end
 	end
@@ -494,13 +491,142 @@ name = string - unique bar name
 value =  0-100   the % the bar should be filled
 show =  boolean  true will keep bar displayed, false will hide the bar and free it for use by another addon
 text =  string - the text to display on the bar
-color  = string = R|G|B   red, green, blue values seperated by |     ex:    "1|0|0"
-
-value, text, and color are all optional variables
+options = table containing formatting commands.
+	options.barColor = { R,G,B, A}   red, green, blue, alpha values.
+	options.textColor = { R,G,B, A}   red, green, blue, alpha values.
+	
+value, text, color, and options are all optional variables
 ]]
-function lib.ProgressBars(name, value, show, text, options)
-	 AucAdvanced.Scan.ProgressBars(name, value, show, text, options)
+local availableBars = {}
+local NumGenericBars = 0
+--generate new bars as needed
+local function newBar()
+	local bar = CreateFrame("STATUSBAR", nil, UIParent, "TextStatusBar")
+	bar:SetWidth(300)
+	bar:SetHeight(18)
+	bar:SetBackdrop({
+				bgFile="Interface\\Tooltips\\UI-Tooltip-Background",
+				edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
+				tile=1, tileSize=10, edgeSize=10,
+				insets={left=1, right=1, top=1, bottom=1}
+			})
+
+	bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	bar:SetStatusBarColor(0.6,0,0,0.6)
+	bar:SetMinMaxValues(0,100)
+	bar:SetValue(50)
+	bar:Hide()
+
+	bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	bar.text:SetPoint("CENTER", bar, "CENTER")
+	bar.text:SetJustifyH("CENTER")
+	bar.text:SetJustifyV("CENTER")
+	bar.text:SetTextColor(1,1,1)
+
+	if NumGenericBars < 1 then
+		bar:SetPoint("CENTER", UIParent, "CENTER", -5,5)
+	else--attach to previous bar
+		bar:SetPoint("BOTTOM", lib["GenericProgressBar"..NumGenericBars], "TOP", 0, 0)
+	end
+	NumGenericBars = NumGenericBars + 1
+	lib["GenericProgressBar"..(NumGenericBars)] = bar
+	return NumGenericBars
 end
+--create 1 bar to start for anchoring
+newBar()
+-- handles the rendering
+local function renderBars(ID, name, value, text, options)
+	local self = lib["GenericProgressBar"..ID]
+	if not self then assert("No bar found available for ID", ID, name, text) end
+	
+	--reset all generated bars that are not inuse to defaults
+	if self and not name then
+		self:Hide()
+		self.text:SetText("")
+		self:SetStatusBarColor(0.6, 0, 0, 0.6) --light red color
+		self.text:SetTextColor(1, 1, 1, 1)
+		return
+	end
+	
+	self:Show()
+	--update progress
+	if value then
+		self:SetValue(value)
+	end
+	--change bars text if desired
+	if text then
+		self.text:SetText(text)
+	end
+	--[[options is a table that contains, "tweaks" ie text or bar color changes
+	Nothing below this line will be processed unless an options table is passed]]
+	if not options or type(options) ~= "table" then return end
+
+	--change bars color
+	local barColor = options.barColor
+	if barColor then
+		local r, g, b, a = barColor[1],barColor[2], barColor[3], barColor[4]
+		if r and g and b then
+			a = a or 0.6
+			self:SetStatusBarColor(r, g, b, a)
+		end
+	end
+	--change text color
+	local textColor = options.textColor
+	if textColor then
+		local r, g, b, a = textColor[1],textColor[2], textColor[3], textColor[4]
+		if r and g and b then
+			a = a or 1
+			self.text:SetTextColor(r, g, b, a)
+		end
+	end
+end
+--main entry point. Handles which bar will be assigned and recycling bars
+function lib.ProgressBars(name, value, show, text, options)
+	--setup parent so we can display even if AH is closed
+	if AuctionFrame and AuctionFrame:IsShown() then
+		lib.GenericProgressBar1:SetParent(AuctionFrame)
+		lib.GenericProgressBar1:SetPoint("TOPRIGHT", AuctionFrame, "TOPRIGHT", -5, 5)
+	else
+		lib.GenericProgressBar1:SetParent(UIParent)
+	end
+	if not name then return end
+	
+	--find a generic bar available for use
+	local ID = availableBars[name]
+	if not ID then --find a bar
+		for i = 1, NumGenericBars do
+			if not availableBars[i] then
+				availableBars[i] = {name, value, text, options}
+				availableBars[name] = i
+				ID = i
+				break
+			end
+		end
+		--no bar available make a new one
+		if not ID then
+			ID = newBar()
+			availableBars[ID] = {name, value, text, options}
+			availableBars[name] = ID
+		end
+	end
+	--Render Bars
+	if show then
+		renderBars(ID, name, value, text, options)
+	else
+		table.remove(availableBars, ID)
+		availableBars[name] = nil
+		--ReRender bars
+		for ID = 1, NumGenericBars do
+			if availableBars[ID] then
+				barData = availableBars[ID]
+				renderBars(ID, barData[1], barData[2], barData[3], barData[4])			
+			else--blank bars
+				renderBars(ID)	
+			end
+		end
+	end
+end
+
 --[[ Market matcher APIs ]]--
 
 function lib.GetBestMatch(itemLink, algorithm, serverKey, reserved)
