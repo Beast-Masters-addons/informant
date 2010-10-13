@@ -441,12 +441,12 @@ function private.ButtonClick(me, mouseButton)
 		ChatEdit_InsertLink(GetAuctionItemLink("list", me.id))
 	--Display the ignore player UI
 	elseif (IsAltKeyDown() ) and me.Owner:GetText() then
-		if not AucAdvanced.Modules.Filter.Basic or not AucAdvanced.Modules.Filter.Basic.IgnoreList then private.sellerIgnore:Hide() return end
+		if not AucAdvanced.Modules.Filter.Basic or not AucAdvanced.Modules.Filter.Basic.IsPlayerIgnored then private.sellerIgnore:Hide() return end
 
 		private.sellerIgnore:ClearAllPoints()	private.sellerIgnore:SetPoint("TOPLEFT", me.Owner,"TOPRIGHT") private.sellerIgnore:Show()
 		--if toon not ignored the ignore
 		local seller = me.Owner:GetText()
-		if not AucAdvanced.Modules.Filter.Basic.IgnoreList[seller] then
+		if not AucAdvanced.Modules.Filter.Basic.IsPlayerIgnored(seller) then
 			private.sellerIgnore.yes:SetScript("OnClick", function() BF_IgnoreList_Add( seller ) private.sellerIgnore:Hide() end)
 			private.sellerIgnore.help:SetText("Add player to ignore list\n\n|CFFFFFFFF"..(seller))
 		else
@@ -679,7 +679,7 @@ function private.SetAuction(button, pos)
 		end
 	end
 	--if player is ignored then color name red otherwise set normal
-	if owner and AucAdvanced.Modules.Filter.Basic and AucAdvanced.Modules.Filter.Basic.IgnoreList and AucAdvanced.Modules.Filter.Basic.IgnoreList[owner] then
+	if owner and AucAdvanced.Modules.Filter.Basic and AucAdvanced.Modules.Filter.Basic.IsPlayerIgnored and AucAdvanced.Modules.Filter.Basic.IsPlayerIgnored(owner) then
 		button.Owner:SetTextColor(1,0,0)
 	else
 		button.Owner:SetTextColor(1,1,1)
@@ -831,7 +831,7 @@ private.sellerIgnore.help:SetParent(private.sellerIgnore)
 private.sellerIgnore.help:SetPoint("CENTER", private.sellerIgnore, "TOP", 0, -25)
 private.sellerIgnore.help:SetWidth(100)
 
-private.sellerIgnore.yes = CreateFrame("Button", nil, private.sellerIgnore, "GameMenuButtonTemplate")
+private.sellerIgnore.yes = CreateFrame("Button", nil, private.sellerIgnore, "UIPanelButtonTemplate")
 private.sellerIgnore.yes:SetNormalFontObject(GameFontNormalSmall)
 private.sellerIgnore.yes:SetPoint("BOTTOMLEFT", private.sellerIgnore, "BOTTOMLEFT", 5, 10)
 private.sellerIgnore.yes:SetScript("OnClick", function() BF_IgnoreList_Add( name ) end)
@@ -842,7 +842,7 @@ local font = private.sellerIgnore.yes:GetFontString()
 font:SetFontObject("GameFontNormalSmall" )
 font:SetTextHeight(10)
 
-private.sellerIgnore.no = CreateFrame("Button", nil, private.sellerIgnore, "GameMenuButtonTemplate")
+private.sellerIgnore.no = CreateFrame("Button", nil, private.sellerIgnore, "UIPanelButtonTemplate")
 private.sellerIgnore.no:SetNormalFontObject(GameFontNormalSmall)
 private.sellerIgnore.no:SetPoint("BOTTOMRIGHT", private.sellerIgnore, "BOTTOMRIGHT", -5, 10)
 private.sellerIgnore.no:SetScript("OnClick", function()  private.sellerIgnore:Hide() end)

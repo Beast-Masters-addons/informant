@@ -358,7 +358,7 @@ function private.UpdateCompetition(image)
 		if seller == player then
 			if not style[i] then style[i] = {} end
 			style[i][1] = { textColor = {0,1,0} }
-		elseif AucAdvanced.Modules.Filter.Basic and AucAdvanced.Modules.Filter.Basic.IgnoreList and AucAdvanced.Modules.Filter.Basic.IgnoreList[result[Const.SELLER]] then
+		elseif AucAdvanced.Modules.Filter.Basic and AucAdvanced.Modules.Filter.Basic.IsPlayerIgnored and AucAdvanced.Modules.Filter.Basic.IsPlayerIgnored(result[Const.SELLER]) then
 			if not style[i] then style[i] = {} end
 			style[i][1] = { textColor = {1,0,0} }
 		end
@@ -802,7 +802,7 @@ function private.PostAuction()
 	local bid = frame.CurItem.bid
 	local buy = frame.CurItem.buy
 	local duration = frame.CurItem.duration or 48
-	local success, reason = AucAdvanced.Post.PostAuction(sig, stack, bid, buy, duration*60, number)
+	local success, reason = AucAdvanced.Post.PostAuctionClick(sig, stack, bid, buy, duration, number)
 	if success then
 		aucPrint("Posting "..number.." stacks of "..stack.."x "..link.." at Bid:"..coins(bid)..", BO:"..coins(buy).." for "..duration.."h")
 	else
