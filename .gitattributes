@@ -5,6 +5,7 @@ Auc-Advanced/CoreStrings.lua -text
 Auc-Advanced/Modules/Auc-Util-Example/Readme.txt -text
 Auc-Advanced/Modules/luae.exe -text
 Auc-Advanced/ShowHideTT/CoreManifest.lua svneol=native#text/lua
+Auc-Advanced/ShowHideTT/CoreModule.lua -text
 Auc-Advanced/ShowHideTT/CoreStrings.lua -text
 Auc-Advanced/ShowHideTT/Modules/Auc-Util-Example/Readme.txt -text
 Auc-Advanced/ShowHideTT/Modules/luae.exe -text
