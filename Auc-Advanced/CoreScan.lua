@@ -36,6 +36,107 @@
 	Auctioneer Scanning Engine.
 
 	Provides a service to walk through an AH Query, reporting changes in the AH to registered utilities and stats modules
+	
+	System Overview
+	
+		Overloads function QueryAuctionItems.
+			when called checks to see if a scan is in progress.
+			If we are currently in a scan, store the last recieved page if not saved just in case (shouldn't be necessary).
+			Scrubs parameters for when called directly to keep D/Cs from happening (like Blizzard does via UI)
+			If in a scan and the current call doesn't match it, commits current scan.
+			Else if not in a scan, record the start of a new scan including whether a manual or automated scan.
+			if first page of scan, indicate to all clients that a scan has started.
+			calls original Blizzard QueryAuctionItems.
+			
+		We add a listener on the AH window, and fire every frame it is opened.
+			If commit coroutine is asleep, resume it.
+			If commit routine is dead and there are scans needing committed, wake it up.
+			If current scan is paused or an error occurs, exit out of routine to cut loading on system.
+			If scans are queued and we are not currently active scanning, start the next scan and exit.
+			If an ah request has been sent and we haven't started to store page, exit if if know data isn't ready to be stored.
+			If a store routine is going and is suspended, restart it (if been stopped long enough)
+			If it is time to get the next page in an automated scan, send the next page query and exit.
+			If AH is open and we were unexpected closed earlier, restart last scan here and exit.
+			If AH is open and we made it here start to Store last page recieved.
+			IF AH is not open, pause the current scan and put it on the scan stack.
+
+		Storing a Page.
+			When a store page is requested, it starts a coroutine.  The coroutine is responsible for all work.
+			Note: store page keeps verifying throughout that store hasn't been requested to stop.  It exits immediately if it has.
+			Also, this area uses defaults for items from GetItemInfo instead of calling for each auction.
+			If a getAll scan, turn off updating of AH Windows.
+			Updates scan processors that the page is being stored.
+			skips walking through and storing auctions if page isn't later than pages already done.
+			walks through all auctions returned.  If data is ready, stores it in page store.  If not, records location # in retry list.
+			while retry list has items and retries left is greater than 0, do following
+				pauses for 1 second
+				decrement retries left
+				walks through all auctions in retries list.  
+					If data is ready, stores it in page store and resets retry count to max.  
+					If not, records location # in newRetry list.
+				replaces retry list with newRetry list.
+			
+			add the items to the scan store and record what the next page we need is.
+			if isGetAll, put AH Window back in normal state.
+			otherwise if an automated scan and there are more pages, start the scan of the next page.
+			otherwise if an automated scan then Commit the scan.
+			otherwise if a manual scan and on the last page, commit the scan.
+
+			this routine means that a page store can take up to NumActionsOnPage*RetryCount seconds to complete
+			for a default page, that is 5 minutes.  For a getall, it could take forever.
+			In practice, it adds up to 15 seconds to what already happens for a regular page, and 5 minutes for getAll.
+			
+		Committing a scan.
+			the commit routine is responsible for storing the scan store into a list and then starting a coroutine (if not already running) that can commit it.
+			The coroutine runs in a loop until there are no more items in the commit queue.
+			Pull first item from commit queue.
+
+			Stage 1.  Prep to retrieve item info
+			Loop through all stored auctions in query create a lookup table from itemlink to the auction entries.
+
+			Stage 2.  Retrieve item info
+			While itemlink lookup has entries and retry count not 0
+				create empty next itemlink lookup table
+				decrement retry count
+				Walk through items in itemlink lookup
+					call GetItemInfo for item
+					If GetItemInfo returns data
+						walk through auction list and fix up data returned for each. 
+						reset retry count to max.
+					else add item to next itemLink lookup
+				replace itemlink lookup with next itemLink lookup
+			if there are still items in itemlink lookup
+				walk scan table from back to front, and remove any item with an ILEVEL of -1
+				mark scan an an incomplete scan.
+
+			
+			Stage 3.  Prep AH Image
+				mark all auctions in auction house image that match current scan as still needing resolved against scan
+				mark all auctions in auction house image that don't match current scan as NOT needing resolved against scan
+				
+			Stage 4.  Merge new scan with AH Image
+				walk through all items in new scan.
+				if a match is found in AH Image that still needs resolved
+					if auction in AH Image was not filtered then
+						check if AH exactly matches current info.
+						if not, then send 'update' processor message.
+						otherwise send 'leave' processor message. 
+					update item in AH Image from scan info and mark entry as resolved.
+				otherwise
+					send 'filter' processor message.
+					If no filters indicate auction to be filtered, then
+						send 'create' processor message.
+					otherwise
+						add flag to auction to indicate it is filtered.
+					add auction to AH Image.
+					
+			Stage 5.  Remove unseen from AH Image
+				walk through all items in AH Image
+				if needs resolved then
+					if expired, then remove from image, sending 'delete' processor message
+					otherwise if not expired and a complete scan, remove from image, sending 'delete' process message
+					otherwise if flagged unseen prior scan, remove from image sending 'delete' processor message
+					otherwise mark unseen in AH Scan image.
 ]]
 if not AucAdvanced then return end
 local coremodule, internal = AucAdvanced.GetCoreModule("CoreScan")
@@ -50,14 +151,14 @@ local private = {}
 lib.Private = private
 
 local Const = AucAdvanced.Const
-local _print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill = AucAdvanced.GetModuleLocals()
+local _print,decode,_,_,replicate,empty,get,set,default,debugPrint,fill, _TRANS = AucAdvanced.GetModuleLocals()
 local GetFaction = AucAdvanced.GetFaction
 local EquipCodeToInvIndex = AucAdvanced.Const.EquipCodeToInvIndex
 
 local tinsert, tremove = tinsert, tremove
 local bitand, bitor, bitnot = bit.band, bit.bor, bit.bnot
 local type, wipe = type, wipe
-local pairs, ipairs = pairs, ipairs
+local pairs, ipairs, next = pairs, ipairs, next
 local tonumber = tonumber
 
 local GetTime = GetTime
@@ -815,12 +916,91 @@ local Commitfunction = function()
 	local scanCount = #TempcurScan
 
 	local progresscounter = 0
-	local progresstotal = 3*oldCount + 4*scanCount
+	local progresstotal = 3*oldCount + 6*scanCount
 
 	local filterDeleteCount,filterOldCount, filterNewCount, updateCount, sameCount, newCount, updateRecoveredCount, sameRecoveredCount, missedCount, earlyDeleteCount, expiredDeleteCount = 0,0,0,0,0,0,0,0,0,0,0
 
+	local itemLinkTable = { }
 
-	--[[ *** Stage 1: Mark all matching auctions as DIRTY, and build a LookUpTable *** ]]
+	lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Starting Stage 1")
+	for pos, data in ipairs(TempcurScan) do
+		local gt = GetTime()
+		progresscounter = progresscounter + 1
+		if gt - lastPause >= processingTime then
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
+			totalProcessingTime = totalProcessingTime + (gt - lastPause)
+			coroutine.yield()
+			lastPause = GetTime()
+		end
+		if (not itemLinkTable[data[Const.LINK]]) then itemLinkTable[data[Const.LINK]] = { } end
+		tinsert(itemLinkTable[data[Const.LINK]], data)
+	end
+
+	local next = next
+	local maxTries = get('scancommit.ttl')
+	local triesLeft = maxTries
+	if (triesLeft == 0) then triesLeft = 1 end
+	while ((not (next(itemLinkTable)==nil)) and (triesLeft > 0)) do
+		local itemLinkNewTable = { }
+		local index, data
+		for index, data in pairs(itemLinkTable) do
+			local gt = GetTime()
+			if gt - lastPause >= processingTime then
+				lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
+				totalProcessingTime = totalProcessingTime + (gt - lastPause)
+				coroutine.yield()
+				lastPause = GetTime()
+			end
+			local _,_,_,itemLevel,_,itemType,itemSubType,_,itemEquipLoc = GetItemInfo(index)
+			if (itemEquipLoc) then
+				local pos2, data2
+				for pos2, data2 in ipairs(data) do
+					-- Found one.  Reset try count
+					triesLeft = maxTries
+					progresscounter = progresscounter + 1
+					data2[Const.ILEVEL] = itemLevel
+					data2[Const.ITYPE] = itemType
+					data2[Const.ISUB] = itemSubType
+					data2[Const.IEQUIP] = AucAdvanced.Const.EquipEncode[itemEquipLoc]
+				end
+			else
+				itemLinkNewTable[index] = data
+			end
+		end
+		itemLinkTable = itemLinkNewTable
+		if (#itemLinkTable > 0 and triesLeft > 0) then
+			local gt = GetTime()
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
+			totalProcessingTime = totalProcessingTime + (gt - lastPause)
+			while gt - GetTime() < 1 do
+				coroutine.yield()
+				lastPause = GetTime()
+			end		
+			lastPause = GetTime()
+		end
+	end
+
+	if (#itemLinkTable >0) then
+		wasIncomplete = true
+		TempcurCommit.wasIncomplete = true
+		local i=#TempcurScan
+		while (i>0) do
+			local gt = GetTime()
+			if gt - lastPause >= processingTime then
+				lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
+				totalProcessingTime = totalProcessingTime + (gt - lastPause)
+				coroutine.yield()
+				lastPause = GetTime()
+			end		
+			if (TempcurScan[i][Const.ILEVEL] == -1) then
+				tremove(TempcurScan, i)
+			end
+			i = i -1
+		end
+	end
+	
+	
+	--[[ *** Stage 3: Mark all matching auctions as DIRTY, and build a LookUpTable *** ]]
 	local dirtyCount = 0
 	local lut = {}
 
@@ -829,7 +1009,7 @@ local Commitfunction = function()
 		progresscounter = progresscounter + 1
 		local gt = GetTime()
 		if gt - lastPause >= processingTime then
-			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
 			totalProcessingTime = totalProcessingTime + (gt - lastPause)
 			coroutine.yield()
 			lastPause = GetTime()
@@ -858,6 +1038,9 @@ local Commitfunction = function()
 		end
 	end
 
+
+	--[[ *** Stage 4: Merge new scan into ScanData *** ]]
+	lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Starting Stage 4") -- change displayed text for reporting purposes
 	local processors = {}
 	local modules = AucAdvanced.GetAllModules("AuctionFilter", "Filter")
 	for pos, engineLib in ipairs(modules) do
@@ -877,16 +1060,13 @@ local Commitfunction = function()
 			table.insert(processors[op], x)
 		end
 	end
-
-	--[[ *** Stage 2: Merge new scan into ScanData *** ]]
-	lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Starting Stage 2") -- change displayed text for reporting purposes
 	processStats(processors, "begin")
 	for index, data in ipairs(TempcurScan) do
 		local itemPos
 		progresscounter = progresscounter + 4
 		local gt = GetTime()
 		if gt - lastPause >= processingTime then
-			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 2")
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 4")
 			totalProcessingTime = totalProcessingTime + (gt - lastPause)
 			coroutine.yield()
 			lastPause = GetTime()
@@ -934,8 +1114,7 @@ local Commitfunction = function()
 	end
 
 
-	--[[ *** Stage 3: Cleanup deleted auctions *** ]]
-	local numempty = 0
+	--[[ *** Stage 5: Cleanup deleted auctions *** ]]
 	local progressstep = 1
 	if #scandata.image > 0 then -- (avoid potential div0)
 		-- #scandata.image is probably now larger than when we originally calculated progresstotal -- adjust the step size to compensate
@@ -946,7 +1125,7 @@ local Commitfunction = function()
 		progresscounter = progresscounter + progressstep
 		local gt = GetTime()
 		if gt - lastPause >= processingTime then
-			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
+			lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 5")
 			totalProcessingTime = totalProcessingTime + (gt - lastPause)
 			coroutine.yield()
 			lastPause = GetTime()
@@ -992,9 +1171,6 @@ local Commitfunction = function()
 				end
 				tremove(scandata.image, pos)
 			end
-		elseif not data[Const.LINK] then --if there isn't a link in the data, remove the entry
-			tremove(scandata.image, pos)
-			numempty = numempty + 1
 		end
 	end
 
@@ -1012,12 +1188,6 @@ local Commitfunction = function()
 		end
 	end
 
-	if numempty > 0 then
-		if nLog then
-			nLog.AddMessage("Auctioneer", "Scan", N_ERROR, "ScanData Missing Links",
-				("We saw %d entries in scandata without links"):format(numempty))
-		end
-	end
 	-- image contains filtered items now.  Need to account for new entries that are flagged as filtered (not shown to stats modules)
 	if (oldCount - earlyDeleteCount - expiredDeleteCount + newCount + filterNewCount - filterDeleteCount ~= currentCount) then
 		if nLog then
@@ -1046,7 +1216,7 @@ local Commitfunction = function()
 	end
 	if (TempcurQuery.qryinfo.nosummary) then
 		printSummary = false
-		scanSize = "NoSum-"..scansize
+		scanSize = "NoSum-"..scanSize
 	end
 
 	if (nLog or printSummary) then
@@ -1057,74 +1227,74 @@ local Commitfunction = function()
 		local summary
 
 		if scanTimeHours ~= 0 then
-			scanTime = scanTime..scanTimeHours.." Hours "
+			scanTime = scanTime..scanTimeHours.._TRANS("PSS_Hours")
 		end
 		if scanTimeMins ~= 0 then
-			scanTime = scanTime..scanTimeMins.." Mins "
+			scanTime = scanTime..scanTimeMins.._TRANS("PSS_Minutes")
 		end
 		if scanTimeSecs ~= 0 or (scanTimeHours == 0 and scanTimeMins == 0) then
-			scanTime = scanTime..scanTimeSecs.." Secs "
+			scanTime = scanTime..scanTimeSecs.._TRANS("PSS_Seconds")
 		end
 
 		if (wasIncomplete) then
-			summaryLine = "Auctioneer scanned {{"..scanCount.."}} auctions over{{"..scanTime.."}}before stopping:"
+			summaryLine = _TRANS("PSS_Incomplete_1").." {{"..scanCount.."}} ".._TRANS("PSS_Incomplete_2").."{{"..scanTime.."}}".._TRANS("PSS_Incomplete_3")
 		else
-			summaryLine = "Auctioneer finished scanning {{"..scanCount.."}} auctions over{{"..scanTime.."}}:"
+			summaryLine = _TRANS("PSS_Complete_1").." {{"..scanCount.."}} ".._TRANS("PSS_Complete_2").."{{"..scanTime.."}}:"
 		end
 		if (printSummary) then _print(summaryLine) end
 		summary = summaryLine
 
-		summaryLine = "  {{"..oldCount.."}} items in DB at start ({{"..dirtyCount.."}} matched query); {{"..currentCount.."}} at end"
+		summaryLine = "  {{"..oldCount.."}} ".._TRANS("PSS_StartItems").."{{"..dirtyCount.."}} ".._TRANS("PSS_MatchedItems").." {{"..currentCount.."}} ".._TRANS("PSS_AtEnd")
 		if (printSummary) then _print(summaryLine) end
 		summary = summary.."\n"..summaryLine
 
 		if (sameCount > 0) then
 			if (sameRecoveredCount > 0) then
-				summaryLine = "  {{"..sameCount.."}} unchanged items (of which, "..sameRecoveredCount.." were missed last scan)"
+				summaryLine = "  {{"..sameCount.."}} ".._TRANS("PSS_Unchanged_Missed")..sameRecoveredCount.._TRANS("PSS_Missed")
 			else
-				summaryLine = "  {{"..sameCount.."}} unchanged items"
+				summaryLine = "  {{"..sameCount.."}} ".._TRANS("PSS_Unchanged_NoMissed")
 			end
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
 		end
 		if (updateCount > 0) then
 			if (updateRecoveredCount > 0) then
-				summaryLine = "  {{"..updateCount.."}} updated items (of which, "..updateRecoveredCount.." were missed last scan)"
+				summaryLine = "  {{"..updateCount.."}} ".._TRANS("PSS_Updated_Missed")..updateRecoveredCount.._TRANS("PSS_Missed")
 			else
-				summaryLine = "  {{"..updateCount.."}} updated items"
+				summaryLine = "  {{"..updateCount.."}} ".._TRANS("PSS_Updated_NoMissed")
 			end
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
 		end
 		if (newCount > 0) then
-			summaryLine = "  {{"..newCount.."}} new items"
+			summaryLine = "  {{"..newCount.."}} ".._TRANS("PSS_NewItems")
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
 		end
 		if (earlyDeleteCount+expiredDeleteCount > 0) then
 			if expiredDeleteCount > 0 then
-				summaryLine = "  {{"..earlyDeleteCount+expiredDeleteCount.."}} items removed (of which, {{"..expiredDeleteCount.."}} were past expiry time)"
+				summaryLine = "  {{"..earlyDeleteCount+expiredDeleteCount.."}} ".._TRANS("PSS_Removed_Expired").." {{"..expiredDeleteCount.."}} ".._TRANS("PSS_Expired")
 			else
-				summaryLine = "  {{"..earlyDeleteCount+expiredDeleteCount.."}} items removed"
+				summaryLine = "  {{"..earlyDeleteCount+expiredDeleteCount.."}} ".._TRANS("PSS_Removed_NoExpired")
 			end
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
 		end
 		if (filterNewCount+filterOldCount > 0) then
-			summaryLine = "  {{"..filterNewCount+filterOldCount.."}} filtered items"
+			summaryLine = "  {{"..filterNewCount+filterOldCount.."}} ".._TRANS("PSS_Filtered")
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
 		end
 		if (filterDeleteCount > 0) then
-			summaryLine = "  {{"..filterDeleteCount.."}} filtered items removed"
+			summaryLine = "  {{"..filterDeleteCount.."}} ".._TRANS("PSS_Filtered_Removed")
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
 		end
 		if (missedCount > 0) then
 			if (wasIncomplete) then
-				summaryLine = "  (Incomplete scan missed {{"..missedCount.."}} items)"
+				summaryLine = "  ".._TRANS("PSS_Incomplete_Missed_1").." "..missedCount.."}} ".._TRANS("PSS_Incomplete_Missed_2")
 			else
-				summaryLine = "  {{"..missedCount.."}} missed items"
+				summaryLine = "  {{"..missedCount.."}} ".._TRANS("PSS_MissedItems")
 			end
 			if (printSummary) then _print(summaryLine) end
 			summary = summary.."\n"..summaryLine
@@ -1172,7 +1342,7 @@ local Commitfunction = function()
 	end
 
 	scanstats.LastScan = now
-	if oldCount ~= currentCount or scanCount > 0 or dirtyCount > 0  or numempty > 0 then
+	if oldCount ~= currentCount or scanCount > 0 or dirtyCount > 0 then
 		scanstats.ImageUpdated = now
 	end
 	if wasUnrestricted and not wasIncomplete then scanstats.LastFullScan = now end
@@ -1315,25 +1485,16 @@ function private.HasAllData()
 	return false
 end
 
---[[ Not currently used
-function private.NoDupes(pageData, compare)
-	if not pageData then return true end
-	for pos, pageItem in ipairs(pageData) do
-		if (compare[Const.LINK] == pageItem[Const.LINK]) then
-			if (private.IsSameItem(pageItem, compare)) then
-				return false
-			end
-		end
-	end
-	return true
-end
---]]
-
-function lib.GetAuctionItem(list, i)
+function lib.GetAuctionItem(list, i, skipGetInfo)
 	local itemLink = GetAuctionItemLink(list, i)
 	if itemLink then
 		itemLink = AucAdvanced.SanitizeLink(itemLink)
-		local _,_,_,itemLevel,_,itemType,itemSubType,_,itemEquipLoc = GetItemInfo(itemLink)
+		local itemLevel,itemType,itemSubType,itemEquipLoc
+		if (skipGetInfo) then
+			itemLevel, itemType, itemSubType, itemEquipLoc = -1, -1, -1, ""
+		else
+			_,_,_,itemLevel,_,itemType,itemSubType,_,itemEquipLoc = GetItemInfo(itemLink)
+		end
 		local _, itemId, itemSuffix, itemFactor, itemEnchant, itemSeed = AucAdvanced.DecodeLink(itemLink)
 		--[[
 			Returns Integer giving range of time left for query
@@ -1388,7 +1549,7 @@ function lib.GetAuctionSellItem(minBid, buyoutPrice, runTime)
 		local curTime = time()
 
 		return {
-			itemLink, itemLevel, itemType, itemSubType, invType, minBid,
+			itemLink, itemLevel, itemType, itemSubType, nil, minBid,
 			timeLeft, curTime, name, texture, count, quality, canUse, level,
 			minBid, 0, buyoutPrice, 0, nil, UnitName("player"),
 			0, -1, itemId, itemSuffix, itemFactor, itemEnchant, itemSeed
@@ -1397,15 +1558,18 @@ function lib.GetAuctionSellItem(minBid, buyoutPrice, runTime)
 end
 
 local StorePageFunction = function()
-	local queryStarted = private.scanStarted
-	if not queryStarted then queryStarted = GetTime() end
 
 	if (not private.curQuery) or (private.curQuery.name == "empty page") then
 		return
 	end
+
+	if (not private.scanStarted) then private.scanStarted = GetTime() end
+	local queryStarted = private.scanStarted
+
+
 	local startTime = GetTime()
 	local lastPause = startTime
-	localRunTime = 0
+	local RunTime = 0
 	private.sentQuery = false
 	local page = AuctionFrameBrowse.page
 	if not private.curScan then
@@ -1414,9 +1578,10 @@ local StorePageFunction = function()
 	if not private.curPages then
 		private.curPages = {}
 	end
+	
 
 	if (nLog) then
-		nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("StorePage Started %fs after Query Start"):format(startTime - queryStarted), ("StorePage Called %f seconds from query to be called"):format(startTime - queryStarted))
+		nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("StorePage For Page %d Started %fs after Query Start"):format(page, startTime - queryStarted), ("StorePage (Page %d) Called\n%f seconds have elapsed since scan start"):format(page, startTime - queryStarted))
 	end
 
 	local curQuery, curScan, curPages = private.curQuery, private.curScan, private.curPages
@@ -1441,7 +1606,7 @@ local StorePageFunction = function()
 		local now = GetTime()
 		private.nextCheck = now
 		private.scanDelay = now + 30
-		localRunTime = GetTime()-lastPause
+		RunTime = RunTime + GetTime()-lastPause
 		coroutine.yield()
 		lastPause = GetTime()
 	end
@@ -1459,13 +1624,13 @@ local StorePageFunction = function()
 
 	local storecount = 0
 	if not private.breakStorePage and (page > curQuery.qryinfo.page) then
-
+		local retries = { }
 		for i = 1, numBatchAuctions do
 			if isGetAll and ((i % getallspeed) == 0) then --only start yielding once the first page is done, so it won't affect normal scanning
 				local gt = GetTime()
 				if (gt-lastPause >= processingTime) then
-					lib.ProgressBars("GetAllProgressBar", 100*i/numBatchAuctions, true)
-					localRunTime = localRunTime + GetTime()-lastPause
+					lib.ProgressBars("GetAllProgressBar", 100*storecount/numBatchAuctions, true)
+					RunTime = RunTime + GetTime() - lastPause
 					coroutine.yield()
 					lastPause = GetTime()
 					if private.breakStorePage then
@@ -1474,36 +1639,75 @@ local StorePageFunction = function()
 				end
 			end
 
-			local itemData = lib.GetAuctionItem("list", i)
-			if itemData then
---				local legacyScanning = private.legacyScanning
---				if legacyScanning == nil then
---					if Auctioneer and Auctioneer.ScanManager and Auctioneer.ScanManager.IsScanning then
---						legacyScanning = Auctioneer.ScanManager.IsScanning
---					else
---						legacyScanning = function () return false end
---					end
---					private.legacyScanning = legacyScanning
---				end
-
-				-- We only store one of the same item/owner/price/quantity in the scan
-				-- unless we are doing a forward scan (in which case we can be sure they
-				-- are not duplicate entries.
---			if private.isScanning
---			or totalAuctions <= 50
---			or numBatchAuctions > 50 --if GetAll, we can be sure they aren't duplicates
---			or legacyScanning() -- Is AucClassic scanning?
---			or private.NoDupes(curScan, itemData) then
+			local itemData = lib.GetAuctionItem("list", i, true)
+			if (itemData) then
 				tinsert(curScan, itemData)
 				storecount = storecount + 1
+			else
+				tinsert(retries, i)
 			end
+		end
+		local maxTries = get('scancommit.ttl')
+		local tryCount = 0
+
+		local newRetries = { }
+		while (#retries > 0 and tryCount < maxTries and not private.breakStorePage) do
+			tryCount = tryCount + 1
+			RunTime = RunTime + GetTime()-lastPause
+			lastPause = GetTime()
+			while (GetTime() - lastPause) < 1 do
+				coroutine.yield()
+				if private.breakStorePage then break end
+			end
+			lastPause = GetTime()
+			if private.breakStorePage then break end
+			for _, i in ipairs(retries) do
+				if isGetAll and ((i % getallspeed) == 0) then --only start yielding once the first page is done, so it won't affect normal scanning
+					local gt = GetTime()
+					if (gt-lastPause >= processingTime) then
+						lib.ProgressBars("GetAllProgressBar", 100*storecount/numBatchAuctions, true)
+						RunTime = RunTime + GetTime()-lastPause
+						coroutine.yield()
+						lastPause = GetTime()
+						if private.breakStorePage then break end
+					end
+				end
+
+				itemData = lib.GetAuctionItem("list", i, true)
+				if (itemData) then
+					tinsert(curScan, itemData)
+					storecount = storecount + 1
+				else
+					tinsert(newRetries, i)
+				end
+			end
+			if nLog and (#retries ~= #newRetries) then
+				nLog.AddMessage("Auctioneer", "Scan", N_INFO, 
+					("StorePage %d Retry Successful"):format(page),
+					("Page: %d\nRetry Count: %d\nRecords Returned: %d\nRecords Left: %d"):format(page, tryCount, #retries - #newRetries, #newRetries))
+			end
+			if (#retries ~= #newRetries) then
+				-- Found at least one.  Reset retry delay.
+				tryCount = 0
+			end
+			retries = newRetries
+			newRetries = { }
+		end
+		if nLog and (#retries > 0) then
+			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("Auction Store Failure Page %d"):format(page),
+				("Page; %d\nRetries: %d\nMissed Entries:%d"):format(page, maxTries, #retries))
 		end
 
 		if (storecount > 0) then
 			curQuery.qryinfo.page = page
 			curPages[page] = true -- we have pulled this page
 		end
+		if (#retries > 0) then
+			curQuery.pageIncomplete = true
+		end
 	end
+	
+	
 	if isGetAll then
 		for _, frame in pairs(EventFramesRegistered) do
 			frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
@@ -1515,6 +1719,7 @@ local StorePageFunction = function()
 		EventFramesRegistered=nil
 	end
 
+	
 	-- Just updated the page if it was a new page, so record it as latest page.
 	if (page > curQuery.qryinfo.page) then
 		curQuery.qryinfo.page = page
@@ -1534,7 +1739,9 @@ local StorePageFunction = function()
 	-- Send the next page query or finish scanning
 	if isGetAll then
 		if not private.breakStorePage then
-			private.Commit((#curScan < totalAuctions - 100), true)
+			elapsed = GetTime() - private.scanStarted - private.totalPaused
+			private.UpdateScanProgress(nil, totalAuctions, #curScan, elapsed, page+2, maxPages, curQuery) --page starts at 0 so we need to add +1
+			private.Commit((#curScan < totalAuctions - 100) or curQuery.pageIncomplete, true)
 			-- Clear the getall output. We don't want to create a new query so use the hook
 			private.queryStarted = GetTime()
 			private.Hook.QueryAuctionItems("empty page", "", "", nil, nil, nil, nil, nil, nil)
@@ -1543,27 +1750,32 @@ local StorePageFunction = function()
 		if (page+1 < maxPages) then
 			private.ScanPage(page + 1)
 		else
-			local incomplete = false
-			if (#curScan < totalAuctions - 10) then -- we just got scan size above, so they should be close.
+			local incomplete = curQuery.pageIncomplete
+			if ((#curScan < totalAuctions - 10)) then -- we just got scan size above, so they should be close.
 				incomplete = true
 			end
+			elapsed = GetTime() - private.scanStarted - private.totalPaused
+			private.UpdateScanProgress(nil, totalAuctions, #curScan, elapsed, page+2, maxPages, curQuery) --page starts at 0 so we need to add +1
 			private.Commit(incomplete, false)
 		end
 	elseif (maxPages == page+1) then
-		local incomplete = false
+		local incomplete = curQuery.pageIncomplete
 		for i = 0, maxPages-1 do
 			if not curPages[i] then
 				incomplete = true
 				break
 			end
 		end
+		elapsed = GetTime() - private.scanStarted - private.totalPaused
+		private.UpdateScanProgress(nil, totalAuctions, #curScan, elapsed, page+2, maxPages, curQuery) --page starts at 0 so we need to add +1
 		private.Commit(incomplete, false)
 	end
 	local endTime = GetTime()
-	localRunTime = localRunTime + endTime-lastPause
-	private.storeTime = (private.storeTime or 0) + localRunTime
+	RunTime = RunTime + endTime-lastPause
+	private.storeTime = (private.storeTime or 0) + RunTime
 	if (nLog) then
-		nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("StorePage %fs"):format(localRunTime), ("StorePage Took %f seconds from request to complete, %f seconds of that was to store, and %f seconds of the time to store was processing time"):format(endTime-queryStarted, endTime-startTime, localRunTime))
+		nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("StorePage Page %d Complete (%fs)"):format(page, RunTime), 
+		("Query Elapsed: %fs\nThis Page Store Elapsed: %fs\nThis Page Code Execution Time: %fs"):format(endTime-queryStarted, endTime-startTime, RunTime))
 	end
 end
 
@@ -1725,7 +1937,7 @@ function private.NewQueryTable(name, minLevel, maxLevel, invTypeIndex, classInde
 	else
 		qryinfo.scanSize = "Partial"
 	end
-
+	query.pageIncomplete = false
 	return query
 end
 
@@ -1846,7 +2058,7 @@ function QueryAuctionItems(name, minLevel, maxLevel, invTypeIndex, classIndex, s
 	if (page==0) then
 		local scanSize = query.qryinfo.scanSize
 		if (query.qryinfo.NoSummary) then
-			scanSize = "NoSum-"..scansize
+			scanSize = "NoSum-"..scanSize
 		end
 		if (nLog) then
 			local queryType = "standard"
@@ -2217,21 +2429,21 @@ end
 
 internal.Scan = {}
 function internal.Scan.NotifyItemListUpdated()
-	if private.scanStarted then
-		if (nLog) then
-			local startTime = GetTime()
-			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("NotifyItemListUpdated Called %fs after Query Start"):format(startTime - private.scanStarted), ("NotifyItemListUpdated Called %f seconds from query to be called"):format(startTime - private.scanStarted))
-		end
-	end
+--	if private.scanStarted then
+--		if (nLog) then
+--			local startTime = GetTime()
+--			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("NotifyItemListUpdated Called %fs after Query Start"):format(startTime - private.scanStarted), ("NotifyItemListUpdated Called %f seconds from query to be called"):format(startTime - private.scanStarted))
+--		end
+--	end
 end
 
 function internal.Scan.NotifyOwnedListUpdated()
-	if private.scanStarted then
-		if (nLog) then
-			local startTime = GetTime()
-			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("NotifyOwnedListUpdated Called %fs after Query Start"):format(startTime - private.scanStarted), ("NotifyOwnedListUpdated Called %f seconds from query to be called"):format(startTime - private.scanStarted))
-		end
-	end
+--	if private.scanStarted then
+--		if (nLog) then
+--			local startTime = GetTime()
+--			nLog.AddMessage("Auctioneer", "Scan", N_INFO, ("NotifyOwnedListUpdated Called %fs after Query Start"):format(startTime - private.scanStarted), ("NotifyOwnedListUpdated Called %f seconds from query to be called"):format(startTime - private.scanStarted))
+--		end
+--	end
 end
 
 internal.Scan.Logout = lib.Logout
