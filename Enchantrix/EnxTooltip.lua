@@ -149,7 +149,7 @@ local function prospectTooltip(prospect, tooltip, name, link, quality, count)
 		table.sort(lines, function(a, b) return a.sort > b.sort end)
 		for n, line in ipairs(lines) do
 			tooltip:AddLine(line.str, nil, embed)
-			if n >= 13 then break end -- Don't add more than 13 lines (1 Powder + 6 Uncommon + 6 Rare)
+--			if n >= 13 then break end -- Don't add more than 13 lines (1 Powder + 6 Uncommon + 6 Rare)
 		end
 	end
 
@@ -242,7 +242,7 @@ local function millingTooltip(prospect, tooltip, name, link, quality, count)
 		table.sort(lines, function(a, b) return a.sort > b.sort end)
 		for n, line in ipairs(lines) do
 			tooltip:AddLine(line.str, nil, embed)
-			if n >= 13 then break end -- Don't add more than 13 lines (1 Powder + 6 Uncommon + 6 Rare)
+--			if n >= 13 then break end -- Don't add more than 13 lines (1 Powder + 6 Uncommon + 6 Rare)
 		end
 	end
 
@@ -284,11 +284,14 @@ function itemTooltip(tooltip, name, link, itemType, itemId, quality, count)
 			return
 		elseif Enchantrix.Settings.GetSetting("ModTTShow") == "alt" and not IsAltKeyDown() then
 			return
-		elseif not Enchantrix.Settings.GetSetting("ModTTShow") == "alt" and not Enchantrix.Settings.GetSetting("ModTTShow") == "noalt" and not Enchantrix.Settings.GetSetting("ModTTShow") == "never" and not Enchantrix.Settings.GetSetting("ModTTShow") == "always" then
-			Enchantrix.Settings.SetSetting("ModTTShow", "alt")
-			if not IsAltKeyDown() then
-				return
-			end
+		elseif Enchantrix.Settings.GetSetting("ModTTShow") == "noshift" and IsShiftKeyDown() then
+			return
+		elseif Enchantrix.Settings.GetSetting("ModTTShow") == "shift" and not IsShiftKeyDown() then
+			return
+		elseif Enchantrix.Settings.GetSetting("ModTTShow") == "noctrl" and IsControlKeyDown() then
+			return
+		elseif Enchantrix.Settings.GetSetting("ModTTShow") == "ctrl" and not IsControlKeyDown() then
+			return
 		end
 	else 
 		Enchantrix.Settings.SetSetting("ModTTShow", "always")
@@ -427,7 +430,7 @@ function itemTooltip(tooltip, name, link, itemType, itemId, quality, count)
 		table.sort(lines, function(a, b) return a.sort > b.sort end)
 		for n, line in ipairs(lines) do
 			tooltip:AddLine(line.str, nil, embed)
-			if n >= 5 then break end -- Don't add more than 5 lines
+--			if n >= 5 then break end -- Don't add more than 5 lines
 		end
 	end
 

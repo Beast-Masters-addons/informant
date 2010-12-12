@@ -131,8 +131,7 @@ function lib.OnLoad()
 	default("util.glypher.profitAppraiser", 100)
 	default("util.glypher.profitBeancounter", 100)
 	default("util.glypher.profitMarket", 50)
-	default("util.glypher.pricemodel.min1", get("util.glypher.pricemodel.min") or 32500)
-	default("util.glypher.pricemodel.min2", get("util.glypher.pricemodel.min") or 35000)
+	default("util.glypher.pricemodel.min1", get("util.glypher.pricemodel.min") or 35000)
 	default("util.glypher.pricemodel.max", 999999)
 	default("util.glypher.pricemodel.underpct", 1)
 	default("util.glypher.pricemodel.useundercut", true)
@@ -401,7 +400,7 @@ function private.SetupConfigGui(gui)
 	--gui:AddTip(id, "Maximimum stock to allow when Glypher wants to make at least min overstock more than max stock")
 
 	gui:AddControl(id, "MoneyFrame", 0, 1, "util.glypher.herbprice", "Price of single Northrend herb")
-	gui:AddTip(id, "Used to calculate the price of Ink of the Sea which can be traded for most other inks.")
+	gui:AddTip(id, "Used to calculate the price of Blackfallow Ink which can be traded for most other inks.")
 
 	gui:AddControl(id, "Subhead", 0, "New glyph configuration")
 
@@ -428,14 +427,10 @@ function private.SetupConfigGui(gui)
 
 	gui:AddControl(id, "Subhead", 0, "Glypher pricing model")
 
-	--gui:AddControl(id, "Subhead", 0, "Minimum Sale Price - 1-Ink Glyphs")
-	gui:AddControl(id, "Note", 0, 1, nil, nil, "Minimum Sale Price - 1-Ink Glyphs")
+	--gui:AddControl(id, "Subhead", 0, "Minimum Sale Price")
+	gui:AddControl(id, "Note", 0, 1, nil, nil, "Minimum Sale Price")
 	gui:AddControl(id, "MoneyFrame", 0, 1, "util.glypher.pricemodel.min1")
 	gui:AddTip(id, "The price that Glypher will never go below on 1-ink glyphs in order to undercut others")
-
-	gui:AddControl(id, "Note", 0, 1, nil, nil, "Minimum Sale Price - 2-Ink Glyphs")
-	gui:AddControl(id, "MoneyFrame", 0, 1, "util.glypher.pricemodel.min2")
-	gui:AddTip(id, "The price that Glypher will never go below on 2-ink glyphs in order to undercut others")
 
 	--gui:AddControl(id, "Subhead", 0, "Maximum Sale Price")
 	gui:AddControl(id, "Note", 0, 1, nil, nil, "Maximum Sale Price")
@@ -707,7 +702,7 @@ function private.cofindGlyphs()
 
 	local inkCost
 	local resProb = 2.5
-	inkCost = ((herbprice * 5) / resProb) * 2 -- 5 herbs divided by the average pigments you get, 2 to make ink of the sea
+	inkCost = ((herbprice * 5) / resProb) * 2 -- 5 herbs divided by the average pigments you get, 2 to make Blackfallow Ink
 
 	if not inkCost then
 		print("Error in inkCost - returned nill!!!!!!!")
@@ -762,10 +757,10 @@ function private.cofindGlyphs()
 					--local inkPrice = AucAdvanced.API.GetMarketValue(link) or 0
 					local _, Id  = decode(link)
 					local isVendored,isLimited,itemCost,toSell,buyStack,maxStack = Informant.getItemVendorInfo(Id)
-					if string.find(":43126:43120:43124:37101:43118:43116:39774:39469:43122:", ":" .. Id .. ":") then
+					if string.find(":61978:43126:43120:43124:37101:43118:43116:39774:39469:43122:", ":" .. Id .. ":") then
 						reagentCost = (reagentCost + (inkCost * count) )
 						addInk = addInk + count
-						set("util.glypher.inks."..itemId..".ink", 43126)
+						set("util.glypher.inks."..itemId..".ink", 61978)
 						set("util.glypher.inks."..itemId..".count", count)
 					elseif Id == 43127 then
 						reagentCost = (reagentCost + (inkCost * count * 10) )
@@ -919,7 +914,7 @@ function private.cofindGlyphs()
 	end
 
 	if get("util.glypher.misc.inktrader") then
-		local _, link = GetItemInfo(43126)
+		local _, link = GetItemInfo(61978)
 		local mess = "You need " .. link .. "x" .. qtyInk .. " to process this queue."
 		DEFAULT_CHAT_FRAME:AddMessage(mess,1.0,0.0,0.0)
 	end
@@ -1050,7 +1045,6 @@ function lib.GetPrice(link, faction, realm)
 	local playerName = UnitName("player")
 	local linkType, itemId, property, factor = decode(link)
 	local glypherMin1 = get("util.glypher.pricemodel.min1")
-	local glypherMin2 = get("util.glypher.pricemodel.min2")
 	local glypherMax = get("util.glypher.pricemodel.max")
 	local glypherUnderpct = get("util.glypher.pricemodel.underpct")
 	local glypherUseundercut = get("util.glypher.pricemodel.useundercut")
@@ -1074,21 +1068,15 @@ function lib.GetPrice(link, faction, realm)
 		local auction = AucAdvanced.API.UnpackImageItem(data[j])
 		auction.buyoutPrice = (auction.buyoutPrice/auction.stackSize)
 		itemId = auction.itemId
-		local ink = get("util.glypher.inks."..itemId..".ink") or 43126
+		local ink = get("util.glypher.inks."..itemId..".ink") or 61978
 		local count = get("util.glypher.inks."..itemId..".count") or 2
-		if ink == 43126 then
-			if count == 1 then
-				glypherMin = glypherMin1
-			elseif count == 2 then
-				glypherMin = glypherMin2
-			else
-				glypherMin = glypherMin2
+		if ink == 61978 then
+			glypherMin = glypherMin1
 				--print("Warning: Item " .. itemId .. " has not been scanned by Glypher:Get Profitable Glyphs, assuming for now that 2 inks are required to make.")
 				--set("util.glypher.inks."..itemId..".count", 2)
-			end
 		else
 			--print("Cannot find ink type " .. ink .. " for glyph " .. itemId .. " for pricing - check http://forums.norganna.org/8/ for information on an update to Auc-Util-Glypher")
-			glypherMin = glypherMin2 -- fallback
+			glypherMin = glypherMin1 -- fallback
 		end
 		if auction.stackSize == 1 then
 			if auction.sellerName == playerName then

@@ -403,10 +403,6 @@ local function setter(setting, value)
 		Enchantrix.MiniIcon.Reposition()
 	end
 
-	if (a == "sideIcon") and Enchantrix.SideIcon then
-		Enchantrix.SideIcon.Update()
-	end
-
 end
 
 function lib.SetSetting(...)
@@ -533,10 +529,11 @@ function lib.MakeGuiConfig()
 	gui:AddControl(id, "Button",     0, 1, "profile.duplicate", _ENCH("GuiDuplicateProfileButton"))
 
 	id = gui:AddTab(_ENCH("GuiTabGeneral"))
+	gui:MakeScrollable(id)
 	gui:AddControl(id, "Header",     0,    _ENCH("GuiGeneralOptions"))
 	gui:AddControl(id, "Subhead",     0,	_ENCH('ModTTShow')) --"Show Tooltip:"
-	gui:AddControl(id, "Selectbox", 0, 1, { { "always", _ENCH('ModTTShow_always') }, {"alt", _ENCH('ModTTShow_alt') }, { "noalt", _ENCH('ModTTShow_noalt') }, { "never", _ENCH('ModTTShow_never')} }, "ModTTShow")
-	gui:AddTip(id, _ENCH('ModTTShow_Help')) --"Determines Tooltip behavior. Always: Show Enchantrix's Tooltip every time. When alt is pressed: Only show Enchantrix's tooltip if alt is pressed. When alt is not pressed: Only show Enchantrix's tooltip if alt is not pressed. Never: Never show Enchantrix's tooltip."	
+	gui:AddControl(id, "Selectbox", 0, 1, { { "always", _ENCH('ModTTShow_always') }, {"alt", _ENCH('ModTTShow_alt') }, { "noalt", _ENCH('ModTTShow_noalt') }, {"shift", _ENCH('ModTTShow_shift') }, {"noshift", _ENCH('ModTTShow_noshift')}, {"ctrl", _ENCH('ModTTShow_ctrl')},{"noctrl", _ENCH('ModTTShow_noctrl')}, { "never", _ENCH('ModTTShow_never')} }, "ModTTShow")
+	gui:AddTip(id, _ENCH('ModTTShow_Help')) --"Determines Tooltip behavior. Always: Show Enchantrix's Tooltip every time. When <mod> is pressed: Only show Enchantrix's tooltip if the specified modifier is pressed. When <mod> is not pressed: Only show Enchantrix's tooltip if the specified modifier is not pressed. Never: Never show Enchantrix's tooltip."	
 	gui:AddControl(id, "Checkbox",   0, 1, "TooltipShowDisenchantLevel", _ENCH("GuiDELevels") )
 	gui:AddControl(id, "Checkbox",   0, 1, "ToolTipEmbedInGameTip", _ENCH("HelpEmbed") )
 	gui:AddControl(id, "Checkbox",   0, 1, "TooltipShowDisenchantMats", _ENCH("GuiDEMaterials") )
@@ -568,7 +565,6 @@ function lib.MakeGuiConfig()
 	gui:AddControl(id, "Checkbox",   0, 1, "miniicon.enable", _ENCH("GuiMinimapShowButton"))
 	gui:AddControl(id, "Slider",     0, 2, "miniicon.angle", 0, 360, 1, _ENCH("GuiMinimapButtonAngle"))
 	gui:AddControl(id, "Slider",     0, 2, "miniicon.distance", -80, 80, 1, _ENCH("GuiMinimapButtonDist"))
-	gui:AddControl(id, "Checkbox",   0, 1, "sideIcon.enable", "Display the sidebar button")
 
 	id = gui:AddTab(_ENCH("GuiAutoDeOptions"))
 	gui:AddControl(id, "Checkbox",   0, 1, "AutoDisenchantEnable", _ENCH("GuiAutoDeEnable"))
