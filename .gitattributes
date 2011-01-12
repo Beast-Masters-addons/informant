@@ -2,6 +2,10 @@
 Auc-Advanced/CoreManifest.lua svneol=native#text/lua
 Auc-Advanced/CoreModule.lua -text
 Auc-Advanced/CoreStrings.lua -text
+Auc-Advanced/Modules/Auc-Stat-Example/Auc-Stat-Example.toc -text
+Auc-Advanced/Modules/Auc-Stat-Example/Embed.xml -text
+Auc-Advanced/Modules/Auc-Stat-Example/Readme.txt -text
+Auc-Advanced/Modules/Auc-Stat-Example/StatExample.lua -text
 Auc-Advanced/Modules/Auc-Util-Example/Readme.txt -text
 Auc-Advanced/Modules/luae.exe -text
 Auc-Advanced/Support/LibGroupStore.lua -text
@@ -56,8 +60,7 @@ Auc-Util-EasyBuyout/Embed.xml -text
 Auc-Util-FixAH/Auc-Util-FixAH.toc -text
 Auc-Util-FixAH/Load.xml -text
 Auc-Util-FixAH/PageOneReturn.lua -text
-Auc-Util-Glypher/Embed.xml -text
-Auc-Util-Glypher/Glypher.lua -text
+Auc-Util-Glypher/Glypher.lua svneol=native#text/lua
 Auc-Util-Glypher/Images/Glypher.blp -text
 Auc-Util-Glypher/Images/Glypher.tga -text
 Auc-Util-Glypher/Images/GlypherE.blp -text
