@@ -64,9 +64,7 @@ Auc-Util-Glypher/Glypher.lua svneol=native#text/lua
 Auc-Util-Glypher/Images/Glypher.blp -text
 Auc-Util-Glypher/Images/Glypher.tga -text
 Auc-Util-Glypher/Images/GlypherE.blp -text
-Auc-Util-GlypherPost/Auc-Util-GlypherPost.toc -text
-Auc-Util-GlypherPost/Embed.xml -text
-Auc-Util-GlypherPost/GlypherPost.lua -text
+Auc-Util-GlypherPost/GlypherPost.lua svneol=native#text/lua
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.lua svneol=native#text/lua
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.toc svneol=native#text/toc
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
