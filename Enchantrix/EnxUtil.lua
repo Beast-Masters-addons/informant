@@ -39,7 +39,6 @@ local getReagentPrice
 local getLinkFromName
 local isDisenchantable
 local getItemIdFromSig
-local getItemHyperlinks
 local getItemIdFromLink
 local saveCraftReagentInfoToCache
 local getCraftReagentInfoFromCache
@@ -442,15 +441,27 @@ function getIType(link)
 	return ("%d:%d:%d:%d"):format(iLevel, iQual, invType, iId)
 end
 
+
+
+-- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
+-- we want to keep just the itemID and suffixID (random enchantment)
 function getSigFromLink(link)
 	assert(type(link) == "string")
 
-	local _, _, id, rand = link:find("item:(%d+):%d+:(%d+):%d+")
+	local _, _, id, rand = link:find("item:(%d+):%d+:%d+:%d+:%d+:%d+:([-%d]+)")
 	if id and rand then
 		return id..":0:"..rand
+	elseif id then
+		return id..":0:0"
+	else
+		local _, _, trimmed = link:find("(item:.+:%d+)|?")
+		Enchantrix.Util.DebugPrint("getSigFromLink", ENX_INFO, "failed to get sig from link", "could not get sig for: " .. trimmed)
 	end
 end
 
+
+-- ccox - this is also wrong, but where is it used?
+-- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
 function getItems(str)
 	if (not str) then return end
 	local itemList = {};
@@ -463,16 +474,6 @@ function getItems(str)
 	return itemList;
 end
 
---Many thanks to the guys at irc://irc.datavertex.com/cosmostesters for their help in creating this function
-function getItemHyperlinks(str)
-	if (not str) then return nil end
-	local itemList = {};
-
-	for color, item, name in str:gmatch("|c(%x+)|Hitem:(%d+:%d+:%d+:%d+)|h%[(.-)%]|h|r") do
-		table.insert(itemList, "|c"..color.."|Hitem:"..item.."|h["..name.."]|h|r")
-	end
-	return itemList;
-end
 -----------------------------------
 --   General Utility Functions   --
 -----------------------------------
@@ -710,7 +711,6 @@ Enchantrix.Util = {
 	GetItemIdFromSig	= getItemIdFromSig,
 	IsDisenchantable	= isDisenchantable,
 	GetItemIdFromLink	= getItemIdFromLink,
-	GetItemHyperlinks	= getItemHyperlinks,
 	SaveCraftReagentInfoToCache		= saveCraftReagentInfoToCache,
 	GetCraftReagentInfoFromCache	= getCraftReagentInfoFromCache,
 
@@ -979,7 +979,7 @@ local function balanceEssencePrices(scanReagentTable, style)
 		[16202] = 16203,  	-- eternal
 		[22447] = 22446,	-- planar
 		[34056] = 34055,	-- cosmic
-		[52719] = 52718,	-- celestial
+		[52718] = 52719,	-- celestial
 	};
 
 	for lesser, greater in pairs(essenceTable) do
