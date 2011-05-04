@@ -50,11 +50,18 @@ function private.UpgradeDatabaseVersion()
 	for server, serverData in pairs(BeanCounterDB) do
 		for player, playerData in pairs(serverData) do
 			private.startPlayerUpgrade(server, player, playerData)
+			private.startPlayerMaintenance(server, player)
 		end
 		--validate the DB for this server after all upgrades have completed
-		if performedUpdate then --only id we actually had to update
+		if performedUpdate then --only if we actually had to update
 			private.integrityCheck(true, server)
-		end	
+		end
+	end
+	--check for tasks that need to run.
+	for server, serverData in pairs(BeanCounterDB) do
+		for player, playerData in pairs(serverData) do
+			private.startPlayerMaintenance(server, player)
+		end
 	end
 end
 
@@ -119,7 +126,19 @@ function private.startPlayerUpgrade(server, player, playerData)
 	 	end
 	end
 	--[[Make sure to refrence the new version location for all new updates after _3_00]]
-
+	local version = 999999
+	if BeanCounterDBSettings and BeanCounterDBSettings[server] and BeanCounterDBSettings[server][player] then
+		version = BeanCounterDBSettings[server][player]["version"] or version
+	end
+	
+	if version < 3.01 then
+ 		private.update._3_01(server, player) --adds reforged itemstring value if missing
+ 		performedUpdate = true
+	end
+	if version < 3.02 then
+ 		private.update._3_02(server, player) --clear any data from the vendor tables
+ 		performedUpdate = true
+	end
 end
 
 function private.update._2_01(server, player)
@@ -276,7 +295,7 @@ function private.update._2_11(server, player)
 					for i = #itemStringData, 1, -1 do
 						local stack, money, deposit , fee, buyout , bid, buyer, Time, reason, location = private.unpackString(itemStringData[i])
 						if location and location == "N" then
-							print(player, server, itemString)
+--~ 							print(player, server, itemString)
 							migrateNeutralData(server, player, DB, itemID, itemString, itemStringData[i]) --local help[er function
 							--itemStringData[i] = nil --This was a bad idea, left nil holes in my indexed data tables. We correct Nils in upgrade 2.12
 							table.remove(itemStringData, i)
@@ -342,4 +361,29 @@ function private.update._3_00(server, player)
 	BeanCounterDBSettings[server][player].version = 3
 end
 
-	
+--Add new reforged item position on all keys
+function private.update._3_01(server, player)
+	for DB, data in pairs(BeanCounterDB[server][player]) do
+		for itemID, itemIDData in pairs(data) do
+			local del = {}
+			for itemString, itemStringData in pairs(itemIDData) do
+				local _, _, _, reforged = lib.API.decodeLink(itemString)
+				if not reforged then
+					del[itemString] = itemStringData
+				end
+			end
+			for i,v in pairs(del)do
+				itemIDData[i..":0"] = v
+				itemIDData[i] = nil
+			end
+		end
+	end
+	BeanCounterDBSettings[server][player].version = 3.01
+end
+
+--remove any entries in the vendor tables, old cruft can cause errors
+function private.update._3_02(server, player)
+	BeanCounterDB[server][player]["vendorsell"] = {}
+	BeanCounterDB[server][player]["vendorbuy"] = {}	
+	BeanCounterDBSettings[server][player].version = 3.02
+end
