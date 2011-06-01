@@ -8,10 +8,6 @@ Auc-Advanced/Modules/Auc-Stat-Example/Readme.txt -text
 Auc-Advanced/Modules/Auc-Stat-Example/StatExample.lua -text
 Auc-Advanced/Modules/Auc-Util-Example/Readme.txt -text
 Auc-Advanced/Modules/luae.exe -text
-Auc-Advanced/Support/LibGroupStore.lua -text
-Auc-Advanced/Support/LibRevision.lua -text
-Auc-Advanced/Support/LibTickTock.lua -text
-Auc-Advanced/Support/Load.xml -text
 Auc-Advanced/Textures/AucAdvIcon.blp -text
 Auc-Advanced/Textures/AucMoneyFrame.blp -text
 Auc-Advanced/Textures/AuctionFrameBotLeft.blp -text
