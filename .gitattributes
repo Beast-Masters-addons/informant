@@ -116,8 +116,6 @@ Enchantrix/Support/LibRevision.lua -text
 Enchantrix/Support/Load.xml -text
 Enchantrix/includes -text
 Informant/InfSettings.lua -text
-Informant/Support/LibRevision.lua -text
-Informant/Support/Load.xml -text
 Informant/includes -text
 Informant/inficon.blp -text
 /build.conf -text
