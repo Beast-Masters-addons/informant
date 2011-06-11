@@ -104,14 +104,10 @@ BeanCounter/Textures/BC-TopLeft.blp -text
 BeanCounter/Textures/BC-TopRight.blp -text
 BeanCounter/Textures/BeanCounterIcon.blp -text
 BeanCounter/includes -text
-Enchantrix-Barker/Support/LibRevision.lua -text
-Enchantrix-Barker/Support/Load.xml -text
 Enchantrix-Barker/includes -text
 Enchantrix/EnxConstantsInscription.lua -text
 Enchantrix/EnxConstantsJewelcrafting.lua -text
 Enchantrix/Skin/EnxOrb.blp -text
-Enchantrix/Support/LibRevision.lua -text
-Enchantrix/Support/Load.xml -text
 Enchantrix/includes -text
 Informant/InfSettings.lua -text
 Informant/includes -text
