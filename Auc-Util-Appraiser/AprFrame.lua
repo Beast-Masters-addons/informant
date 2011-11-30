@@ -131,7 +131,7 @@ function private.CreateFrames()
 		if frame.showAuctions then
 			local auctionStart = #ItemList + 1
 			for auc=1, GetNumAuctionItems("owner") do
-				local name, texture, count, quality, canUse, level, minBid, minIncrement, buyoutPrice, bidAmount, highBidder, owner  = GetAuctionItemInfo("owner", auc)
+				local name, texture, count, quality, canUse, level, _, minBid, minIncrement, buyoutPrice, bidAmount, highBidder, owner  = GetAuctionItemInfo("owner", auc)
 				local link = GetAuctionItemLink("owner", auc)
 
 				local sig = SigFromLink(link)
@@ -2619,17 +2619,17 @@ function private.CreateFrames()
 			AuctionFrameBot:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Bid-Bot")
 			AuctionFrameBotRight:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Bid-BotRight")
 			AuctionFrameMoneyFrame:Show()
-			if (AuctionDressUpFrame:IsVisible()) then
-				AuctionDressUpFrame:Hide()
-				AuctionDressUpFrame.reshow = true
+			if (SideDressUpFrame:IsVisible()) then
+				SideDressUpFrame:Hide()
+				SideDressUpFrame.reshow = true
 			end
 			frame:Show()
 			AucAdvanced.Scan.LoadScanData()
 			frame.GenerateList(true)
 		else
-			if (AuctionDressUpFrame.reshow) then
-				AuctionDressUpFrame:Show()
-				AuctionDressUpFrame.reshow = nil
+			if (SideDressUpFrame.reshow) then
+				SideDressUpFrame:Show()
+				SideDressUpFrame.reshow = nil
 			end
 			AuctionFrameMoneyFrame:Show()
 			frame:Hide()
