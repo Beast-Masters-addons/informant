@@ -34,7 +34,7 @@ LibStub("LibRevision"):Set("$URL$","$Rev$","5.1.DEV.", 'auctioneer', 'libs')
 
 local select,ipairs,pairs=select,ipairs,pairs
 local concat=table.concat
-local tonumber,tostring,strsplit,strjoin=tonumber,tostring,strsplit,strjoin
+local tonumber,tostring,strsplit,strjoin,UnitName,GetRealmName,GetMoney =tonumber,tostring,strsplit,strjoin,UnitName,GetRealmName,GetMoney
 local tinsert,tremove = tinsert,tremove
 
 local libName = "BeanCounter"
@@ -49,7 +49,7 @@ local private = {
 	realmName = GetRealmName(),
 	AucModule, --registers as an auctioneer module if present and stores module local functions
 	faction = nil,
-	version = 3.02,
+	version = 3.03,
 	wealth = 0, --This characters current net worth. This will be appended to each transaction.
 	compressed = false,
 
@@ -155,6 +155,7 @@ function lib.OnLoad(addon)
 	private.CreateFrames() --create our framework used for AH and GUI
 	private.createDeleteItemPrompt() --create the item delete prompt
 	private.slidebar() --create slidebar icon
+	private.maintenanceTasks() --run any scheduled tasks
 
 	private.scriptframe:RegisterEvent("PLAYER_MONEY")
 	private.scriptframe:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -407,9 +408,8 @@ function private.onEvent(frame, event, arg, ...)
 end
 --scripts that handle recording DE events
 local inDEState = false
-local DisenchantLocale = GetSpellInfo(13262) or "Disenchant" --localized Spell name for Disenchant
-function private.onEventDisenchant(frame, event, arg, spell, ...)
-	if event == "UNIT_SPELLCAST_SUCCEEDED" and arg == "player" and spell == DisenchantLocale then
+function private.onEventDisenchant(frame, event, arg, spell, _, _, spellID)
+	if event == "UNIT_SPELLCAST_SUCCEEDED" and arg == "player" and spellID == 13262 then
 		inDEState = true
 		private.bag = {}
 	elseif event == "ITEM_LOCK_CHANGED" and inDEState then
