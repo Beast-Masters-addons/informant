@@ -316,7 +316,7 @@ function lib.OnLoad()
 	AucAdvanced.Settings.SetDefault("util.appraiser.round.subtract", 1)
 	AucAdvanced.Settings.SetDefault("util.appraiser.bid.markdown", 10)
 	AucAdvanced.Settings.SetDefault("util.appraiser.bid.subtract", 0)
-	AucAdvanced.Settings.SetDefault("util.appraiser.bid.deposit", true)
+	AucAdvanced.Settings.SetDefault("util.appraiser.bid.deposit", false)
 	AucAdvanced.Settings.SetDefault("util.appraiser.bid.vendor", true)
 	AucAdvanced.Settings.SetDefault("util.appraiser.color", true)
 	AucAdvanced.Settings.SetDefault("util.appraiser.colordirection","RIGHT")
@@ -340,6 +340,9 @@ function lib.OnLoad()
 	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_CurBid'), 65) --CurBid
 	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.".._TRANS('APPR_Interface_Buyout'), 67) --Buyout
 	AucAdvanced.Settings.SetDefault("util.appraiser.columnwidth.BLANK", 0.05)
+
+	local localName = _TRANS('APPR_Interface_Appraiser')
+	function lib.GetLocalName() return localName end
 end
 
 function lib.CanSupplyMarket()
