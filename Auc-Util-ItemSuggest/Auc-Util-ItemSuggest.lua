@@ -38,6 +38,7 @@ local lib = AucAdvanced.NewModule(libType, libName, nil, true) -- noPrivate
 if not lib then return end
 local aucPrint,decode,_,_,replicate,empty,get,set,default,debugPrint,fill,_TRANS = AucAdvanced.GetModuleLocals()
 local Const = AucAdvanced.Const
+local Resources = AucAdvanced.Resources
 
 local SplitServerKey = AucAdvanced.SplitServerKey
 local GetDepositCost = GetDepositCost
@@ -78,7 +79,7 @@ function lib.Suggest(hyperlink, quantity, serverKey, additional)
 		return
 	end
 	if type(quantity) ~= "number" or quantity < 1 then quantity = 1 end
-	serverKey = Const.ServerKeyHome -- temporary: peg to home faction for now
+	serverKey = Resources.ServerKeyHome -- temporary: peg to home faction for now
 	if type(additional) ~= "table" then additional = emptyTable end -- ensure 'additional' is always a table, though it may be empty
 	if hyperlink == LastLink and quantity == LastQuantity and additional == LastAdditional then
 		-- caution: we don't check to see if the _contents_ of 'additional' have changed
@@ -955,9 +956,9 @@ local function OnLoadRunOnce()
 	OnLoadRunOnce = nil
 
 	default("util.itemsuggest.enablett", 1) --Enables Item Suggest from Item AI to be displayed in tooltip
-	default("util.itemsuggest.enchantskill", 525) -- Used for item AI
-	default("util.itemsuggest.jewelcraftskill", 525)-- Used for item AI
-	default("util.itemsuggest.inscriptionskill", 525)-- Used for item AI
+	default("util.itemsuggest.enchantskill", Const.MAXSKILLLEVEL) -- Used for item AI
+	default("util.itemsuggest.jewelcraftskill", Const.MAXSKILLLEVEL)-- Used for item AI
+	default("util.itemsuggest.inscriptionskill", Const.MAXSKILLLEVEL)-- Used for item AI
 	default("util.itemsuggest.vendorweight", 100)-- Used for item AI
 	default("util.itemsuggest.auctionweight", 100)-- Used for item AI
 	default("util.itemsuggest.prospectweight", 100)-- Used for item AI
@@ -1017,11 +1018,11 @@ local function SetupConfigGui(gui)
 	SliderSpacer = gui:AddControl(id, "Note", 0 ,0 ,0, "") -- invisible control used to correctly space controls following the sliders
 
     gui:AddControl(id, "Header", 0, "Skill usage Limits")
-	gui:AddControl(id, "WideSlider", 0, 2, "util.itemsuggest.enchantskill", 0, 525, 25, "Max Enchanting Skill On Realm: %s")
+	gui:AddControl(id, "WideSlider", 0, 2, "util.itemsuggest.enchantskill", 0, Const.MAXSKILLLEVEL, 25, "Max Enchanting Skill On Realm: %s")
 	gui:AddTip(id, "Set ItemSuggest limits based upon Enchanting skill for your characters on this realm.")
-	gui:AddControl(id, "WideSlider", 0, 2, "util.itemsuggest.jewelcraftskill", 0, 525, 25, "Max JewelCrafting Skill On Realm: %s")
+	gui:AddControl(id, "WideSlider", 0, 2, "util.itemsuggest.jewelcraftskill", 0, Const.MAXSKILLLEVEL, 25, "Max JewelCrafting Skill On Realm: %s")
 	gui:AddTip(id, "Set ItemSuggest limits based upon Jewelcrafting skill for your characters on this realm.")
-	gui:AddControl(id, "WideSlider", 0, 2, "util.itemsuggest.inscriptionskill", 0, 525, 25, "Max Inscription Skill On Realm: %s")
+	gui:AddControl(id, "WideSlider", 0, 2, "util.itemsuggest.inscriptionskill", 0, Const.MAXSKILLLEVEL, 25, "Max Inscription Skill On Realm: %s")
 	gui:AddTip(id, "Set ItemSuggest limits based upon Inscription skill for your characters on this realm.")
 
 	gui:AddControl(id, "Header", 0, "Pricing Models")

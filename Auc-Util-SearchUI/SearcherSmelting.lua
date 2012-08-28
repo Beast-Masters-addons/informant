@@ -238,7 +238,7 @@ default("smelting.profit.min", 1)
 default("smelting.profit.pct", 50)
 default("smelting.level.custom", false)
 default("smelting.level.min", 0)
-default("smelting.level.max", 525)
+default("smelting.level.max", Const.MAXSKILLLEVEL)
 default("smelting.adjust.brokerage", true)
 default("smelting.adjust.deposit", true)
 default("smelting.adjust.deplength", 48)
@@ -295,11 +295,11 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "Header",     0,      "Smelting search criteria")
 	local last = gui:GetLast(id)
 
-	gui:AddControl(id, "MoneyFramePinned",  0, 1, "smelting.profit.min", 1, 99999999, "Minimum Profit")
+	gui:AddControl(id, "MoneyFramePinned",  0, 1, "smelting.profit.min", 1, 999999999, "Minimum Profit")
 	gui:AddControl(id, "Slider",            0, 1, "smelting.profit.pct", 1, 100, .5, "Min Discount: %0.01f%%")
 	gui:AddControl(id, "Checkbox",          0, 1, "smelting.level.custom", "Use custom levels")
-	gui:AddControl(id, "Slider",            0, 2, "smelting.level.min", 0, 525, 25, "Minimum skill: %s")
-	gui:AddControl(id, "Slider",            0, 2, "smelting.level.max", 25, 525, 25, "Maximum skill: %s")
+	gui:AddControl(id, "Slider",            0, 2, "smelting.level.min", 0, Const.MAXSKILLLEVEL, 25, "Minimum skill: %s")
+	gui:AddControl(id, "Slider",            0, 2, "smelting.level.max", 25, Const.MAXSKILLLEVEL, 25, "Maximum skill: %s")
 
 	gui:AddControl(id, "Subhead",           0,   "Include in search")
 	gui:AddControl(id, "Checkbox",          0, 1, "smelting.enableOre", "Ore > Bar")
@@ -319,7 +319,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "Checkbox",          0.56, 1,  "smelting.allow.buy", "Allow Buyouts")
 	gui:AddControl(id, "Checkbox",          0.42, 1, "smelting.maxprice.enable", "Enable individual maximum price:")
 	gui:AddTip(id, "Limit the maximum amount you want to spend with the Converter searcher")
-	gui:AddControl(id, "MoneyFramePinned",  0.42, 2, "smelting.maxprice", 1, 99999999, "Maximum Price for Converter")
+	gui:AddControl(id, "MoneyFramePinned",  0.42, 2, "smelting.maxprice", 1, 999999999, "Maximum Price for Converter")
 
 	gui:AddControl(id, "Subhead",           0.42,    "Price Valuation Method:")
 	gui:AddControl(id, "Selectbox",         0.42, 1, resources.selectorPriceModels, "smelting.model")
@@ -353,7 +353,7 @@ function lib.Search (item)
 		maxskill = get("smelting.level.max")
 	else
 		minskill = 0
-		maxskill = 525
+		maxskill = Const.MAXSKILLLEVEL
 	end
 	local skillneeded = smeltMinLevels[item[Const.ITEMID]]
 	if (skillneeded < minskill) or (skillneeded > maxskill) then

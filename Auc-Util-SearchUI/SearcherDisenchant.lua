@@ -40,8 +40,10 @@ default("disenchant.profit.min", 1)
 default("disenchant.profit.pct", 50)
 default("disenchant.level.custom", false)
 default("disenchant.level.min", 0)
-default("disenchant.level.max", 525)
+default("disenchant.level.max", Const.MAXSKILLLEVEL)
 default("disenchant.adjust.brokerage", true)
+default("disenchant.adjust.deposit", true)
+default("disenchant.adjust.listings", 3)
 default("disenchant.allow.bid", true)
 default("disenchant.allow.buy", true)
 default("disenchant.maxprice", 10000000)
@@ -90,11 +92,11 @@ function lib:MakeGuiConfig(gui)
 
 	local last = gui:GetLast(id)
 
-	gui:AddControl(id, "MoneyFramePinned",  0, 1, "disenchant.profit.min", 1, 99999999, "Minimum Profit")
+	gui:AddControl(id, "MoneyFramePinned",  0, 1, "disenchant.profit.min", 1, 999999999, "Minimum Profit")
 	gui:AddControl(id, "Slider",            0, 1, "disenchant.profit.pct", 1, 100, .5, "Min Discount: %0.01f%%")
 	gui:AddControl(id, "Checkbox",          0, 1, "disenchant.level.custom", "Use custom levels")
-	gui:AddControl(id, "Slider",            0, 2, "disenchant.level.min", 0, 525, 25, "Minimum skill: %s")
-	gui:AddControl(id, "Slider",            0, 2, "disenchant.level.max", 25, 525, 25, "Maximum skill: %s")
+	gui:AddControl(id, "Slider",            0, 2, "disenchant.level.min", 0, Const.MAXSKILLLEVEL, 25, "Minimum skill: %s")
+	gui:AddControl(id, "Slider",            0, 2, "disenchant.level.max", 25, Const.MAXSKILLLEVEL, 25, "Maximum skill: %s")
 	gui:AddControl(id, "Subhead",           0, "Note:")
 	gui:AddControl(id, "Note",              0, 1, 290, 30, "The \"Pct\" Column is \% of DE Value")
 
@@ -104,7 +106,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "Checkbox",          0.56, 1, "disenchant.allow.buy", "Allow Buyouts")
 	gui:AddControl(id, "Checkbox",          0.42, 1, "disenchant.maxprice.enable", "Enable individual maximum price:")
 	gui:AddTip(id, "Limit the maximum amount you want to spend with the Disenchant searcher")
-	gui:AddControl(id, "MoneyFramePinned",  0.42, 2, "disenchant.maxprice", 1, 99999999, "Maximum Price for Disenchant")
+	gui:AddControl(id, "MoneyFramePinned",  0.42, 2, "disenchant.maxprice", 1, 999999999, "Maximum Price for Disenchant")
 
 	gui:AddControl(id, "Subhead",           0.42,    "Price Valuation Method:")
 	gui:AddControl(id, "Selectbox",         0.42, 1, resources.selectorPriceModelsEnx, "disenchant.model")
@@ -112,6 +114,8 @@ function lib:MakeGuiConfig(gui)
 
 	gui:AddControl(id, "Subhead",           0.42,    "Fees Adjustment")
 	gui:AddControl(id, "Checkbox",          0.42, 1, "disenchant.adjust.brokerage", "Subtract auction fees")
+	gui:AddControl(id, "Checkbox",          0.42, 1, "disenchant.adjust.deposit", "Subtract deposit")
+	gui:AddControl(id, "Slider",            0.42, 1, "disenchant.adjust.listings", 1, 10, .1, "Ave relistings: %0.1fx")
 end
 
 function lib.Search(item)
@@ -177,6 +181,10 @@ function lib.Search(item)
 	--adjust for brokerage costs
 	if get("disenchant.adjust.brokerage") then
 		market = market * resources.CutAdjust
+	end
+	--adjust for deposit costs - for simplicity this is just (1 silver * relist times)
+	if get("disenchant.adjust.deposit") then
+		market = market - 100 * get("disenchant.adjust.listings")
 	end
 
 	-- check amount of profit

@@ -47,6 +47,7 @@ private.distributionCache = {}
 private.worthCache = {}
 
 local Const = AucAdvanced.Const
+local Resources = AucAdvanced.Resources
 local QueryImage = AucAdvanced.API.QueryImage
 local PriceCalcLevel = AucAdvanced.Modules.Util.PriceLevel and AucAdvanced.Modules.Util.PriceLevel.CalcLevel
 
@@ -299,7 +300,7 @@ function lib.GetScanData(serverKey)
 	local realmdata = AucScanData.scans[realm]
 	if not realmdata then return end -- not in database
 
-	local livedata = serverKey == Const.ServerKeyHome or serverKey == Const.ServerKeyNeutral -- 'live' data can be changed by scanning
+	local livedata = serverKey == Resources.ServerKeyHome or serverKey == Resources.ServerKeyNeutral -- 'live' data can be changed by scanning
 	local scandata = realmdata[faction]
 	if scandata then
 		if not livedata then
@@ -364,7 +365,7 @@ function lib.ClearScanData(command)
 		if keyword == "server" then
 			if extra == "" then extra = Const.PlayerRealm end
 		elseif keyword == "faction" then
-			if extra == "" then extra = AucAdvanced.GetFaction() end
+			if extra == "" then extra = Resources.ServerKeyCurrent end
 		end
 		if AucScanData.scans[extra] then -- it's a realm name in our database
 			AucScanData.scans[extra] = nil
@@ -386,7 +387,7 @@ function lib.ClearScanData(command)
 	wipe(private.dataCache)
 	-- Our functions expect home faction to exist - create a new one if it has just been deleted
 	if not AucScanData.scans[Const.PlayerRealm] then AucScanData.scans[Const.PlayerRealm] = {} end
-	lib.GetScanData(Const.ServerKeyHome) -- force create (if needed) and put back in cache
+	lib.GetScanData(Resources.ServerKeyCurrent) -- force create (if needed) and put back in cache
 	if report then
 		aucPrint("Auctioneer: ScanData cleared for {{"..report.."}}.")
 		local clearstats = {
@@ -442,7 +443,7 @@ local function OnLoadRunOnce()
 	aucPrint("Auctioneer: {{ScanData}} loaded.")
 	private.UpgradeDB()
 	if not AucScanData.scans[Const.PlayerRealm] then AucScanData.scans[Const.PlayerRealm] = {} end
-	lib.GetScanData(Const.ServerKeyHome) -- force unpack of home faction data
+	lib.GetScanData(Resources.ServerKeyCurrent) -- force unpack of current faction data
 	private.isLoaded = true
 end
 function lib.OnLoad()
@@ -480,57 +481,82 @@ function lib.OnUnload()
 
 	local maxLen = 2^22
 
+	local now = time()
+	local maxTime = 60 * 60 * 24 * 30 -- 30 days
+
 	if not (AucScanData and AucScanData.scans) then return end
 
 	-- Convert all image data to loadstring strings
 	for server, sData in pairs(AucScanData.scans) do
+		local hasData = false
 		for faction, fData in pairs(sData) do
-			if fData.image and type(fData.image) == "table" then
-				fData.ropes = {}
-				rope:Add("return {")
-				local fCount = #fData.image
-				for i = 1, fCount do
-					local item = fData.image[i]
-					if item and type(item) == "table" then
-						rope:Add("{")
-						local pos = 1
-						while item[pos] or item[pos+1] or item[pos+2] or item[pos+3] do
-							local v = item[pos]
-							if v == nil then
-								rope:Add("nil,")
-							else
-								local t = type(v)
-								if t == "string" then
-									rope:Add(("%q,"):format(v))
-								elseif t == "number" then
-									rope:Add(v..",")
-								elseif t == "boolean" then
-									rope:Add(tostring(v)..",")
+			local scanstats = fData.scanstats
+			local timestamp = scanstats and scanstats.ImageUpdated
+			if not timestamp or (now - timestamp) > maxTime then
+				sData[faction] = nil
+			else
+				hasData = true
+
+				if fData.image and type(fData.image) == "table" then
+					fData.ropes = {}
+					rope:Add("return {")
+					local fCount = #fData.image
+					for i = 1, fCount do
+						local item = fData.image[i]
+						if item and type(item) == "table" then
+							rope:Add("{")
+							local pos = 1
+							while item[pos] or item[pos+1] or item[pos+2] or item[pos+3] do
+								local v = item[pos]
+								if v == nil then
+									rope:Add("nil,")
 								else
-									rope:Add("nil--[["..t.."]],")
+									local t = type(v)
+									if t == "string" then
+										rope:Add(("%q,"):format(v))
+									elseif t == "number" then
+										rope:Add(v..",")
+									elseif t == "boolean" then
+										rope:Add(tostring(v)..",")
+									else
+										rope:Add("nil--[["..t.."]],")
+									end
 								end
+								pos = pos + 1
 							end
-							pos = pos + 1
+							rope:Add("},")
+						elseif item == nil then
+							rope:Add("nil,")
+						else
+							rope:Add("nil--[["..type(item).."]],")
 						end
-						rope:Add("},")
-					elseif item == nil then
-						rope:Add("nil,")
-					else
-						rope:Add("nil--[["..type(item).."]],")
+						if rope.len and rope.len > maxLen then
+							rope:Add("}");
+							tinsert(fData.ropes, rope:Get())
+							rope:Clear()
+							rope:Add("return {")
+						end
 					end
-					if rope.len and rope.len > maxLen then
-						rope:Add("}");
-						tinsert(fData.ropes, rope:Get())
-						rope:Clear()
-						rope:Add("return {")
-					end
+					rope:Add("}")
+					fData.image = "rope"
+					tinsert(fData.ropes, rope:Get())
+					rope:Clear()
 				end
-				rope:Add("}")
-				fData.image = "rope"
-				tinsert(fData.ropes, rope:Get())
-				rope:Clear()
 			end
 		end
+		if not hasData then
+			AucScanData.scans[server] = nil
+		end
+	end
+end
+
+-- Special handling for when a Neutral player character chooses a faction
+if Resources.PlayerFaction == "Neutral" then
+	lib.Processors.factionselect = function()
+		-- wipe scan data cache and reload using new value of ServerKeyCurrent
+		wipe(private.dataCache)
+		if not AucScanData.scans[Const.PlayerRealm] then AucScanData.scans[Const.PlayerRealm] = {} end
+		lib.GetScanData(Resources.ServerKeyCurrent)
 	end
 end
 
