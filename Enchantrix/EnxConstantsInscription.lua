@@ -384,12 +384,12 @@ const.MillGroupYields = {
 -- measured beta August 25, 2012
 	[SHADOW_PIGMENT_LOW] = {
 		[SHADOW_PIGMENT] = 2.5,
-		[MISTY_PIGMENT] = 0.3,
+		[MISTY_PIGMENT] = 0.25,
 		},
 	
 	[SHADOW_PIGMENT_HIGH] = {
 		[SHADOW_PIGMENT] = 3.0,
-		[MISTY_PIGMENT] = 0.6,
+		[MISTY_PIGMENT] = 0.56,
 		},
 }
 
