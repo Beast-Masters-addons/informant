@@ -25,8 +25,6 @@ Auc-Advanced/Textures/WhiteCornerBorder.blp -text
 Auc-Advanced/includes -text
 Auc-Db/DbStrings.lua -text
 Auc-Filter-Basic/BasicFilter.xml svneol=native#text/xml
-Auc-Stat-Classic/Auc-Stat-Classic.toc svneol=native#text/toc
-Auc-Stat-Classic/StatClassic.lua svneol=native#text/lua
 Auc-Stat-Histogram/Auc-Stat-Histogram.toc svneol=native#text/toc
 Auc-Stat-Histogram/StatHistogram.lua svneol=native#text/lua
 Auc-Stat-Sales/Auc-Stat-Sales.toc svneol=native#text/toc
