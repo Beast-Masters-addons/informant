@@ -64,13 +64,11 @@ Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.lua svneol=native#text/lua
 Auc-Util-ItemSuggest/Auc-Util-ItemSuggest.toc svneol=native#text/toc
 Auc-Util-ScanFinish/Embed.xml svneol=native#text/xml
 Auc-Util-ScanFinish/ScanComplete.mp3 -text svneol=unset#audio/mpeg
-Auc-Util-ScanFinish/ScanComplete.ogg -text
 Auc-Util-ScanFinish/ScanFinish.lua svneol=native#text/lua
 Auc-Util-ScanStart/Auc-Util-ScanStart.toc -text
 Auc-Util-ScanStart/Embed.xml -text
 Auc-Util-ScanStart/ScanStart.lua -text
 Auc-Util-SearchUI/DoorBell.mp3 -text
-Auc-Util-SearchUI/DoorBell.ogg -text
 Auc-Util-SearchUI/FilterItemAuctionHistory.lua svneol=native#text/lua
 Auc-Util-SearchUI/FilterItemLevel.lua svneol=native#text/lua
 Auc-Util-SearchUI/FilterItemPrice.lua svneol=native#text/lua
