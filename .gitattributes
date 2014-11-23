@@ -2,6 +2,7 @@
 Auc-Advanced/CoreManifest.lua svneol=native#text/lua
 Auc-Advanced/CoreModule.lua -text
 Auc-Advanced/CoreResources.lua -text
+Auc-Advanced/CoreServers.lua -text
 Auc-Advanced/CoreStrings.lua -text
 Auc-Advanced/Modules/Auc-Stat-Example2/Auc-Stat-Example2.toc -text
 Auc-Advanced/Modules/Auc-Stat-Example2/Embed.xml -text
