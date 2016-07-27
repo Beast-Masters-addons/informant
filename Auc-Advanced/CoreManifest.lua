@@ -52,10 +52,10 @@ AucAdvanced = {Modules = {Filter={}, Match={}, Stat={}, Util={}}, Data = {}}
 local lib = AucAdvanced
 
 local DEV_VERSION = "5.22.DEV"
-local MINIMUM_TOC = 60100
-local MINIMUM_CLIENT = "6.1.2"
+local MINIMUM_TOC = 70000
+local MINIMUM_CLIENT = "7.0.3"
 -- MINIMUM_BUILD is optional, and should only be used where TOC is not sufficient; otherwise it should be commented out
-local MINIMUM_BUILD = 19802
+-- local MINIMUM_BUILD = 00000
 
 lib.Version="<%version%>";
 if lib.Version:byte(1) == 60 then -- 60 = '<'
@@ -77,11 +77,6 @@ local _,build,_,tocVersion = GetBuildInfo()
 if tocVersion < MINIMUM_TOC or (MINIMUM_BUILD and tonumber(build) < MINIMUM_BUILD) then
 	message("Auctioneer requires game client version "..MINIMUM_CLIENT.." or higher.")
 	lib.ABORTLOAD = "Incorrect WoW client version"
-end
-
--- Legion Hybrid code check: flag HYBRID6 is used to indicate that the client is NOT yet updated to Legion
-if tocVersion < 70000 then
-	lib.HYBRID6 = true
 end
 
 -- Check that Stubby exists
