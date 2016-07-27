@@ -220,10 +220,10 @@ function lib.QueueBuy(link, seller, count, minbid, buyout, price, reason, nosear
 			end
 			request.itemname = name:lower()
 			request.uselevel = minlevel or 0
-			request.classindex = AucAdvanced.Const.CLASSESREV[classname]
-			if request.classindex then
-				request.subclassindex = AucAdvanced.Const.SUBCLASSESREV[classname][subclassname]
-			end
+			-- request.classindex = AucAdvanced.Const.CLASSESREV[classname] -- ### Legion todo: rewrite with classIDs
+			-- if request.classindex then
+				-- request.subclassindex = AucAdvanced.Const.SUBCLASSESREV[classname][subclassname]
+			-- end
 			request.quality = quality or 0
 		else
 			local lType, speciesID, _, petQuality = strsplit(":", link)
@@ -240,8 +240,8 @@ function lib.QueueBuy(link, seller, count, minbid, buyout, price, reason, nosear
 				end
 				request.itemname = petName:lower()
 				request.uselevel = iMin or 0
-				request.classindex = AucAdvanced.Const.CLASSESREV[iType]
-				request.subclassindex = petType
+				-- request.classindex = AucAdvanced.Const.CLASSESREV[iType] -- ### Legion todo: rewrite with classIDs
+				-- request.subclassindex = petType
 				request.quality = tonumber(petQuality) or 0
 			else
 				return QueueBuyErrorHelper(link, "NoItem")
@@ -301,16 +301,20 @@ function private.PushSearch()
 	-- (when the scan finishes, only requests with .querysig entries may be deleted)
 	for _, req in ipairs(private.BuyRequests) do
 		if not req.querysig then
-			req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.classindex, req.subclassindex, nil, req.quality, true)
+			-- Usage CreateQuerySig(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData)
+			--req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.classindex, req.subclassindex, nil, req.quality, true)
+			req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.quality, true, nil)
 		end
 	end
 
 	private.Searching = request.querysig
-	AucAdvanced.Scan.StartScan(request.itemname, request.uselevel, request.uselevel, nil, request.classindex, request.subclassindex, nil, request.quality, nil, true)
+	-- Usage StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options)
+	AucAdvanced.Scan.StartScan(request.itemname, request.uselevel, request.uselevel, nil, request.quality, nil, true, nil) -- ### Legion : use filterData
 end
 
 function private.FinishedSearch(complete, querysig, query)
-	if not complete or query.isUsable or query.invType or not query.name then return end
+	--if not complete or query.isUsable or query.invType or not query.name then return end
+	if not complete or query.isUsable or not query.name then return end -- Legion todo: check query.filterData?
 	for index = #private.BuyRequests, 1, -1 do
 		local request = private.BuyRequests[index]
 		-- Compare the query sig to the sig(s) calculated during PushSearch

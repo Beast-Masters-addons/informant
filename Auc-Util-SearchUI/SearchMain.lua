@@ -202,7 +202,7 @@ else
 end
 --The rescan method is a button that is displayed only if the searcher implements a rescan function. The searcher then passes any itemlinks it wants refrreshed data on
 --Will accept either full search details or a link (item or battlepet)
-function lib.RescanAuctionHouse(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex)
+function lib.RescanAuctionHouse(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, filterData)
 	if not name or type(name) ~= "string" then return end
 	-- we should either have a plain name or a link: a link will contain eaxctly 5 '|' characters
 	-- a plain text name should not contain any
@@ -253,10 +253,12 @@ function lib.RescanAuctionHouse(name, minUseLevel, maxUseLevel, invTypeIndex, cl
 
 	if name then
 		if AucAdvanced.Scan.IsScanning() or AucAdvanced.Scan.IsPaused() then
-			AucAdvanced.Scan.StartPushedScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex)
+			--AucAdvanced.Scan.StartPushedScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex) -- ### Legion
+			AucAdvanced.Scan.StartPushedScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, nil, filterData)
 		else
 			AucAdvanced.Scan.PushScan()
-			AucAdvanced.Scan.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex)
+			--AucAdvanced.Scan.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex) -- ### Legion
+			AucAdvanced.Scan.StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, nil, nil, filterData)
 		end
 	end
 end

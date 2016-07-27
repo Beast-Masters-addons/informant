@@ -32,38 +32,38 @@
 if not AucSearchUI then return end
 local lib, parent, private = AucSearchUI.NewSearcher("General")
 if not lib then return end
-local print,decode,_,_,replicate,empty,_,_,_,debugPrint,fill = AucAdvanced.GetModuleLocals()
+local aucPrint,decode,_,_,replicate,empty,_,_,_,debugPrint,fill = AucAdvanced.GetModuleLocals()
 local get,set,default,Const = AucSearchUI.GetSearchLocals()
 lib.tabname = "General"
 
-function private.getTypes()
-	if not private.typetable then
-		private.typetable = {GetAuctionItemClasses()}
-		table.insert(private.typetable,1, "All")
-	end
-	return private.typetable
-end
+-- function private.getTypes()
+	-- if not private.typetable then
+		-- private.typetable = {GetAuctionItemClasses()}
+		-- table.insert(private.typetable,1, "All")
+	-- end
+	-- return private.typetable
+-- end
 
-function private.getSubTypes()
-	local subtypetable, typenumber
-	local typename = get("general.type")
-	local typetable = private.getTypes()
-	if typename ~= "All" then
-		for i, j in pairs(typetable) do
-			if j == typename then
-				typenumber = i
-				break
-			end
-		end
-	end
-	if typenumber then
-		subtypetable = {GetAuctionItemSubClasses(typenumber-1)}-- subtract 1 because 1 is the "All" category
-		table.insert(subtypetable, 1, "All")
-	else
-		subtypetable = {[1]="All"}
-	end
-	return subtypetable
-end
+-- function private.getSubTypes()
+	-- local subtypetable, typenumber
+	-- local typename = get("general.type")
+	-- local typetable = private.getTypes()
+	-- if typename ~= "All" then
+		-- for i, j in pairs(typetable) do
+			-- if j == typename then
+				-- typenumber = i
+				-- break
+			-- end
+		-- end
+	-- end
+	-- if typenumber then
+		-- subtypetable = {GetAuctionItemSubClasses(typenumber-1)}-- subtract 1 because 1 is the "All" category
+		-- table.insert(subtypetable, 1, "All")
+	-- else
+		-- subtypetable = {[1]="All"}
+	-- end
+	-- return subtypetable
+-- end
 
 function private.getQuality()
 	return {
@@ -140,12 +140,14 @@ function lib:MakeGuiConfig(gui)
 	gui:SetLast(id, cont)
 	last = cont
 
+	--[[ ### Legion: temporarily removed, broken by patch
 	gui:AddControl(id, "Note",       0.0, 1, 100, 14, "Type:")
 	gui:AddControl(id, "Selectbox",   0.0, 1, private.getTypes, "general.type")
 	gui:SetLast(id, last)
 	gui:AddControl(id, "Note",       0.3, 1, 100, 14, "SubType:")
 	gui:AddControl(id, "Selectbox",   0.3, 1, private.getSubTypes, "general.subtype")
 	gui:SetLast(id, last)
+	--]]
 	gui:AddControl(id, "Note",       0.7, 1, 100, 14, "TimeLeft:")
 	gui:AddControl(id, "Selectbox",  0.7, 1, private.getTimeLeft(), "general.timeleft")
 
@@ -191,7 +193,7 @@ end
 function lib.Search(item)
 	private.debug = ""
 	if private.NameSearch("name", item[Const.NAME])
-			and private.TypeSearch(item[Const.ITYPE], item[Const.ISUB])
+			--and private.TypeSearch(item[Const.ITYPE], item[Const.ISUB]) -- ### Legion temp disabled
 			and private.TimeSearch(item[Const.TLEFT])
 			and private.QualitySearch(item[Const.QUALITY])
 			and private.LevelSearch("ilevel", item[Const.ILEVEL])
@@ -217,15 +219,15 @@ function lib.Rescan()
 	local searchtype = get("general.type")
 	local searchsubtype = get("general.subtype")
 
-	local classIndex = AucAdvanced.Const.CLASSESREV[searchtype]
-	local subclassIndex
-	if classIndex then
-		subclassIndex = AucAdvanced.Const.SUBCLASSESREV[searchtype][searchsubtype]
-	end
+	-- local classIndex = AucAdvanced.Const.CLASSESREV[searchtype]
+	-- local subclassIndex
+	-- if classIndex then
+		-- subclassIndex = AucAdvanced.Const.SUBCLASSESREV[searchtype][searchsubtype]
+	-- end
 
 	if name then
-		--print(name, min, max, nil, classIndex, subclassIndex, nil, quality)
-		AucSearchUI.RescanAuctionHouse(name, min, max, nil, classIndex, subclassIndex, nil, quality )
+		-- Usage: RescanAuctionHouse(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, filterData)
+		AucSearchUI.RescanAuctionHouse(name, min, max, nil, quality) -- ### Legion todo: use filterData
 	end
 end
 
@@ -292,7 +294,7 @@ function private.NameSearch(nametype,itemName)
 	return false
 end
 
-function private.TypeSearch(itype, isubtype)
+function private.TypeSearch(itype, isubtype) -- ### Legion: change to classID etc.
 	local searchtype = get("general.type")
 	if searchtype == "All" then
 		return true

@@ -118,7 +118,7 @@ function private.CommandHandler(editbox, command, subcommand, ...)
 		AucAdvanced.Settings.SetSetting("GetAllSpeed", subcommand)
 		AucAdvanced.Print("Setting GetAllSpeed to "..tostring(AucAdvanced.Settings.GetSetting("GetAllSpeed")))
 	elseif command == "getall" then
-		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, nil, nil, nil, true)
+		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, true)
 	else
 		if command ~= "" and subcommand then
 			local engineLib = AucAdvanced.GetModule(command, subcommand:lower(), "CommandHandler")
@@ -132,8 +132,10 @@ function private.CommandHandler(editbox, command, subcommand, ...)
 end
 
 function lib.ScanCommand(cat, subcat)
-	cat = tonumber(cat)
-	subcat = tonumber(subcat)
+	-- ### Legion: category scanning broken by patch, disable until fixed
+	cat = nil
+	-- cat = tonumber(cat)
+	-- subcat = tonumber(subcat)
 	local catName = nil
 	local subcatName = nil
 	--If there was a requested category to scan, we'll first check if its a valid category
@@ -161,7 +163,8 @@ function lib.ScanCommand(cat, subcat)
 	else
 			private.Print("Beginning scanning: {{Category "..cat.."."..subcat.." ("..subcatName.." of "..catName..")}}")
 	end
-	AucAdvanced.Scan.StartScan(nil, nil, nil, nil, cat, subcat, nil, nil)
+	-- Usage: StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options) -- ### Legion needs fixing
+	AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, nil, nil, nil)
 end
 
 function lib.GetCommandLead(llibType, llibName)

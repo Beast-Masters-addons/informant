@@ -264,10 +264,12 @@ function private:OnUpdate(delay)
 		end
 	end
 	--Create the overlay filter buttons the (callbackType == "auctionui") is too early.
+	--[[ ### Legion: Filter overlay temporarily disabled as broken by patch
 	if not AuctioneerFilterButton1 and AuctionFilterButton1 then
 		private.CreateSecondaryFilterButtons()
 		hooksecurefunc("AuctionFrameFilters_Update", private.AuctionFrameFilters_UpdateClasses)--used to respond to scrollframe
 	end
+	--]]
 	--if we still have filters pending process it, unless a scan is in progress or paused
 	if #queue > 0 and not AucAdvanced.Scan.IsScanning() and not AucAdvanced.Scan.IsPaused() then
 		private.play()
@@ -346,6 +348,7 @@ function private.play()
 	if AucAdvanced.Scan.IsPaused() then
 		AucAdvanced.Scan.SetPaused(false)
 	elseif not AucAdvanced.Scan.IsScanning() then
+		--[=[ ### Legion todo: temp disabled
 		if #queue == 0 then queue = private.checkedFrames() end --check for user selected frames
 		--debugPrint(("play: queue count=%i"):format(#queue), "ScanButton", "play", 0, "Debug")
 		if #queue > 0  then
@@ -356,8 +359,12 @@ function private.play()
 				queueFinished = true --Used to clear the selected filters/highlights AFTER the last queued scan has completed
 			end
 		else
+			-- ### Legion todo: check how Blizzard does this
 			AucAdvanced.Scan.StartScan("", "", "", AuctionFrameBrowse.selectedInvtypeIndex, AuctionFrameBrowse.selectedClassIndex, AuctionFrameBrowse.selectedSubclassIndex,  nil, nil)
 		end
+		--]=]
+		-- Usage StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options)
+		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, nil, nil, nil)
 	end
 	private.UpdateScanProgress()
 end
@@ -370,7 +377,7 @@ function private.getall()
 			return
 		end
 
-		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, nil, nil, nil, true)
+		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, true)
 	end
 	private.UpdateScanProgress()
 end
