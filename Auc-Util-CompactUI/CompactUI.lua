@@ -48,7 +48,7 @@ private.pageElements = {} -- cache pageContents subtables for reuse
 private.candy = {} -- decorative elements
 private.buttons = {}
 
-local searchname, searchminLevel, searchmaxLevel, searchinvTypeIndex, searchclassIndex, searchsubclassIndex, searchpage, searchisUsable, searchqualityIndex, searchGetAll, searchExactMatch
+local searchname, searchminLevel, searchmaxLevel, searchpage, searchisUsable, searchqualityIndex, searchGetAll, searchExactMatch, searchFilterData
 
 lib.Processors = {
 	config = function(callbackType, gui)
@@ -101,7 +101,7 @@ end
 --[[ Local functions ]]--
 function private.OnQuery(...)
 	-- copy query details
-	searchname, searchminLevel, searchmaxLevel, searchinvTypeIndex, searchclassIndex, searchsubclassIndex, searchpage, searchisUsable, searchqualityIndex, searchGetAll, searchExactMatch = ...
+	searchname, searchminLevel, searchmaxLevel, searchpage, searchisUsable, searchqualityIndex, searchGetAll, searchExactMatch, searchFilterData = ...
 	-- other functions hooking the query
 	if private.UpdateDetailColumn then private.UpdateDetailColumn(...) end
 end
@@ -110,7 +110,7 @@ function private.QueryCurrent(SortTable, SortColumn, reverse)
 	if SortTable == "bidder" or SortTable == "owner" then
 		OldSortAuctionApplySort(SortTable, SortColumn, reverse)
 	else
-		QueryAuctionItems(searchname, searchminLevel, searchmaxLevel, searchinvTypeIndex, searchclassIndex, searchsubclassIndex, searchpage, searchisUsable, searchqualityIndex, searchGetAll, searchExactMatch)
+		QueryAuctionItems(searchname, searchminLevel, searchmaxLevel, searchpage, searchisUsable, searchqualityIndex, searchGetAll, searchExactMatch, searchFilterData)
 	end
 end
 
@@ -388,7 +388,11 @@ function private.HookAH()
 
 	-- Column 3 special handling: label changes depending on queried class/subclass filters
 	local detail = private.headers[3]
-	function private.UpdateDetailColumn(name, minLevel, maxLevel, invTypeIndex, classIndex, subclassIndex, page, isUsable, qualityIndex, GetAll)
+	function private.UpdateDetailColumn(name, minLevel, maxLevel, page, isUsable, qualityIndex, GetAll, exactMatch, filterData)
+		--[[ ### Legion : temporarily disabled as GetDetailColumnString has been removed,
+			and classIndex, subclassIndex are no longer provided as parameters (to QueryAuctionItems)
+			New Blizzard function AuctionFrame_GetDetailColumnString also requires classIndex, subclassIndex, so we can't use it at this time
+			We could parse both filterData and AuctionCategories to find the best match; then we could fetch the detailColumnString entry from that node of AuctionCategories
 		local text = GetDetailColumnString(classIndex, subclassIndex)
 		if text == "SLOT_ABBR" then
 			detail.Text:SetText("Slot")
@@ -397,30 +401,32 @@ function private.HookAH()
 		else
 			detail.Text:SetText("Min")
 		end
+		--]]
+		detail.Text:SetText("Min") -- ### Legion : temporarily always set to this
 	end
 
 	local tex
 	tex = AuctionFrameBrowse:CreateTexture()
-	tex:SetTexture(1,1,1, 0.05)
+	tex:SetColorTexture(1,1,1, 0.05)
 	tex:SetPoint("TOPLEFT", private.buttons[1].rLevel, "TOPLEFT")
 	tex:SetPoint("BOTTOMRIGHT", private.buttons[NEW_NUM_BROWSE].rLevel, "BOTTOMRIGHT")
 	tinsert(private.candy, tex)
 
 	tex = AuctionFrameBrowse:CreateTexture()
-	tex:SetTexture(1,1,1, 0.05)
+	tex:SetColorTexture(1,1,1, 0.05)
 	tex:SetPoint("TOPLEFT", private.buttons[1].tLeft, "TOPLEFT")
 	tex:SetPoint("BOTTOMRIGHT", private.buttons[NEW_NUM_BROWSE].tLeft, "BOTTOMRIGHT")
 	tinsert(private.candy, tex)
 
 	tex = AuctionFrameBrowse:CreateTexture()
-	tex:SetTexture(1,1,1, 0.05)
+	tex:SetColorTexture(1,1,1, 0.05)
 	tex:SetPoint("TOPLEFT", private.buttons[1].Owner, "TOPRIGHT", 2, 0)
 	tex:SetPoint("BOTTOM", private.buttons[NEW_NUM_BROWSE].Buy, "BOTTOM", 0, 0)
 	tex:SetPoint("RIGHT", private.buttons[1].Bid, "RIGHT", -10, 0)
 	tinsert(private.candy, tex)
 
 	tex = AuctionFrameBrowse:CreateTexture()
-	tex:SetTexture(1,1,0.5, 0.1)
+	tex:SetColorTexture(1,1,0.5, 0.1)
 	tex:SetPoint("TOPLEFT", private.buttons[NEW_NUM_BROWSE].Count, "BOTTOMLEFT", 0, -1)
 	tex:SetWidth(610)
 	tex:SetHeight(38)
@@ -690,11 +696,11 @@ function private.SetAuction(button, pos)
 	end
 
 	if (selected) then
-		button.LineTexture:SetTexture(1,1,0.3, 0.2)
+		button.LineTexture:SetColorTexture(1,1,0.3, 0.2)
 	elseif (pos % 2 == 0) then
-		button.LineTexture:SetTexture(0.3,0.3,0.4, 0.1)
+		button.LineTexture:SetColorTexture(0.3,0.3,0.4, 0.1)
 	else
-		button.LineTexture:SetTexture(0,0,0.1, 0.1)
+		button.LineTexture:SetColorTexture(0,0,0.1, 0.1)
 	end
 	button.id = id
 
