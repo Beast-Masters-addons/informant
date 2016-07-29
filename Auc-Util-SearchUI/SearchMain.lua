@@ -433,7 +433,7 @@ local function isGlobalSetting(setting)
 	return
 end
 
-local function setter(setting, value)
+local function setter(setting, value, silent)
 	initData()
 
 	local db = currentSettings
@@ -471,8 +471,11 @@ local function setter(setting, value)
 	hasUnsaved = true
 	lib.UpdateSave()
 
-	AucAdvanced.SendProcessorMessage("configchanged", setting, value, setting, "searchui", "util")
-	lib.NotifyCallbacks('config', 'changed', setting, value)
+	-- 'silent' flag inhibits notifications - only to be used for obsolete settings (see also equivalent CoreSettings function)
+	if not silent then
+		AucAdvanced.SendProcessorMessage("configchanged", setting, value, setting, "searchui", "util")
+		lib.NotifyCallbacks('config', 'changed', setting, value)
+	end
 end
 
 function lib.SetSetting(...)

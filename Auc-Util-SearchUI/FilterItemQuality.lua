@@ -95,7 +95,7 @@ function lib:MakeGuiConfig(gui)
 			-- ### Legion : try to delete obsolete settings,
 			-- we now use classID instead of class name (same as CoreScan), and numeric quality values instead of text (as we want to localize the text at some time)
 			-- to be removed after a suitable time interval...
-			set("ignoreitemquality."..classNames[i].."."..qualnames[j], nil)
+			set("ignoreitemquality."..classNames[i].."."..qualnames[j], nil, true)
 		end
 		gui:AddControl(id, "Note", .67, 1, 200, 20, classNames[i])
 	end
