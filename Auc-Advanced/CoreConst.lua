@@ -150,7 +150,7 @@ lib.CompactRealm = lib.PlayerRealm:gsub(" ", "") -- CompactRealm is realm name w
 
 -- *** AuctionCategory tables (AC_*) ***
 -- Indexed list of class IDs
--- CoreScan records class/subclass in the form of these IDs in ScanData
+-- CoreScan records item class in the form of these IDs in ScanData
 lib.AC_ClassIDList = {
 	LE_ITEM_CLASS_WEAPON,
 	LE_ITEM_CLASS_ARMOR,
@@ -169,10 +169,60 @@ lib.AC_ClassIDList = {
 -- names should match the (localized string) return values from GetItemInfo
 -- *not* the same as Category names (i.e. AUCTION_CATEGORY_*)
 lib.AC_ClassNameList = {}
-for k, v in ipairs(lib.AC_ClassIDList) do
-	lib.AC_ClassNameList[k] = GetItemClassInfo(v)
+-- Table of lists of subClassIDs, referenced by classID
+-- May not always be the the same order as Blizzard's subClassIndex values
+lib.AC_SubClassIDLists = {}
+-- Table of lists of subclass names, in the same order as AC_SubClassIDLists, also referenced by classID
+lib.AC_SubClassNameLists = {}
+-- Build the class and subclass tables:
+for index, classID in ipairs(lib.AC_ClassIDList) do
+	lib.AC_ClassNameList[index] = GetItemClassInfo(classID)
+	local subClassIDs, subClassNames = {GetAuctionItemSubClasses(classID)}, {}
+	lib.AC_SubClassIDLists[classID] = subClassIDs
+	lib.AC_SubClassNameLists[classID] = subClassNames
+	for subindex, subClassID in ipairs(subClassIDs) do
+		subClassNames[subindex] = GetItemSubClassInfo(classID, subClassID)
+	end
 end
+-- List of Inventory Type IDs, only used for Armour category
+-- Each armour subcategory only uses a subset of this list of invtypes (and some have no invtypes at all)
+-- Therefore indexes of this list are not the same as Blizzard's subSubIndex values
+lib.AC_InvTypeIDList = {
+	-- Cloth/Leather/Mail/Plate InvTypes:
+	LE_INVENTORY_TYPE_HEAD_TYPE, -- also Generic
+	LE_INVENTORY_TYPE_SHOULDER_TYPE,
+	LE_INVENTORY_TYPE_CHEST_TYPE,
+	LE_INVENTORY_TYPE_WAIST_TYPE,
+	LE_INVENTORY_TYPE_LEGS_TYPE,
+	LE_INVENTORY_TYPE_FEET_TYPE,
+	LE_INVENTORY_TYPE_WRIST_TYPE,
+	LE_INVENTORY_TYPE_HAND_TYPE,
+	-- Generic InvTypes:
+	LE_INVENTORY_TYPE_NECK_TYPE,
+	LE_INVENTORY_TYPE_CLOAK_TYPE, -- Actually typed as Cloth in Blizzard data
+	LE_INVENTORY_TYPE_FINGER_TYPE,
+	LE_INVENTORY_TYPE_TRINKET_TYPE,
+	LE_INVENTORY_TYPE_HOLDABLE_TYPE,
+	-- Shield has no InvType
+	LE_INVENTORY_TYPE_BODY_TYPE,
+	-- Head is listed again as a Generic type in Blizzard data
+	-- Cosmetic has no InvTypes
+}
+-- List of Inventory Type names, in the same order as the IDs in AC_InvTypeIDList
+lib.AC_InvTypeNameList = {}
+for index, invtypeID in ipairs(lib.AC_InvTypeIDList) do
+	lib.AC_InvTypeNameList[index] = GetItemInventorySlotInfo(invtypeID)
+end
+--[[ ### todo:
+	scandata stores EquipCode values, we will need conversion table from EquipCode to InvTypeID
+		Note that some EquipCode values are for weapons, so will not have a matching InvTypeID value
+	GetItemInfo returns "INVTYPE_*" strings, so will need conversion table for those too
+		Again not avery "INVTYPE_" string will have a matching InvTypeID
+--]]
 
+-- Special Case for battlepets: convert the petType return from C_PetJournal.GetPetInfoBySpeciesID into a subClassID
+-- ### todo: keep checking this conversion is correct, otherwise will have to hard-code lookup table
+lib.AC_PetType2SubClassID = {GetAuctionItemSubClasses(LE_ITEM_CLASS_BATTLEPET)}
 
 AucAdvanced.Const = lib
 
