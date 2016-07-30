@@ -977,18 +977,24 @@ local Commitfunction = function()
 		lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
 		coroutine.yield() -- yield here to allow the bar to display, and help the frame rate a little
 		local breakinterval, timeadjust
+		local itemcachedelay -- ### Legion item cache patch
 		local stage1throttle = get("core.scan.stage1throttle")
 		if stage1throttle >= Const.ALEVEL_HI then
 			breakinterval, timeadjust = 500, 0.1
+			itemcachedelay = 16 -- ### Legion item cache patch
 		elseif stage1throttle >= Const.ALEVEL_MED then
 			breakinterval, timeadjust = 2000, 0.4
+			itemcachedelay = 8 -- ### Legion item cache patch
 		elseif stage1throttle >= Const.ALEVEL_LOW then
 			breakinterval, timeadjust = 5000, 1
+			itemcachedelay = 4 -- ### Legion item cache patch
 		else -- OFF
 			breakinterval, timeadjust = nil, 1
+			itemcachedelay = 2 -- ### Legion item cache patch
 		end
 		local breakcount = 0
 		local doYield = false
+		local doDelay = false -- ### Legion item cache patch
 		local battlepetYield = true
 		local firstfailureYield = true
 		nextPause = debugprofilestop() + processingTime * timeadjust
@@ -1015,14 +1021,24 @@ local Commitfunction = function()
 					-- first time battlepet API is used, it appears to trigger a small amount of lag
 					doYield = true
 					battlepetYield = false
-				elseif not success and firstfailureYield then
-					-- experimental: yield after first failure detected
-					-- todo: fiddle with this, perhaps yielding every X failures, see if it appears to help
-					doYield = true
-					firstfailureYield = false
+				elseif not success then
+					if firstfailureYield then
+						-- experimental: yield after first failure detected
+						-- todo: fiddle with this, perhaps yielding every X failures, see if it appears to help
+						doYield = true
+						firstfailureYield = false
+					end
+					if reason == "Retry" then doDelay = true end -- ### Legion item cache patch
 				end
 			end
 		end
+
+		-- ### Legion item cache patch: delay between passes to give server more time to return GetItemInfo data
+		-- must use GetTime to time this pause, as debugprofilestop is unsafe across yields
+		local nextWait = GetTime() + itemcachedelay -- delay time depends on stage1throttle
+		while GetTime() < nextWait do
+			coroutine.yield()
+		end -- ###
 
 		-- Stage 1 Second Pass
 		breakcount = 0
@@ -1066,14 +1082,14 @@ local Commitfunction = function()
 					_G.nLog.AddMessage("Auctioneer", "Scan", _G.N_WARNING, "Incomplete Auction Seen",
 						(("%s%s%s%s%s%s"):format(
 						"Page %d, Index %d -- %s\n %s -- %d of %s sold by %s\n",
-						"Level %d, Quality %s, Item Level %s\n",
-						"Item Type %s, Sub Type %s, Equipment Position %s\n",
+						"Level %s, Quality %s, Item Level %s\n",
+						"Item Class %s, SubClass %s, Equipment Position %s\n",
 						"Price %s, Bid %s, NextBid %s, MinInc %s, Buyout %s\n Time Left %s, Time %s\n",
 						"High Bidder %s  Can Use: %s  Bonuses %s  Item ID %s  Suffix %s  Factor %s  Enchant %s  Seed %s\n",
 						"Deprecated2: %s")):format(
 						data.PAGE, data.PAGEINDEX, "too broken, can not use at all",
 						data[Const.LINK] or "(nil)", data[Const.COUNT] or -1, data[Const.NAME] or "(nil)", data[Const.SELLER] or "(UNKNOWN)",
-						data[Const.ULEVEL] or -1, data[Const.QUALITY] or -1, data[Const.ILEVEL] or -1,data[Const.CLASSID] or "(UNKNOWN)", data[Const.SUBCLASSID] or "(UNKNOWN)", data[Const.IEQUIP] or '(n/a)',
+						data[Const.ULEVEL] or "(nil)", data[Const.QUALITY] or "(nil)", data[Const.ILEVEL] or "(nil)", data[Const.CLASSID] or "(UNKNOWN)", data[Const.SUBCLASSID] or "(UNKNOWN)", data[Const.IEQUIP] or '(n/a)',
 						data[Const.PRICE] or -1, data[Const.CURBID] or -1, data[Const.MINBID] or -1, data[Const.MININC] or -1, data[Const.BUYOUT] or -1,
 						data[Const.TLEFT] or -1, data[Const.TIME] or "(nil)", data[Const.AMHIGH] and "Yes" or "No",
 						(data[Const.CANUSE]==false and "Yes") or (data[Const.CANUSE] and "No" or "(nil)"), data[Const.BONUSES] or '(nil)', data[Const.ITEMID] or '(nil)',
@@ -1694,7 +1710,8 @@ end
 do
 	local ItemInfoCache, PetInfoCache = {}, {}
 	local ItemTried, PetTried
-	local cageSubtypeLookup
+	local lookupPetType2SubClassID = Const.AC_PetType2SubClassID
+	local GetPetInfoBySpeciesID = C_PetJournal.GetPetInfoBySpeciesID
 
 	function private.ResetItemInfoCache()
 		wipe(ItemInfoCache)
@@ -1729,18 +1746,15 @@ do
 	end
 
 	local function GetPetInfoCache(speciesID, scanthrottle) -- ### Legion : revised, check
-		if not cageSubtypeLookup then
-			cageSubtypeLookup = {GetAuctionItemSubClasses(LE_ITEM_CLASS_BATTLEPET)} -- ### Legion: todo: check this conversion is correct, otherwise have to hard-code lookup table
-		end
 		local subtype = PetInfoCache[speciesID]
 		if not subtype then
 			if scanthrottle and PetTried[speciesID] then
 				-- GetPetInfoBySpeciesID previously failed for this speciesID in this processing pass
 				return
 			end
-			local _, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+			local _, _, petType = GetPetInfoBySpeciesID(speciesID)
 			if petType then
-				subtype = cageSubtypeLookup[petType]
+				subtype = lookupPetType2SubClassID[petType]
 				PetInfoCache[speciesID] = subtype
 			else
 				if scanthrottle then
@@ -1774,8 +1788,8 @@ do
 				itemData[Const.ENCHANT] = 0
 				itemData[Const.SEED] = 0 -- there must be a hidden unique seed, but I can't find a way to access it
 			end
-			if not itemData[Const.CLASSID] then -- ### Legion: replace iType with classID thoughout
-				local _, speciesID = strsplit(":", itemLink)
+			if not itemData[Const.CLASSID] then
+				local _, speciesID, level = strsplit(":", itemLink)
 				speciesID = tonumber(speciesID)
 				if speciesID then
 					local subClassID = GetPetInfoCache(speciesID, scanthrottle)
@@ -1784,7 +1798,10 @@ do
 						itemData[Const.IEQUIP] = nil -- always nil for Pet Cages
 						itemData[Const.ULEVEL] = itemData[Const.ULEVEL] or 0 -- expected to be 0 for all battlepets
 						itemData[Const.SUBCLASSID] = subClassID
-						-- iLevel should have been obtained from GetAuctionItemInfo (could be extracted from link, if required though)
+						if not itemData[Const.ILEVEL] then
+							-- iLevel should normally have been obtained from GetAuctionItemInfo, but it's missing
+							itemData[Const.ILEVEL] = tonumber(level) or 1
+						end
 					end
 				end
 			end
@@ -1810,7 +1827,7 @@ do
 					return nil, "UnknownLinkType", "unknown"
 				end
 			end
-			if not itemData[Const.CLASSID] then -- ### Legion: replace iType with classID thoughout
+			if not itemData[Const.CLASSID] then
 				local itemInfo = GetItemInfoCache(itemLink, itemID, itemData[Const.BONUSES], scanthrottle) -- {iType, iSubtype, Const.EquipEncode[equipLoc], iLevel, uLevel}
 				if itemInfo then
 					itemData[Const.CLASSID] = itemInfo[1]
@@ -1990,13 +2007,13 @@ function lib.GetAuctionSellItem(minBid, buyoutPrice, runTime)
 		local linkType, itemId, itemSuffix, itemFactor, itemEnchant, itemSeed = AucAdvanced.DecodeLink(itemLink)
 		if linkType == "item" then
 			itemLink = AucAdvanced.SanitizeLink(itemLink)
-			local _,_,_,itemLevel,level,itemType,itemSubType,_,itemEquipLoc = GetItemInfo(itemLink)
+			local _,_,_,itemLevel,level,_,_,_,itemEquipLoc,_,_,classID,subClassID = GetItemInfo(itemLink)
 			local timeLeft = 4
 			if runTime <= 12*60 then timeLeft = 3 end
 			local curTime = time()
 
 			return {
-				itemLink, itemLevel, itemType, itemSubType, nil, minBid,
+				itemLink, itemLevel, classID, subClassID, nil, minBid,
 				timeLeft, curTime, name, texture, count, quality, canUse, level,
 				minBid, 0, buyoutPrice, 0, nil, Const.PlayerName,
 				0, -1, itemId, itemSuffix, itemFactor, itemEnchant, itemSeed
@@ -2045,9 +2062,6 @@ local StorePageFunction = function()
 			we want to call it before GetNumAuctionItems, so we must use private.isGetAll for detection
 		--]]
 		coroutine.yield()
-		if private.warningCanSendBug and CanSendAuctionQuery() then -- check it again after delay
-			private.warningCanSendBug = nil
-		end
 	end
 
 	local curQuery, curScan, curPages = private.curQuery, private.curScan, private.curPages
@@ -2121,6 +2135,7 @@ local StorePageFunction = function()
 	if not private.breakStorePage and (page > qryinfo.page) then
 		-- First pass
 		local retries = { }
+		private.InitItemInfoCache() -- ### Legion item cache patch
 		for i = 1, numBatchAuctions do
 			if isGetAll then -- only yield for GetAll scans
 				if debugprofilestop() > nextPause or i % breakcount == 0 then
@@ -2138,6 +2153,7 @@ local StorePageFunction = function()
 			if (itemData) then
 				local isComplete, completeMinusSeller = private.isComplete(itemData)
 				if (isComplete) then
+					private.GetAuctionItemFillIn(itemData, true) -- ### Legion item cache patch
 					tinsert(curScan, itemData)
 					storecount = storecount + 1
 				else
@@ -2170,6 +2186,7 @@ local StorePageFunction = function()
 			needsRetries = false
 			sellerOnly = true
 			tryCount = tryCount + 1
+			private.InitItemInfoCache() -- ### Legion item cache patch
 			-- must use GetTime to time this pause, as debugprofilestop is unsafe across yields
 			local nextWait = GetTime() + 1
 			while GetTime() < nextWait do
@@ -2196,6 +2213,7 @@ local StorePageFunction = function()
 				if (itemData) then
 					local isComplete, completeMinusSeller = private.isComplete(itemData)
 					if (isComplete) then
+						private.GetAuctionItemFillIn(itemData, true) -- ### Legion item cache patch
 						tinsert(curScan, itemData)
 						storecount = storecount + 1
 					else
@@ -2298,7 +2316,7 @@ local StorePageFunction = function()
 			qryinfo.unresolved = (qryinfo.unresolved or 0) + all_missed + links_missed + link_data_missed + ld_and_names_missed
 		end
 	end
-
+	private.ResetItemInfoCache() -- ### Legion item cache patch
 
 	if EventFramesRegistered then
 		for _, frame in pairs(EventFramesRegistered) do
@@ -2378,15 +2396,6 @@ local StorePageFunction = function()
 --		("Query Elapsed: %fs\nThis Page Store Elapsed: %fs\nThis Page Code Execution Time: %fs"):format(endTime-queryStarted, endTime-retrievalStarted, RunTime))
 		("Query Elapsed: %fs\nThis Page Store Elapsed: %fs"):format(endTime-queryStarted, endTime-retrievalStarted))
 	end
-
-	-- Report warning for Blizzard bug {ADV-595}
-	-- (we wait til we're finished storing as much as we can, before asking the user to close the AH)
-	if private.warningCanSendBug then
-		private.warningCanSendBug = nil
-		if not CanSendAuctionQuery() then
-			--_G.message("The Server is not responding correctly.\nClosing and reopening the Auctionhouse may fix this problem.") -- ### suppressed
-		end
-	end
 end
 
 function private.StopStorePage(silent)
@@ -2414,9 +2423,17 @@ end
 
 --[[ AucAdvanced.Scan.QueryFilterFromID(classID, subClassID, inventoryType)
 	-- Auctioneer core functions generally work with ID values
+	-- In scandata records, indexes Const.CLASSID and Const.SUBCLASSID are stored as IDs
+	-- GetitemInfo returns classID and subClassID at postions 12 and 13
 	-- Caution: this is different from the index system used by Blizzard_AuctionUI
+	-- Caution: do not use EquipEncode values for inventoryType
 --]]
 function lib.QueryFilterFromID(classID, subClassID, inventoryType)
+	if type(classID) ~= "number" or (subClassID ~= nil and type(subClassID) ~= "number") then return end
+	if type(inventoryType) == "number" then
+		if not subClassID then return end
+	elseif inventoryType ~= nil then return end
+
 	return {{ classID = classID, subClassID = subClassID, inventoryType = inventoryType}}
 end
 --[[ AucAdvanced.Scan.QueryFilterFromIndex(categoryIndex, subCategoryIndex, subSubCategoryIndex)
@@ -2424,19 +2441,23 @@ end
 --]]
 function lib.QueryFilterFromIndex(categoryIndex, subCategoryIndex, subSubCategoryIndex)
 	if not AuctionCategories then return end
-	-- From Blizzard_AuctionUI helper function:
-	local filterData;
-	if categoryIndex and subCategoryIndex and subSubCategoryIndex then
-		filterData = AuctionCategories[categoryIndex].subCategories[subCategoryIndex].subCategories[subSubCategoryIndex].filters;
-	elseif categoryIndex and subCategoryIndex then
-		filterData = AuctionCategories[categoryIndex].subCategories[subCategoryIndex].filters;
-	elseif categoryIndex then
-		filterData = AuctionCategories[categoryIndex].filters;
-	else
-		-- not filtering by category, leave nil for all
+	local node = AuctionCategories[categoryIndex]
+	if not node then return end
+	if subCategoryIndex then
+		local subcat = node.subCategories
+		if not subcat then return end
+		node = subcat[subCategoryIndex]
+		if not node then return nil end
+
+		if subSubCategoryIndex then
+			subcat = node.subCategories
+			if not subcat then return end
+			node = subcat[subSubCategoryIndex]
+			if not node then return end
+		end
 	end
 
-	return filterData
+	return node.filters
 end
 
 --[[ AucAdvanced.Scan.QuerySafeName(name)
@@ -2864,7 +2885,6 @@ function private.OnUpdate(me, dur)
 				-- Fix for Blizzard Auctionhouse bug {ADV-595}
 				-- CanSendAuctionQuery continues to return nil indefinitely. We use a timeout
 				timeoutCanSend = 0
-				private.warningCanSendBug = true -- further handling required by StorePageFunction
 				lib.StorePage()
 			else
 				-- part of fix for Blizzard bug {ADV-595}
