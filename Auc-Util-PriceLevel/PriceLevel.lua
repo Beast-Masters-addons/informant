@@ -218,7 +218,7 @@ function lib.SetBar(i, r,g,b, pct)
 		elseif (opacity > 1) then opacity = 1 end
 
 		local gradient = AucAdvanced.Settings.GetSetting("util.pricelevel.gradient")
-		tex:SetTexture(1,1,1)
+		tex:SetColorTexture(1,1,1)
 		if (gradient) then
 			local direction = AucAdvanced.Settings.GetSetting("util.pricelevel.direction")
 			if (direction == "LEFT") then

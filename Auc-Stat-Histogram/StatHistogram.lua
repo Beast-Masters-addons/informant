@@ -433,7 +433,7 @@ function private.SetupConfigGui(gui)
 		local bar = frame.bargraph.bars[i]
 		bar:SetPoint("BOTTOMLEFT", frame.bargraph, "BOTTOMLEFT", (graphwidth*(i-1)/300)+5, 5)
 		bar:SetWidth(graphwidth/300)
-		bar:SetTexture(0.2, 0.8, 0.2)
+		bar:SetColorTexture(0.2, 0.8, 0.2)
 		function bar:SetValue(value)
 			if value == 0 then value = 0.001 end
 			self:SetHeight((self:GetParent():GetHeight()-20)*value)
@@ -447,7 +447,7 @@ function private.SetupConfigGui(gui)
 		pdf:SetPoint("BOTTOMLEFT", frame.bargraph, "BOTTOMLEFT", pdf.offset, 50)
 		pdf:SetWidth(graphwidth/300)
 		pdf:SetHeight(5)
-		pdf:SetTexture(.2, .2, 0.8, .6)
+		pdf:SetColorTexture(.2, .2, 0.8, .6)
 		function pdf:SetValue(value)
 			local bottom = (self:GetParent():GetHeight()-20)*value
 			self:SetPoint("BOTTOMLEFT", frame.bargraph, "BOTTOMLEFT", self.offset, bottom)
@@ -521,7 +521,7 @@ function lib.SetWorkingItem(link)
 	frame.link = nil
 	for i = 1,300 do
 		frame.bargraph.bars[i]:SetValue(0)
-		frame.bargraph.bars[i]:SetTexture(0.2, 0.8, 0.2)
+		frame.bargraph.bars[i]:SetColorTexture(0.2, 0.8, 0.2)
 		frame.bargraph.pdf[i]:SetValue(0)
 	end
 
@@ -560,7 +560,7 @@ function lib.SetWorkingItem(link)
 		if median == 0 then
 			if recount >= count/2 then
 				median = i
-				frame.bargraph.bars[i]:SetTexture(0.8, 0.2, 0.2)
+				frame.bargraph.bars[i]:SetColorTexture(0.8, 0.2, 0.2)
 			end
 		end
 	end
