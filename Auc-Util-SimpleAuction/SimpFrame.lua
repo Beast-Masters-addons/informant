@@ -887,10 +887,10 @@ function private.Refresh(background)
 		local itemName, _, itemRarity, _, itemMinLevel, itemType, itemSubType = GetItemInfo(link)
 		name = itemName
 		minLevel = itemMinLevel
-		typeId = Const.CLASSESREV[itemType]
-		if typeId then
-			subtypeId = Const.SUBCLASSESREV[itemType][itemSubType]
-		end
+		-- typeId = Const.CLASSESREV[itemType] -- ### Legion disabled
+		-- if typeId then
+			-- subtypeId = Const.SUBCLASSESREV[itemType][itemSubType]
+		-- end
 		quality = itemRarity
 	else
 		local lType, speciesID, _, petQuality = strsplit(":", link)
@@ -898,13 +898,13 @@ function private.Refresh(background)
 		speciesID = tonumber(speciesID)
 		if lType == "battlepet" and speciesID then
 			-- it's a pet
-			local _,_,_,_,iMin, iType = GetItemInfo(82800) -- Pet Cage
+			--local _,_,_,_,iMin, iType = GetItemInfo(82800) -- Pet Cage -- ### Legion disabled
 			-- all caged pets should have the default pet name (custom names are removed when caging)
 			local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
 			name = petName
-			minLevel = iMin
-			typeId = Const.CLASSESREV[iType]
-			subtypeId = petType
+			--minLevel = iMin
+			--typeId = Const.CLASSESREV[iType]
+			--subtypeId = petType
 			quality = tonumber(petQuality)
 		end
 	end

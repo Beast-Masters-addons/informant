@@ -1352,10 +1352,10 @@ function private.CreateFrames()
 			end
 			itemName = name
 			itemMinLevel = minlevel
-			itemTypeId = AucAdvanced.Const.CLASSESREV[classname]
-			if itemTypeId then
-				itemSubId = AucAdvanced.Const.SUBCLASSESREV[classname][subclassname]
-			end
+			-- itemTypeId = AucAdvanced.Const.CLASSESREV[classname]
+			-- if itemTypeId then
+				-- itemSubId = AucAdvanced.Const.SUBCLASSESREV[classname][subclassname]
+			-- end
 			itemRarity = quality
 		else
 			local lType, speciesID, _, petQuality = strsplit(":", link)
@@ -1374,8 +1374,8 @@ function private.CreateFrames()
 				end
 				itemName = petName
 				itemMinLevel = iMin
-				itemTypeId = AucAdvanced.Const.CLASSESREV[iType]
-				itemSubId = petType
+				--itemTypeId = AucAdvanced.Const.CLASSESREV[iType]
+				--itemSubId = petType
 				itemRarity = tonumber(petQuality)
 			else
 				-- Reuse same error message as above
@@ -1387,11 +1387,11 @@ function private.CreateFrames()
 
 		aucPrint(_TRANS('APPR_Interface_RefreshingView') :format(itemName))--Refreshing view of {{%s}}
 		if background and type(background) == 'boolean' then
-			--AucAdvanced.Scan.StartPushedScan(itemName, itemMinLevel, itemMinLevel, nil, itemTypeId, itemSubId, nil, itemRarity, true) -- ### Legion
+			-- Usage: StartPushedScan(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData, options) -- ### Legion
 			AucAdvanced.Scan.StartPushedScan(itemName, itemMinLevel, itemMinLevel, nil, itemRarity, true, nil, nil)
 		else
 			AucAdvanced.Scan.PushScan()
-			--AucAdvanced.Scan.StartScan(itemName, itemMinLevel, itemMinLevel, nil, itemTypeId, itemSubId, nil, itemRarity, nil, true) -- ### Legion
+			--Usage: StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options) -- ### Legion
 			AucAdvanced.Scan.StartScan(itemName, itemMinLevel, itemMinLevel, nil, itemRarity, nil, true, nil, nil)
 		end
 	end
