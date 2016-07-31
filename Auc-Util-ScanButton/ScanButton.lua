@@ -359,12 +359,12 @@ function private.play()
 				queueFinished = true --Used to clear the selected filters/highlights AFTER the last queued scan has completed
 			end
 		else
-			-- ### Legion todo: check how Blizzard does this
 			AucAdvanced.Scan.StartScan("", "", "", AuctionFrameBrowse.selectedInvtypeIndex, AuctionFrameBrowse.selectedClassIndex, AuctionFrameBrowse.selectedSubclassIndex,  nil, nil)
 		end
 		--]=]
 		-- Usage StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options)
-		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, nil, nil, nil)
+		local filterData = AucAdvanced.Scan.QueryFilterFromIndex(AuctionFrameBrowse.selectedCategoryIndex, AuctionFrameBrowse.selectedSubCategoryIndex, AuctionFrameBrowse.selectedSubSubCategoryIndex)
+		AucAdvanced.Scan.StartScan(nil, nil, nil, nil, nil, nil, nil, filterData)
 	end
 	private.UpdateScanProgress()
 end
@@ -397,7 +397,7 @@ This means we do not have to directly modify blizzards filter frame
 --Resets the selections table to 0 if an alt click is not used, or after a scan has been implemented
 private.Filters = {}
 function private.AuctionFrameFilters_ClearSelection()
-	for i,v in pairs(CLASS_FILTERS) do
+	for i,v in pairs(CLASS_FILTERS) do -- ### Legion : CLASS_FILTERS exists, but is not used by Blizzard code (empty table)
 		private.Filters[v] = {0,i} --store cleared table of selections
 	end
 end
@@ -434,13 +434,13 @@ function private.CreateSecondaryFilterButtons()
 			base[frame]:SetScript("OnClick", function()
 				if IsControlKeyDown() then
 					-- Test patch to clear AH settings when CTRL click is used just like we clear ours when non-ctrl is used
-					if (AuctionFrameBrowse.selectedClassIndex) then
+					if (AuctionFrameBrowse.selectedClassIndex) then -- ### Legion : replaced by selectedCategoryIndex
 						AuctionFrameBrowse.selectedClass = nil
 						AuctionFrameBrowse.selectedClassIndex = nil
 						AuctionFrameBrowse.selectedSubclass = nil
-						AuctionFrameBrowse.selectedSubclassIndex = nil
+						AuctionFrameBrowse.selectedSubclassIndex = nil -- ### Legion : replaced by selectedSubCategoryIndex
 						AuctionFrameBrowse.selectedInvtype = nil
-						AuctionFrameBrowse.selectedInvtypeIndex = nil
+						AuctionFrameBrowse.selectedInvtypeIndex = nil -- ### Legion : replaced by selectedSubSubCategoryIndex
 						AuctionFrameFilters_Update()
 					end
 					if private.Filters[ _G["AuctionFilterButton"..i]:GetText()][1] then
