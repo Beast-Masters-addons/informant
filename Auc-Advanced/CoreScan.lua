@@ -1035,9 +1035,11 @@ local Commitfunction = function()
 
 		-- ### Legion item cache patch: delay between passes to give server more time to return GetItemInfo data
 		-- must use GetTime to time this pause, as debugprofilestop is unsafe across yields
-		local nextWait = GetTime() + itemcachedelay -- delay time depends on stage1throttle
-		while GetTime() < nextWait do
-			coroutine.yield()
+		if doDelay then
+			local nextWait = GetTime() + itemcachedelay -- delay time depends on stage1throttle
+			while GetTime() < nextWait do
+				coroutine.yield()
+			end
 		end -- ###
 
 		-- Stage 1 Second Pass
@@ -2881,7 +2883,7 @@ function private.OnUpdate(me, dur)
 			if CanSendAuctionQuery() then
 				timeoutCanSend = 0
 				lib.StorePage()
-			elseif timeoutCanSend > 15 then
+			elseif timeoutCanSend > 25 then
 				-- Fix for Blizzard Auctionhouse bug {ADV-595}
 				-- CanSendAuctionQuery continues to return nil indefinitely. We use a timeout
 				timeoutCanSend = 0
