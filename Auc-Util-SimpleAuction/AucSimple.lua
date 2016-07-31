@@ -194,7 +194,6 @@ function lib.OnLoad()
 	default("util.simpleauc.clickhook", true)
 	default("util.simpleauc.clickhook.doubleclick", false)
 	default("util.simpleauc.scanbutton", true)
-	default("util.simpleauc.scanbutton.disable.wowecon", true)
 	default("util.simpleauc.tooltip", true)
 	default("util.simpleauc.tooltip.undercut", true)
 	default("util.simpleauc.auto.duration", 48)
@@ -204,20 +203,15 @@ function lib.OnLoad()
 	default("util.simpleauc.undercut.fixed", 1)
 	default("util.simpleauc.undercut.percent", 2.5)
 	default("util.simpleauc.displayauctiontab", true)
+
+	-- Removed setting
+	set("util.simpleauc.scanbutton.disable.wowecon", nil, true)
 end
 
 function private.UpdateConfig(setting, value)
 	if private.frame then
 		local frame = private.frame
-		local showing = false
 		if get("util.simpleauc.scanbutton") then
-			showing = true
-			if get("util.simpleauc.scanbutton.disable.wowecon") and IsAddOnLoaded("WOWEcon_PriceMod") then
-				showing = false
-			end
-		end
-
-		if showing then
 			frame.scanbutton:Show()
 		else
 			frame.scanbutton:Hide()
@@ -284,7 +278,6 @@ function private.SetupConfigGui(gui)
 	gui:AddControl(id, "Subhead",      0,    "Scan button")
 	gui:AddControl(id, "Checkbox",     0, 1, "util.simpleauc.scanbutton", "Show big red scan button at bottom of browse window")
 	gui:AddTip(id, "Displays the old-style \"Scan\" button at the bottom of the browse window.")
-	gui:AddControl(id, "Checkbox",     0, 2, "util.simpleauc.scanbutton.disable.wowecon", "Except if WowEcon is loaded")
 end
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")

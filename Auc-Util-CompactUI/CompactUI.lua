@@ -772,11 +772,6 @@ function private.MyAuctionFrameUpdate()
 	if AuctionFrameBrowse.selectedClass ~= TOKEN_FILTER_LABEL then
 		if not BrowseScrollFrame then return end
 
-		if WOWEcon_AH_PerItem_Enable
-		and WOWEcon_AH_PerItem_Enable:IsVisible() then
-			WOWEcon_AH_PerItem_Enable:Hide()
-		end
-
 		if AucAdvanced.API.IsBlocked() then
 			for pos, candy in ipairs(private.candy) do candy:Hide() end
 			BrowsePrevPageButton:Hide()
