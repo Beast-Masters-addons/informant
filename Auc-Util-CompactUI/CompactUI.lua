@@ -124,7 +124,7 @@ end
 
 function private.HookAH()
 	private.HookAH = nil
-	lib.inUse = true -- deprecated
+	lib.inUse = true -- deprecated, use lib.IsActive()
 	private.switchUI:SetParent(AuctionFrameBrowse)
 	private.switchUI:SetPoint("TOPRIGHT", AuctionFrameBrowse, "TOPRIGHT", -157, -17)
 
@@ -389,20 +389,21 @@ function private.HookAH()
 	-- Column 3 special handling: label changes depending on queried class/subclass filters
 	local detail = private.headers[3]
 	function private.UpdateDetailColumn(name, minLevel, maxLevel, page, isUsable, qualityIndex, GetAll, exactMatch, filterData)
-		--[[ ### Legion : temporarily disabled as GetDetailColumnString has been removed,
-			and classIndex, subclassIndex are no longer provided as parameters (to QueryAuctionItems)
-			New Blizzard function AuctionFrame_GetDetailColumnString also requires classIndex, subclassIndex, so we can't use it at this time
-			We could parse both filterData and AuctionCategories to find the best match; then we could fetch the detailColumnString entry from that node of AuctionCategories
-		local text = GetDetailColumnString(classIndex, subclassIndex)
-		if text == "SLOT_ABBR" then
-			detail.Text:SetText("Slot")
-		elseif text == "SKILL_ABBR" then
-			detail.Text:SetText("Skill")
-		else
-			detail.Text:SetText("Min")
+		-- Detail should be set to "Slot" for bags, "Skill" for recipes, otherwise "Min"
+		-- Inspect filterData, looking for any classID other than for container or recipe
+		local detailText = "Min"
+		if filterData then
+			local allBags, allRecipes = true, true
+			local bagID, recipeID = LE_ITEM_CLASS_CONTAINER, LE_ITEM_CLASS_RECIPE
+			for _, filter in ipairs(filterData) do
+				if filter.classID ~= bagID then allBags = false end
+				if filter.classID ~= recipeID then allRecipes = false end
+			end
+			if allBags then detailText = "Slot"
+			elseif allRecipes then detailText = "Skill" end
 		end
-		--]]
-		detail.Text:SetText("Min") -- ### Legion : temporarily always set to this
+
+		detail.Text:SetText(detailText)
 	end
 
 	local tex
