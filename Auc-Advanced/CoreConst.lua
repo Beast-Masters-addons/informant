@@ -32,6 +32,7 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreConst")
 
 local lib = {
 	PlayerName = UnitName("player"),
@@ -145,6 +146,7 @@ local lib = {
 	MAXITEMLEVEL = 950,
 	MAXBIDPRICE = 99999999999, -- copy from Blizzard_AuctionUI.lua, so it is available before AH loads
 }
+AucAdvanced.Const = lib
 
 lib.CompactRealm = lib.PlayerRealm:gsub(" ", "") -- CompactRealm is realm name with spaces removed
 
@@ -213,17 +215,33 @@ lib.AC_InvTypeNameList = {}
 for index, invtypeID in ipairs(lib.AC_InvTypeIDList) do
 	lib.AC_InvTypeNameList[index] = GetItemInventorySlotInfo(invtypeID)
 end
---[[ ### todo:
-	scandata stores EquipCode values, we will need conversion table from EquipCode to InvTypeID
-		Note that some EquipCode values are for weapons, so will not have a matching InvTypeID value
-	GetItemInfo returns "INVTYPE_*" strings, so will need conversion table for those too
-		Again not avery "INVTYPE_" string will have a matching InvTypeID
---]]
+-- Map equipment locations (INVTYPE_*) to inventory type IDs
+-- Only valid for Armour types for which an ID code LE_INVENTORY_TYPE_*_TYPE exists
+lib.AC_EquipLoc2InvTypeID = {
+	INVTYPE_HEAD = LE_INVENTORY_TYPE_HEAD_TYPE,
+	INVTYPE_NECK = LE_INVENTORY_TYPE_NECK_TYPE,
+	INVTYPE_SHOULDER = LE_INVENTORY_TYPE_SHOULDER_TYPE,
+	INVTYPE_BODY = LE_INVENTORY_TYPE_BODY_TYPE,
+	INVTYPE_CHEST = LE_INVENTORY_TYPE_CHEST_TYPE,
+	INVTYPE_WAIST = LE_INVENTORY_TYPE_WAIST_TYPE,
+	INVTYPE_LEGS = LE_INVENTORY_TYPE_LEGS_TYPE,
+	INVTYPE_FEET = LE_INVENTORY_TYPE_FEET_TYPE,
+	INVTYPE_WRIST = LE_INVENTORY_TYPE_WRIST_TYPE,
+	INVTYPE_HAND = LE_INVENTORY_TYPE_HAND_TYPE,
+	INVTYPE_FINGER = LE_INVENTORY_TYPE_FINGER_TYPE,
+	INVTYPE_TRINKET = LE_INVENTORY_TYPE_TRINKET_TYPE,
+	INVTYPE_CLOAK = LE_INVENTORY_TYPE_CLOAK_TYPE,
+	INVTYPE_HOLDABLE = LE_INVENTORY_TYPE_HOLDABLE_TYPE,
+}
+-- Map Auctioneer equipment codes (as stored in scandata) to inventory type IDs
+lib.AC_EquipCode2InvTypeID = {}
+for equiploc, invtypeID in pairs(lib.AC_EquipLoc2InvTypeID) do
+	lib.AC_EquipCode2InvTypeID[lib.EquipEncode[equiploc]] = invtypeID
+end
 
 -- Special Case for battlepets: convert the petType return from C_PetJournal.GetPetInfoBySpeciesID into a subClassID
 -- ### todo: keep checking this conversion is correct, otherwise will have to hard-code lookup table
 lib.AC_PetType2SubClassID = {GetAuctionItemSubClasses(LE_ITEM_CLASS_BATTLEPET)}
 
-AucAdvanced.Const = lib
-
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreConst")
