@@ -439,31 +439,6 @@ function lib.buttonTooltips(self, text)
 	end
 end
 
---[[ for reference:
-	ItemTable[Const.LINK]    = hyperlink
-	ItemTable[Const.ILEVEL]  = iLevel
-	ItemTable[Const.ITYPE]   = iType
-	ItemTable[Const.ISUB]    = iSubType
-	ItemTable[Const.IEQUIP]  = iEquip
-	ItemTable[Const.PRICE]   = price
-	ItemTable[Const.TLEFT]   = timeleft
-	ItemTable[Const.NAME]    = name
-	ItemTable[Const.COUNT]   = count
-	ItemTable[Const.QUALITY] = quality
-	ItemTable[Const.CANUSE]  = canUse
-	ItemTable[Const.ULEVEL]  = level
-	ItemTable[Const.MINBID]  = minBid
-	ItemTable[Const.MININC]  = minInc
-	ItemTable[Const.BUYOUT]  = buyout
-	ItemTable[Const.CURBID]  = curBid
-	ItemTable[Const.AMHIGH]  = isHigh
-	ItemTable[Const.SELLER]  = owner
-	ItemTable[Const.ITEMID]  = itemid
-	ItemTable[Const.SUFFIX]  = suffix
-	ItemTable[Const.FACTOR]  = factor
-	ItemTable[Const.ENCHANT]  = enchant
-	ItemTable[Const.SEED]  = seed
-]]
 --returns if a item meets snatch criteria
 function lib.Search(item)
 	local itemsig = GetSnatchSig(item[Const.LINK])

@@ -222,13 +222,13 @@ function lib.RescanAuctionHouse(name, minUseLevel, maxUseLevel, isUsable, qualit
 				name = na
 				minUseLevel = ulvl
 				maxUseLevel = ulvl
-				invTypeIndex = nil
-				classIndex = Const.CLASSESREV[itype]
-				if classIndex then
-					subclassIndex = Const.SUBCLASSESREV[itype][isub]
-				else
-					subclassIndex = nil
-				end
+				-- invTypeIndex = nil
+				-- classIndex = Const.CLASSESREV[itype]
+				-- if classIndex then
+					-- subclassIndex = Const.SUBCLASSESREV[itype][isub]
+				-- else
+					-- subclassIndex = nil
+				-- end
 				isUsable = nil
 				qualityIndex = qu
 			end
@@ -241,9 +241,9 @@ function lib.RescanAuctionHouse(name, minUseLevel, maxUseLevel, isUsable, qualit
 					name = na
 					minUseLevel = ulvl
 					maxUseLevel = ulvl
-					invTypeIndex = nil
-					classIndex = Const.CLASSESREV[itype]
-					subclassIndex = ty
+					-- invTypeIndex = nil
+					-- classIndex = Const.CLASSESREV[itype]
+					-- subclassIndex = ty
 					isUsable = nil
 					qualityIndex = tonumber(quality)
 				end
@@ -1453,12 +1453,12 @@ function private.MakeGuiConfig()
 				gui.Rescan:SetScript("OnClick", function()
 									if flagRescan then
 										flagRescan = nil
-										CooldownFrame_SetTimer(private.gui.Rescan.frame, GetTime(), 0, 0)
+										--CooldownFrame_SetTimer(private.gui.Rescan.frame, GetTime(), 0, 0) -- ### Legion : removed - what is replacement called?
 										private.gui.Search:Enable()
 										lib.PerformSearch()
 									else
 										searcher.Rescan()
-										CooldownFrame_SetTimer(gui.Rescan.frame, GetTime(), 2, 1)
+										--CooldownFrame_SetTimer(gui.Rescan.frame, GetTime(), 2, 1) -- ### Legion : removed - what is replacement called?
 										private.gui.Search:Disable()
 										flagRescan = GetTime()
 									end
