@@ -37,6 +37,8 @@
 	See CoreAPI.lua for a description of the modules API
 ]]
 local AucAdvanced = AucAdvanced
+if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreMain")
 
 if (not AucAdvancedData) then AucAdvancedData = {} end
 if (not AucAdvancedLocal) then AucAdvancedLocal = {} end
@@ -321,9 +323,14 @@ end
 local function OnEnteringWorld(frame)
 	frame:UnregisterEvent("PLAYER_ENTERING_WORLD") -- we only want the first instance of this event
 	OnEnteringWorld = nil
-
-	if not AucAdvanced or AucAdvanced.ABORTLOAD then
-		-- something's gone wrong - silently abort loading (any error should have been reported elsewhere)
+	if not AucAdvanced then return end -- Shouldn't happen as CoreManifest creates the basic table first thing
+	AucAdvanced.CoreFileCheckOut() -- calling with no filename to finalize check in/out process
+	if AucAdvanced.ABORTLOAD then
+		-- something's gone wrong - abort loading
+		-- in most cases an error should have been reported elsewhere, we don't want to generate a new one
+		-- but we should give some indication of the problem, so we shall print a short message to chat instead
+		-- since we cannot guarantee Auc's print is working, we shall use default print function
+		print("Auctioneer load aborted: "..AucAdvanced.ABORTLOAD)
 		return
 	end
 
@@ -411,3 +418,4 @@ end
 
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreMain")
