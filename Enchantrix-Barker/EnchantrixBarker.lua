@@ -34,6 +34,7 @@ EnchantrixBarker_RegisterRevision("$URL$", "$Rev$")
 
 -- ccox - WoW 3.0 API change
 local GetCraftInfoFunc = GetCraftInfo or GetTradeSkillInfo;
+-- _G.C_TradeSkillUI.GetRecipeInfo(recipes[i])
 
 local priorityList = {};
 
@@ -179,8 +180,7 @@ end
 
 function EnchantrixBarker_OnEvent(event,...)
 	--Returns "Enchanting" for enchantwindow
-	local GetTradeLineFunc = GetCraftDisplaySkillLine or GetTradeSkillLine	-- ccox - WoW 3.0 - GetCraft routines are gone
-	local craftName, _rank, _maxRank = GetTradeLineFunc();
+	local tradeSkillID, craftName, _rank, _maxRank, skillLineModifier = _G.C_TradeSkillUI.GetTradeSkillLine();
 
 	if craftName and craftName == _BARKLOC('Enchanting') then
 		if( event == "CRAFT_SHOW" or event == "TRADE_SKILL_SHOW") then
