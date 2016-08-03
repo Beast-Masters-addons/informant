@@ -451,22 +451,24 @@ end
 -- we want to keep just the itemID and suffixID (random enchantment)
 function getSigFromLink(link)
 	assert(type(link) == "string")
-
---	Enchantrix.Util.DebugPrint("getSigFromLink input", ENX_INFO, link )	-- debugging
+	
 --	local _, _, id, rand = link:find("item:(%d+):%d+:%d+:%d+:%d+:%d+:([-%d]+)")	-- old version from Warlords
-	local _, _, id, rand = link:find("item:(%d+):%d*:%d*:%d*:%d*:%d*:([-%d]*)")
-	if id and rand then
+	local _, _, id, rand = link:find("item:(%d+):%d*:%d*:%d*:%d*:%d*:([-%d]*)")	-- current for Legion
+	--Enchantrix.Util.DebugPrint("getSigFromLink input", ENX_INFO, "getting sig for ", link, id, rand )	-- debugging
+	if ((not rand) or (rand == "")) then
+		rand = 0
+	end
+	if id then
 		return id..":0:"..rand
-	elseif id then
-		return id..":0:0"
 	else
 		local _, _, trimmed = link:find("(item:.+:%d+)|?")
-		Enchantrix.Util.DebugPrint("getSigFromLink", ENX_INFO, "failed to get sig from link", "could not get sig for: " .. trimmed)
+		Enchantrix.Util.DebugPrint("getSigFromLink", ENX_INFO, "failed to get sig from link", "could not get sig for: " .. trimmed .. ", ".. id ..", ".. rand.. ", ".. link)
 	end
 end
 
 
 -- ccox - this is also wrong, but where is it used?
+-- ccox - unused as far as I can tell!
 -- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
 function getItems(str)
 	if (not str) then return end
@@ -746,9 +748,16 @@ function Enchantrix.Util.GetIType(link)
 		return
 	end
 
+	-- Legion (Wow 7.0) currently has artifact relics disenchantable, but they don't follow normal equipment rules, and are a subtype of Gem
+	-- convert this to a type we can handle
+	if (itemType == "Gem" and  itemSubType == "Artifact Relic") then
+		itemEquipLoc = "INVTYPE_TRINKET"
+	end
+
 	local class = const.InventoryTypes[itemEquipLoc] or 0
 
 	if itemRarity < 2 or not (class and (class == const.WEAPON or class == const.ARMOR)) then
+		--Enchantrix.Util.DebugPrint("GetIType", ENX_INFO, "Item not weapon or armor", "for: " .. itemRarity .. ", " .. class .. ", ".. itemType ..  ", ".. itemSubType ..  ", ".. itemEquipLoc ..  ", " ..link)
 		return
 	end
 
