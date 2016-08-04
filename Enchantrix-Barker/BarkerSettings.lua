@@ -114,11 +114,11 @@ local settingDefaults = {
 	['barker.Unknown'] = 1,		-- too many enchants failing to parse
 
 	['barker'] = true,
-	['barker.profit_margin'] = 10,		-- percent
-	['barker.lowest_price'] = 5000,		-- GSC
+	['barker.profit_margin'] = 20,		-- percent
+	['barker.lowest_price'] = 10000,	-- GSC
 	['barker.randomise'] = 10,
 	['barker.sweet_price'] = 50000,		-- GSC
-	['barker.high_price'] = 500000,		-- GSC
+	['barker.high_price'] = 10000000,	-- GSC
 	['barker.highest_profit'] = 100000,	-- GSC
 	['barker.factor_price'] = 20,
 
@@ -441,8 +441,8 @@ function lib.MakeGuiConfig()
 
 	gui.AddControl(id, "Subhead",        0,    "Priority settings")
 	gui.AddControl(id, "WideSlider",     0, 1, "barker.factor_price", 0, 100, 1, "Price priority: %d%%")
-	gui.AddControl(id, "WideSlider",     0, 1, "barker.sweet_price", 0, 500000, 5000, "Sweet spot: %s", gsc)
-	gui.AddControl(id, "WideSlider",     0, 1, "barker.high_price", 0, 5000000, 50000, "High tide: %s", gsc)
+	gui.AddControl(id, "WideSlider",     0, 1, "barker.sweet_price", 0, 500000, 50000, "Sweet spot: %s", gsc)
+	gui.AddControl(id, "WideSlider",     0, 1, "barker.high_price", 0, 50000000, 500000, "High tide: %s", gsc)
 	gui.AddControl(id, "WideSlider",     0, 1, "barker.randomise", 0, 100, 1, "Randomise amount: %d%%")
 
 	id = gui.AddTab("Items, Stats")
