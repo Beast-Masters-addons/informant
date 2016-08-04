@@ -111,6 +111,7 @@ local settingDefaults = {
 	['printframe'] = 1,
 
 	['profile.name'] = '',		-- not sure why this gets hit so often, might be a bug
+	['barker.Unknown'] = 1,		-- too many enchants failing to parse
 
 	['barker'] = true,
 	['barker.profit_margin'] = 10,		-- percent
