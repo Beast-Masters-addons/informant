@@ -142,23 +142,6 @@ end
 
 function mergeDisenchantLists()
 
--- DisenchantList no longer exists
--- it used to be merged in here
-
---[[
-	-- Merge items from EnchantedLocal into EnchantedItemTypes
-	-- now only useful to developers
-
-	EnchantedItemTypes = {}
-	for sig, disenchant in pairs(EnchantedLocal) do
-		local item = Enchantrix.Util.GetItemIdFromSig(sig)
-		local itype = Enchantrix.Util.GetItemType(item)
-		if itype then
-			EnchantedItemTypes[itype] = mergeDisenchant(EnchantedItemTypes[itype], disenchant)
-		end
-	end
-]]
-
 	-- now we need to merge the user non-disenchantables with the default non-disenchantables
 	if not NonDisenchantablesLocal then NonDisenchantablesLocal = {} end
 	for sig, value in pairs(NonDisenchantablesLocal) do
@@ -171,18 +154,18 @@ function mergeDisenchantLists()
 end
 
 
-function saveDisenchant(sig, reagentID, count)
+function saveDisenchant(sig, reagentID, count, itemLink)
 	-- Update tables after a disenchant has been detected
 
-	--Enchantrix.Util.DebugPrint("saveDisenchant", ENX_INFO, sig, reagentID, count, type(sig) )	-- debugging
+	--Enchantrix.Util.DebugPrint("saveDisenchant", ENX_INFO, "saveDisenchant", sig, reagentID, count, type(sig) )	-- debugging
 	assert(type(sig) == "string");
 	assert(tonumber(reagentID));
 	assert(tonumber(count));
 
-	local id = Enchantrix.Util.GetItemIdFromSig(sig)
-	local itype = Enchantrix.Util.GetIType(id)
+	local itype = Enchantrix.Util.GetIType(itemLink)	-- must use full link to get correct quality result, thanks to quality boosts/bonuses
 
 	local disenchant = ("%d:1:%d:0"):format(reagentID, count)
+	--Enchantrix.Util.DebugPrint("saveDisenchant", ENX_INFO, "saveDisenchant", sig, reagentID, count, type(sig), itype, disenchant )	-- debugging
 	EnchantedLocal[sig] = mergeDisenchant(EnchantedLocal[sig], disenchant)
 	if itype then
 		EnchantedItemTypes[itype] = mergeDisenchant(EnchantedItemTypes[itype], disenchant)
@@ -263,6 +246,7 @@ end
 
 function getItemDisenchants(link)
 	local iType = Enchantrix.Util.GetIType(link)
+		
 	if (not iType) then
 		-- NOTE - ccox - GetIType can return nil for items that are not disenchantable
 		-- a nil result does not mean that we could not find the IType
@@ -573,7 +557,10 @@ local function index(self, key)
 		iLevel = tonumber(iLevel) or 0
 		iQual = tonumber(iQual) or 0
 		iType = tonumber(iType) or 0
-		if (iLevel > 0 and iQual >= 2 and (iType == 2 or iType == 4)) then
+
+		if (iLevel > 0 and iQual >= 2 
+--		and (iType == 2 or iType == 4)
+		) then
 
 			local baseData = getBaseTableDisenchants(iLevel,iQual,iType,iItem);
 			if (baseData) then
@@ -603,7 +590,9 @@ local function newindex(self, key, value)
 		iType = tonumber(iType) or 0
 		iItem = tonumber(iItem) or 0
 
-		if (iLevel > 0 and iQual >= 2 and (iType == 2 or iType == 4) and iItem > 0) then
+		if (iLevel > 0 and iQual >= 2
+--		and (iType == 2 or iType == 4)
+		and iItem > 0) then
 			local key = strjoin(":", iLevel, iQual, iType)
 			if (not EnchantrixData) then EnchantrixData = {} end
 			if (not EnchantrixData.disenchants) then EnchantrixData.disenchants = {} end

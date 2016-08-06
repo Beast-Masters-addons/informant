@@ -305,6 +305,13 @@ function itemTooltip(tooltip, name, link, itemType, itemId, quality, count)
 	end
 
 	local embed = Enchantrix.Settings.GetSetting('ToolTipEmbedInGameTip')
+
+	-- useful for debugging, not useful for most folks, setting must be changed in settings file
+--	if ( Enchantrix.Settings.GetSetting('TooltipShowItemDebugDetails') ) then
+	if ( true ) then
+		local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, invTexture = GetItemInfo(link)
+		tooltip:AddLine("Quality is "..itemRarity..", Type is "..itemType..", SubType is "..itemSubType..", EquipLoc is "..itemEquipLoc, nil, embed)
+	end
 	
 	-- see if this is a simple reagent produced from disenchanting, prospecting or milling
 	if ( Enchantrix.Settings.GetSetting('TooltipShowMatSources') ) then

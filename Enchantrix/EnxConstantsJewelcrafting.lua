@@ -469,14 +469,16 @@ const.ProspectableItems = {
 			},
 
 	-- TODO - ccox - determine yields
-	-- ARGH!   Prospecting isn't working yet!!
+	-- ARGH!   Prospecting isn't working correctly yet!!
 	[LAYSTONE_ORE] = {
-			[SANGRITE] = 0.25,
-			[DEEPAMBER] = 0.25,
-			[AZSUNITE] = 0.25,
-			[CHAOTICSPINEL] = 0.25,
-			[SKYSTONE] = 0.25,
-			[QUEENSOPAL] = 0.25,
+			[GENERICGEMCHIP] = 1.0,
+			
+			[SANGRITE] = 0.15,
+			[DEEPAMBER] = 0.15,
+			[AZSUNITE] = 0.15,
+			[CHAOTICSPINEL] = 0.15,
+			[SKYSTONE] = 0.15,
+			[QUEENSOPAL] = 0.15,
 			
 			[FURYSTONE] = 0.04,
 			[EYEOFPROPHECY] = 0.04,
@@ -484,22 +486,17 @@ const.ProspectableItems = {
 			[PANDEMONITE] = 0.04,
 			[MAELSTROMSAPPHIRE] = 0.04,
 			[SHADOWRUBY] = 0.04,
-			
-			[REDGEMCHIP] = 0.167,
-			[ORANGEGEMCHIP] = 0.167,
-			[YELLOWGEMCHIP] = 0.167,
-			[GREENGEMCHIP] = 0.167,
-			[BLUEGEMCHIP] = 0.167,
-			[PURPLEGEMCHIP] = 0.167,
 			},
 	
 	[FELSLATE_ORE] = {
-			[SANGRITE] = 0.25,
-			[DEEPAMBER] = 0.25,
-			[AZSUNITE] = 0.25,
-			[CHAOTICSPINEL] = 0.25,
-			[SKYSTONE] = 0.25,
-			[QUEENSOPAL] = 0.25,
+			[GENERICGEMCHIP] = 1.0,
+			
+			[SANGRITE] = 0.15,
+			[DEEPAMBER] = 0.15,
+			[AZSUNITE] = 0.15,
+			[CHAOTICSPINEL] = 0.15,
+			[SKYSTONE] = 0.15,
+			[QUEENSOPAL] = 0.15,
 			
 			[FURYSTONE] = 0.04,
 			[EYEOFPROPHECY] = 0.04,
@@ -507,13 +504,6 @@ const.ProspectableItems = {
 			[PANDEMONITE] = 0.04,
 			[MAELSTROMSAPPHIRE] = 0.04,
 			[SHADOWRUBY] = 0.04,
-			
-			[REDGEMCHIP] = 0.167,
-			[ORANGEGEMCHIP] = 0.167,
-			[YELLOWGEMCHIP] = 0.167,
-			[GREENGEMCHIP] = 0.167,
-			[BLUEGEMCHIP] = 0.167,
-			[PURPLEGEMCHIP] = 0.167,
 			},
 	
 }

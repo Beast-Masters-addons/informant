@@ -394,7 +394,8 @@ function onEvent(funcVars, event, player, spell, rank, target)
 				end
 				isMilling = true;
 			end
-			local sig = Enchantrix.Util.GetSigFromLink(DisenchantEvent.finished)
+			local itemLink = DisenchantEvent.finished
+			local sig = Enchantrix.Util.GetSigFromLink(itemLink)
 			local reagentList = {}
 			for i = 1, GetNumLootItems(), 1 do
 				if GetLootSlotType(i) == LOOT_SLOT_ITEM then	-- LootSlotIsItem(i) 
@@ -410,8 +411,8 @@ function onEvent(funcVars, event, player, spell, rank, target)
 						reagentList[ reagentID ] = (reagentList[ reagentID ] or 0) + quantity
 						if (isDisenchant and i == 1) then
 							-- disenchant only yields one item, so we can pass it in one at a time
-							-- also, we want to ignore guild bonus materials, so only take the first one
-							Enchantrix.Storage.SaveDisenchant(sig, reagentID, quantity)
+							-- also, we want to ignore bonus materials, so only take the first one
+							Enchantrix.Storage.SaveDisenchant(sig, reagentID, quantity, itemLink)
 						end
 					end
 				end

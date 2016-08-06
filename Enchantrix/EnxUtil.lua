@@ -31,8 +31,8 @@
 Enchantrix_RegisterRevision("$URL$", "$Rev$")
 
 -- Global functions
-local getItems
-local getItemType
+--local getItems
+--local getItemType
 local getReagentInfo
 local getSigFromLink
 local getReagentPrice
@@ -62,22 +62,30 @@ local tooltip = LibStub("nTipHelper:1")
 ------------------------
 
 -- Return false if item id can't be disenchanted
+-- See full code in Enchantrix.Util.GetIType(link)
 function isDisenchantable(id)
 	if (id) then
-		local _, _, quality, _, _, _, _, count, equip = GetItemInfo(id)
+		local _, _, quality, _, _, itemType, itemSubType, itemStackCount, itemEquipLoc = GetItemInfo(id)
 		if (not quality) then
 			-- GetItemInfo() failed, item might be disenchantable
 			return true
 		end
-		if (not Enchantrix.Constants.InventoryTypes[equip]) then
+		
+		-- Legion (Wow 7.0) currently has artifact relics disenchantable, but they don't follow normal equipment rules, and are a subtype of Gem
+		-- convert this to a type we can handle
+		if (itemType == "Gem" and  itemSubType == "Artifact Relic") then
+			itemEquipLoc = "INVTYPE_TRINKET"
+		end
+		
+		if (not Enchantrix.Constants.InventoryTypes[itemEquipLoc]) then
 			-- Neither weapon nor armor
 			return false
 		end
-		if (quality and quality < 2) then
-			-- Low quality
+		if (quality and ((quality < 2) or (quality > 4))) then
+			-- Low quality or too high quality
 			return false
 		end
-		if (count and count > 1) then
+		if (itemStackCount and itemStackCount > 1) then
 			-- Stackable item
 			return false
 		end
@@ -311,7 +319,7 @@ function getLinkFromName(name)
 		end
 	end
 
-	-- max item is now about 250000
+	-- max item is now about 150000
 	-- we should NOT be doing a search item by item
 
 	return EnchantConfig.cache.names[name]
@@ -394,8 +402,10 @@ function getReagentPrice(reagentID, extra)
 end
 
 
+--[[
 -- Return item level (rounded up to nearest 5 levels), quality and type as string,
 -- e.g. "20:2:Armor" for uncommon level 20 armor
+-- ccox - only used in old code
 function getItemType(id)
 	if (id) then
 		local _, _, quality, ilevel, _, _, _, _, equip = GetItemInfo(id)
@@ -404,6 +414,7 @@ function getItemType(id)
 		end
 	end
 end
+--]]
 
 -- Return item id as integer
 function getItemIdFromSig(sig)
@@ -421,32 +432,40 @@ function getItemIdFromLink(link)
 	end
 end
 
+--[[
+-- ccox - this appears to be unused!
 function getIType(link)
 	assert(type(link) == "string")
 	local iId = getItemIdFromLink(link)
-	local iName,iLink,iQual,iLevel,iMin,iType,iSub,iStack,iEquip,iTex=GetItemInfo(link)
-	if (iQual < 2) then
-		--Enchantrix.DebugPrint("GetIType", ENX_INFO, "Quality too low", "The quality for " .. link .. " is too low (" .. iQual .. "< 2)")
+	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, invTexture = GetItemInfo(link)
+	if ((itemRarity < 2) or (itemRarity > 4)) then
+		--Enchantrix.DebugPrint("GetIType", ENX_INFO, "Quality too low", "The quality for " .. link .. " is not disenchantable (" .. iQual .. ")")
 		return
 	end
-	if not iEquip then
+
+	-- Legion (Wow 7.0) currently has artifact relics disenchantable, but they don't follow normal equipment rules, and are a subtype of Gem
+	-- convert this to a type we can handle
+	if (itemType == "Gem" and  itemSubType == "Artifact Relic") then
+		itemEquipLoc = "INVTYPE_TRINKET"
+	end
+	
+	if not itemEquipLoc then
 		--Enchantrix.DebugPrint("GetIType", ENX_INFO, "Item not equippable", "The item " .. link .. " is not equippable")
 		return
 	end
-	local invType = Enchantrix.Constants.InventoryTypes[iEquip]
-	if not invType then
-		Enchantrix.DebugPrint("GetIType", ENX_INFO, "Unrecognized equip slot", "The item " .. link .. " has an equip slot (" .. iEquip .. ") that is not recognized")
+	local class = Enchantrix.Constants.InventoryTypes[itemEquipLoc] or 0
+	if not class then
+		Enchantrix.DebugPrint("GetIType", ENX_INFO, "Unrecognized equip slot", "The item " .. link .. " has an equip slot (" .. itemEquipLoc .. ") that is not recognized")
 		return
 	end
-
-	return ("%d:%d:%d:%d"):format(iLevel, iQual, invType, iId)
+	return ("%d:%d:%d:%d"):format(itemLevel, itemRarity, class, iId)
 end
-
+--]]
 
 
 -- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
 -- Legion: item:129104::::::::100:253::11
--- Need to figure out what the random suffix is, but nobody seems to have documented the changes yet!
+-- TODO - ccox - Need to figure out what the random suffix is, but nobody seems to have documented the changes yet for Legion
 
 -- we want to keep just the itemID and suffixID (random enchantment)
 function getSigFromLink(link)
@@ -467,7 +486,8 @@ function getSigFromLink(link)
 end
 
 
--- ccox - this is also wrong, but where is it used?
+--[[
+-- ccox - this is wrong, but where is it used?
 -- ccox - unused as far as I can tell!
 -- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
 function getItems(str)
@@ -481,6 +501,8 @@ function getItems(str)
 	end
 	return itemList;
 end
+--]]
+
 
 -----------------------------------
 --   General Utility Functions   --
@@ -709,9 +731,9 @@ end
 Enchantrix.Util = {
 	Revision			= "$Revision$",
 
-	GetItems			= getItems,
-	GetItemType			= getItemType,
-	SigFromLink			= sigFromLink,
+--	GetItems			= getItems,
+--	GetItemType			= getItemType,
+--	SigFromLink			= sigFromLink,
 	GetReagentInfo		= getReagentInfo,
 	GetSigFromLink		= getSigFromLink,
 	GetLinkFromName		= getLinkFromName,
