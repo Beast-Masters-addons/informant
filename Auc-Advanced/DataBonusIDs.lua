@@ -65,6 +65,8 @@ data.BonusTierList = {
 	545, -- Epic upgrade
 	566, -- Heroic
 	567, -- Mythic
+	1798, -- Heroic 705
+	1799, -- Mythic 720
 }
 
 data.BonusCraftedStageList = {
