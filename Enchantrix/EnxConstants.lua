@@ -619,7 +619,7 @@ const.baseDisenchantTable = {
  [EPIC] = {
  	-- weapon lookups will fall back to the armor table
   [const.ARMOR] = {
-   ["bounds"] = { 40, 45, 50, 55, 60, 94, 99, 164, 299, 419, 495, 630, 790, 1000 },
+   ["bounds"] = { 40, 45, 50, 55, 60, 94, 99, 164, 299, 419, 495, 630, 750, 1000 },
    [40]  = { { SRADIANT,    1.00, 3.0 } },
    [45]  = { { SRADIANT,    1.00, 3.5 } },
    [50]  = { { LRADIANT,    1.00, 3.5 } },
@@ -632,7 +632,7 @@ const.baseDisenchantTable = {
    [419] = { { MAELSTROM,   1.00, 1.0 } },	-- highest level CATA epic is 416, first Panda epic is 420
    [495] = { { SHA_FRAGMENT,   1.00, 1.0 } },	-- changed in a dot release
    [630] = { { SHA_CRYSTAL, 1.00, 1.0 } },	-- highest level Panda epic so far is 600
-   [790] = { { TEMPORAL, 1.00, 1.0 } },	-- first WoD epic is 640, highest WoD epic is 715
+   [750] = { { TEMPORAL, 1.00, 1.0 } },	-- first WoD epic is 640, highest WoD epic is 715
 
 	-- Legion, don't list blood of sargaras, because it is a bonus (not in place of)
    [1000] =  { {CHAOS_CRYSTAL, 1.0, 1.0 } },	-- first Legion epic is 800, highest Legion epic is currently 905
