@@ -157,7 +157,7 @@ local Const = AucAdvanced.Const
 local Resources = AucAdvanced.Resources
 local aucPrint,decode,_,_,replicate,empty,get,set,default,debugPrint,fill, _TRANS = AucAdvanced.GetModuleLocals()
 local ResolveServerKey = AucAdvanced.ResolveServerKey
--- local EquipCodeToInvIndex = AucAdvanced.Const.EquipCodeToInvIndex -- ### Legion todo: may be replaced with something else?
+local EquipCodeToInvType = AucAdvanced.Const.AC_EquipCode2InvTypeID
 
 local table, tinsert, tremove, gsub, string, coroutine, pcall, time = _G.table, _G.tinsert, _G.tremove, _G.gsub, _G.string, _G.coroutine, _G.pcall, _G.time
 local ceil, math, mod, floor = _G.ceil, _G.math, _G.mod, _G.floor
@@ -668,13 +668,33 @@ local function processStats(processors, operation, curItem, oldItem)
 	return true
 end
 
+
+function private.IsInFilter(filterData, data)
+	-- To find a match, we need to check that data matches any one filter in filterData
+	-- (at least, that's my understanding of how it works)
+	local classID, subClassID, inventoryType = data[Const.CLASSID], data[Const.SUBCLASSID], EquipCodeToInvType[data[Const.IEQUIP]] -- must convert iEquip code to inventoryType for comparison
+	for _, filter in ipairs(filterData) do
+		if filter.classID == classID then
+			if filter.subClassID then
+				if filter.subClassID == subClassID then
+					if not filter.inventoryType or filter.inventoryType == inventoryType then
+						-- classID and subClassID both match, and
+						-- either there is no inventoryType in the filter or inventoryType matches
+						return true
+					end
+				end
+			else
+				-- classID matches, no subClassID in filter, so data does match this filter
+				return true
+			end
+		end
+	end
+end
+
 function private.IsInQuery(curQuery, data)
 	if (not curQuery.minUseLevel or (data[Const.ULEVEL] >= curQuery.minUseLevel))
 			and (not curQuery.maxUseLevel or (data[Const.ULEVEL] <= curQuery.maxUseLevel))
-			--and (not curQuery.class or curQuery.class == data[Const.ITYPE])
-			--and (not curQuery.subclass or (curQuery.subclass == data[Const.ISUB]))
 			and (not curQuery.isUsable or (private.CanUse(data[Const.LINK])))
-			--and (not curQuery.invType or (EquipCodeToInvIndex[data[Const.IEQUIP]] == curQuery.invType)) -- must convert iEquip code to invTypeIndex for comparison
 			and (not curQuery.quality or (data[Const.QUALITY] >= curQuery.quality))
 			then
 		if curQuery.name then
@@ -683,7 +703,9 @@ function private.IsInQuery(curQuery, data)
 				return false
 			end
 		end
-		-- ### Legion todo: check filterData
+		if curQuery.filterData and not private.IsInFilter(curQuery.filterData, data) then
+			return false
+		end
 		return true
 	end
 	return false
@@ -947,11 +969,20 @@ local Commitfunction = function()
 		or TempcurQuery.name or TempcurQuery.isUsable or TempcurQuery.invType or TempcurQuery.quality) -- no restrictions, potentially a full scan
 
 	-- ### temp fix, until we figure out what isUsable flag is now doing
-	-- ### Legion : temp fix, until we can parse filterData properly
-	if TempcurQuery.isUsable or TempcurQuery.filterData then
+	if TempcurQuery.isUsable then
 		wasIncomplete = true -- always treat as incomplete
 	end
-
+	-- ### Legion : filters including inventoryType require a lookup in a hard-coded table in CoreConst
+	-- ### for now, any query where the filterData includes an inventoryType shall be treated as incomplete
+	-- ### until we are certain we've coded the lookup table correctly
+	if TempcurQuery.filterData and not wasIncomplete then
+		for _, filter in ipairs(TempcurQuery.filterData) do
+			if filter.inventoryType then
+				wasIncomplete = true
+				break
+			end
+		end
+	end
 
 	local serverKey = Resources.ServerKey
 	local scandata = private.GetScanData(serverKey)
