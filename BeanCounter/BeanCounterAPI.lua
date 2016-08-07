@@ -51,6 +51,25 @@ local function debugPrint(...)
         private.debugPrint("BeanCounterAPI",...)
     end
 end
+
+-- DEBUGGING
+--[[
+local DebugLib = LibStub("DebugLib")
+local debug, assert, printQuick
+if DebugLib then
+	debug, assert, printQuick = DebugLib("LibExtraTip")
+else
+	function debug() end
+	assert = debug
+	printQuick = debug
+end
+
+-- when you just want to print a message and don't care about the rest
+function DebugPrintQuick(...)
+	printQuick(...)
+end
+--]]
+
 --[[External Search Stub, allows other addons searches to search to display in BC or get results of a BC search
 Can be item Name or Link or itemID
 If itemID or Link search will be faster than a plain text lookup
@@ -285,6 +304,9 @@ end
 --[[Change or add a reason code to a transaction]]
 function  lib.API.updatedReason(realm, newReason, itemLink, bid, buy, net, stack, sellerName, deposit, fee, currentReason, Time)
 	--to string all number values for comparison to stored data
+
+	--DebugPrintQuick("Adding Reason for ", itemLink, newReason, currentReason)
+
 	bid, buy, net, stack, deposit, fee, Time = tostringall(bid, buy, net, stack, deposit, fee, Time)
 	--convert ... back to 0
 	if currentReason == "..." then currentReason = "0" end
@@ -301,7 +323,7 @@ function  lib.API.updatedReason(realm, newReason, itemLink, bid, buy, net, stack
 					local STACK, NET, DEPOSIT , FEE, BUY , BID, SELLERNAME, TIME, CURRENTREASON, LOCATION = private.unpackString(text)
 					if currentReason == CURRENTREASON and stack == STACK and sellerName == SELLERNAME and bid == BID and buy == BUY and net == NET and deposit == DEPOSIT and Time == TIME then
 						local newText = private.packString(STACK, NET, DEPOSIT , FEE, BUY , BID, SELLERNAME, TIME, newReason, LOCATION)
-
+						--DebugPrintQuick("Changing Reason for ", itemLink, newReason, currentReason, itemID, itemString)
 						table.remove(data[itemID][itemString], i)
 						private.databaseAdd(DB, nil, itemString, newText)
 						private.wipeSearchCache() --clear cached searches
@@ -356,7 +378,13 @@ function lib.API.getItemString(itemLink)
 	if not itemLink or not type(itemLink) == "string" then return end
 	local itemString, itemName = itemLink:match("H(item:.-)|h%[(.-)%]")
 	if not itemString then return end
-	itemString = itemString:gsub("(item:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+):%d+:%d+", "%1:80:0")
+	
+	--DebugPrintQuick("Itemstring input ", itemString, itemName)
+	-- WARNING - this must survive multiple iterations on the same link/string without changing it
+	--itemString = itemString:gsub("(item:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+):%d+:%d+", "%1:80:0")	-- OLD, FAILING
+	itemString = itemString:gsub("(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):%d+:%d*:(.*)", "%1:100::%2")
+	--DebugPrintQuick("Itemstring output ", itemString, itemName)
+	
 	return itemString, itemName
 end
 
@@ -366,7 +394,7 @@ Handles Hitem:string,  item:string, or full itemlinks
 function lib.API.decodeLink(link)
 	local vartype = type(link)
 	if (vartype == "string") then
-		local header, id, enchant, gem1, gem2, gem3, gemBonus, suffix, uniqueID, tail = strsplit(":", link, 10)
+		local header, id, _enchant, _gem1, _gem2, _gem3, _gemBonus, suffix, uniqueID, tail = strsplit(":", link, 10)
 		if header:sub(-4) ~= "item" then return end
 			return id, suffix, uniqueID
 		end
@@ -384,29 +412,35 @@ function lib.API.getBidReason(itemLink, quantity)
 
 	local itemString = lib.API.getItemString(itemLink)
 	local itemID, suffix = lib.API.decodeLink(itemLink)
+	--DebugPrintQuick("Checking Reason for ", itemLink, quantity, itemString, itemID, suffix)
 
 	if private.playerData["completedBidsBuyouts"][itemID] and private.playerData["completedBidsBuyouts"][itemID][itemString] then
 		for i,v in pairs(private.playerData["completedBidsBuyouts"][itemID][itemString]) do
 			local quan, _, _ , _, _, bid, _, Time, reason = private.unpackString(v)
 			if tonumber(quan) == tonumber(quantity) and reason and Time then
+				--DebugPrintQuick("Found Reason same player for ", reason, itemLink, quantity, itemString, itemID, suffix, v)
 				return reason, Time, tonumber(bid)
 			end
 		end
 	end
+	
 	--not found on the current player lets see if we bought it on another player
 	for player in pairs(private.serverData) do
 		if private.serverData[player]["completedBidsBuyouts"][itemID] and private.serverData[player]["completedBidsBuyouts"][itemID][itemString] then
 			for i,v in pairs(private.serverData[player]["completedBidsBuyouts"][itemID][itemString]) do
 				local quan, _, _ , _, _, bid, _, Time, reason = private.unpackString(v)
 				if tonumber(quan) == tonumber(quantity) and reason and Time then
+					--DebugPrintQuick("Found Reason other player for ", reason, itemLink, quantity, itemString, itemID, suffix, v)
 					return reason, Time, tonumber(bid), player
 				end
 			end
 		end
 	end
 
+	--DebugPrintQuick("No Reason found for ", itemLink, quantity, itemString, itemID, suffix)
 	return --if nothing found return nil
 end
+
 --[[Any itemlink passed into this function will be prompted to remove from the database]]
 function lib.API.deleteItem(itemLink)
 	if itemLink and itemLink:match("^(|c%x+|Hitem.+|h%[.+%])") then
