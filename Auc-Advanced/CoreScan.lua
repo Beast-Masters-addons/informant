@@ -137,9 +137,9 @@
 					otherwise mark unseen in AH Scan image.
 ]]
 local _G = _G
-
-if not AucAdvanced then return end
 local AucAdvanced = AucAdvanced
+if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreScan")
 local coremodule, internal = AucAdvanced.GetCoreModule("CoreScan")
 if not coremodule or not internal then return end -- Someone has explicitely broken us
 
@@ -693,10 +693,16 @@ end
 
 function private.IsInQuery(curQuery, data)
 	if (not curQuery.minUseLevel or (data[Const.ULEVEL] >= curQuery.minUseLevel))
-			and (not curQuery.maxUseLevel or (data[Const.ULEVEL] <= curQuery.maxUseLevel))
-			and (not curQuery.isUsable or (private.CanUse(data[Const.LINK])))
-			and (not curQuery.quality or (data[Const.QUALITY] >= curQuery.quality))
-			then
+		and (not curQuery.maxUseLevel or (data[Const.ULEVEL] <= curQuery.maxUseLevel))
+		and (not curQuery.isUsable or (private.CanUse(data[Const.LINK])))
+		then
+		if curQuery.quality then
+			local q = data[Const.QUALITY]
+			-- special handling as GetAuctionItemInfo sometimes returns invalid quality of -1
+			if q >= 0 and q < curQuery.quality then
+				return false
+			end
+		end
 		if curQuery.name then
 			local dataname = data[Const.NAME]:lower() -- case insensitive; curQuery.name is already lowercased
 			if dataname ~= curQuery.name and (curQuery.exactMatch or not dataname:find(curQuery.name, 1, true)) then
@@ -1314,6 +1320,10 @@ local Commitfunction = function()
 			if data[Const.SELLER] == "" then -- unknown seller name in new data; copy the old name if it exists
 				data[Const.SELLER] = oldItem[Const.SELLER]
 			end
+
+			if data[Const.QUALITY] == -1 then -- invalid quality value in new data; copy the old quality
+				data[Const.QUALITY] = oldItem[Const.QUALITY]
+			end
 			if (bitand(data[Const.FLAG], Const.FLAG_FILTER)==Const.FLAG_FILTER) then
 				filterOldCount = filterOldCount + 1
 			else
@@ -1832,7 +1842,7 @@ do
 						itemData[Const.ULEVEL] = itemData[Const.ULEVEL] or 0 -- expected to be 0 for all battlepets
 						itemData[Const.SUBCLASSID] = subClassID
 						if not itemData[Const.ILEVEL] then
-							-- iLevel should normally have been obtained from GetAuctionItemInfo, but it's missing
+							-- iLevel should normally have been obtained from GetAuctionItemInfo, but if it's missing we can get it from the link
 							itemData[Const.ILEVEL] = tonumber(level) or 1
 						end
 					end
@@ -3228,3 +3238,4 @@ function internal.Scan.NotifyOwnedListUpdated()
 end
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreScan")

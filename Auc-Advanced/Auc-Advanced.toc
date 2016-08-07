@@ -31,7 +31,7 @@ CoreUtil.lua
 CoreConfig.lua
 CorePost.lua
 CoreSettings.lua
-CoreBuy.lua
 CoreScan.lua
+CoreBuy.lua
 CoreAPI.lua
 Modules\Active.xml
