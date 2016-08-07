@@ -39,6 +39,7 @@
 	queueable fashion.
 ]]
 if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreBuy")
 local coremodule, internalStore = AucAdvanced.GetCoreModule("CoreBuy")
 if not coremodule then return end -- Someone has explicitely broken us
 
@@ -212,46 +213,56 @@ function lib.QueueBuy(link, seller, count, minbid, buyout, price, reason, nosear
 	if nosearch then
 		request.nosearch = true
 	else
-		-- calculate and store values needed for searching
-		if strmatch(link, "|Hitem:") then
-			local name, _, quality, _, minlevel, classname, subclassname = GetItemInfo(link)
-			if not name then
-				return QueueBuyErrorHelper(link, "NoItem")
-			end
-			request.itemname = name:lower()
-			request.uselevel = minlevel or 0
-			-- request.classindex = AucAdvanced.Const.CLASSESREV[classname] -- ### Legion todo: rewrite with classIDs
-			-- if request.classindex then
-				-- request.subclassindex = AucAdvanced.Const.SUBCLASSESREV[classname][subclassname]
-			-- end
-			request.quality = quality or 0
-		else
-			local lType, speciesID, _, petQuality = strsplit(":", link)
-			lType = lType:sub(-9)
-			speciesID = tonumber(speciesID)
-			if lType == "battlepet" and speciesID then
-				-- it's a pet
-				local _,_,_,_,iMin, iType = GetItemInfo(82800) -- Pet Cage
-				-- all caged pets should have the default pet name (custom names are removed when caging)
-				local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
-				if not petType then
-					-- indicates it's not a recognized Pet species
-					return QueueBuyErrorHelper(link, "NoPet")
-				end
-				request.itemname = petName:lower()
-				request.uselevel = iMin or 0
-				-- request.classindex = AucAdvanced.Const.CLASSESREV[iType] -- ### Legion todo: rewrite with classIDs
-				-- request.subclassindex = petType
-				request.quality = tonumber(petQuality) or 0
-			else
-				return QueueBuyErrorHelper(link, "NoItem")
-			end
+		local result, reason = private.SetRequestSearchParams(request)
+		if not result then
+			return result, reason
 		end
 	end
 
 	private.QueueInsert(request)
 	private.ActivateEvents()
 	lib.ScanPage()
+	return true
+end
+
+-- Another helper for QueueBuy
+function private.SetRequestSearchParams(request)
+	-- calculate and store values needed for searching
+	local link = request.link
+	local lType, itemID, s1, s2 = strsplit(":", link)
+	itemID = tonumber(itemID)
+	if not itemID or itemID == 0 then
+		return QueueBuyErrorHelper(link, "InvalidLink")
+	end
+	lType = lType:sub(-4)
+	if lType == "item" then
+		local name, _, quality, _, minlevel, _, _, _, _, _, _, classID, subClassID = GetItemInfo(link)
+		if not name then
+			return QueueBuyErrorHelper(link, "NoItem")
+		end
+		request.itemname = name:lower()
+		-- only store uselevel and quality if greater than 0
+		if minlevel and minlevel > 0 then request.uselevel = minlevel end
+		if quality and quality > 0 then request.quality = quality end
+		request.filterData = AucAdvanced.Scan.QueryFilterFromID(classID, subClassID)
+		if #request.itemname < 30 then request.exact = true end -- use exact match, except for very long names
+	elseif lType == "epet" then -- last 4 characters of "battlepet"
+		-- speciesID = itemID, petQuality is contained in s2. s1 is not used
+		local quality = tonumber(s2)
+		local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(itemID)
+		if not petType then
+			-- indicates it's not a recognized Pet species
+			return QueueBuyErrorHelper(link, "NoPet")
+		end
+		-- all caged pets should have the default pet name (custom names are removed when caging)
+		request.itemname = petName:lower()
+		--request.uselevel always nil. only store quality if greater than 0
+		if quality and quality > 0 then request.quality = quality end
+		request.filterData = AucAdvanced.Scan.QueryFilterFromID(LE_ITEM_CLASS_BATTLEPET, Const.AC_PetType2SubClassID[petType])
+		if #request.itemname < 30 then request.exact = true end -- use exact match, except for very long names
+	else
+		return QueueBuyErrorHelper(link, "InvalidLink")
+	end
 	return true
 end
 
@@ -302,19 +313,17 @@ function private.PushSearch()
 	for _, req in ipairs(private.BuyRequests) do
 		if not req.querysig then
 			-- Usage CreateQuerySig(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData)
-			--req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.classindex, req.subclassindex, nil, req.quality, true)
-			req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.quality, true, nil)
+			req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.quality, req.exact, req.filterData)
 		end
 	end
 
 	private.Searching = request.querysig
 	-- Usage StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options)
-	AucAdvanced.Scan.StartScan(request.itemname, request.uselevel, request.uselevel, nil, request.quality, nil, true, nil) -- ### Legion : use filterData
+	AucAdvanced.Scan.StartScan(request.itemname, request.uselevel, request.uselevel, nil, request.quality, nil, request.exact, request.filterData)
 end
 
 function private.FinishedSearch(complete, querysig, query)
-	--if not complete or query.isUsable or query.invType or not query.name then return end
-	if not complete or query.isUsable or not query.name then return end -- Legion todo: check query.filterData?
+	if not complete or query.isUsable or not query.name then return end
 	for index = #private.BuyRequests, 1, -1 do
 		local request = private.BuyRequests[index]
 		-- Compare the query sig to the sig(s) calculated during PushSearch
@@ -749,3 +758,4 @@ private.Prompt.DragBottom:SetScript("OnMouseDown", DragStart)
 private.Prompt.DragBottom:SetScript("OnMouseUp", DragStop)
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreBuy")
