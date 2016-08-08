@@ -49,11 +49,8 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	local sell = 0
 	local buy = 0
 	local stacks = 1
-
-	local itemInfo
-	if (itemID and itemID > 0) then
-		itemInfo = Informant.GetItem(itemID)
-	end
+	
+	local itemInfo = Informant.GetItem(link)
 	if (not itemInfo) then return end
 	Informant.itemInfo = itemInfo
 
