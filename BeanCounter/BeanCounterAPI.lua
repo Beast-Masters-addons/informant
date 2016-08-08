@@ -380,7 +380,7 @@ function lib.API.getItemString(itemLink)
 	if not itemString then return end
 	
 	--DebugPrintQuick("Itemstring input ", itemString, itemName)
-	-- WARNING - this must survive multiple iterations on the same link/string without changing it
+	-- WARNING - this must survive multiple iterations on the same link/string without changing it more than once
 	--itemString = itemString:gsub("(item:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+):%d+:%d+", "%1:80:0")	-- OLD, FAILING
 	itemString = itemString:gsub("(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):%d+:%d*:(.*)", "%1:100::%2")
 	--DebugPrintQuick("Itemstring output ", itemString, itemName)

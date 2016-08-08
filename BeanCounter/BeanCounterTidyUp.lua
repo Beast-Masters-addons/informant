@@ -143,6 +143,7 @@ local function pruneItemNameArrayHelper(itemID)
 		end
 	end
 end
+
 function private.pruneItemNameArray()
 	local  itemID, key
 	local del = {}
@@ -209,6 +210,7 @@ function private.compactDB(server, player)
 	end
 	debugPrint("Finished compressing Databases", server, player)
 end
+
 function private.removeUniqueID(datatoCompress, DB, server, player)
 	local TIME = time()--no need to call this for every loop
 	for itemString, itemStringData in pairs(datatoCompress) do
@@ -224,6 +226,7 @@ function private.removeUniqueID(datatoCompress, DB, server, player)
 		end
 	end
 end
+
 function private.removeOldData(datatoPurge, DB, server, player)
 	local months = get("monthstokeepdata") --doh, hard coded the value during testing
 	local expire = time() - (months * 30 * 24 * 60 * 60)
@@ -258,6 +261,7 @@ function private.sortArrayByDate(server, player)
 	end
 	debugPrint("Finished sorting database", server, player)
 end
+
 --Prune Old keys from postedXXXX tables
 --First we find a itemID that needs pruning then we check all other keys for that itemID and prune.
 function private.prunePostedDB(server, player)
@@ -290,6 +294,7 @@ function private.prunePostedDB(server, player)
 	end
 	debugPrint("Finished Cleaning Posted Databases", server, player)
 end
+
 --deletes all entries matching a itemLink from database for that server
 function private.deleteExactItem(itemLink)
 	if not itemLink or not itemLink:match("^(|c%x+|H.+|h%[.+%])") then return end
@@ -400,6 +405,7 @@ local integrityClean, integrityCount = true, 1
 	end
 
 end
+
 --look at each value and compare to the number, string, number pattern for that specific DB
 function private.IC(tbl, DB, text)
 	for i,v in pairs(tbl) do
