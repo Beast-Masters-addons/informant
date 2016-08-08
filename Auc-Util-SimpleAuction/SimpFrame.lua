@@ -880,43 +880,37 @@ function private.PostAuction()
 end
 
 function private.Refresh(background)
-	local name, minLevel, typeId, subtypeId, quality
+	local name, minLevel, quality, filterData
 	local link = frame.CurItem.link
 	if not link then return end
-	if strmatch(link, "|Hitem:") then
-		local itemName, _, itemRarity, _, itemMinLevel, itemType, itemSubType = GetItemInfo(link)
+	local lType, itemID, _, petQuality = strsplit(":", link)
+	lType = lType:sub(-4)
+	itemID = tonumber(itemID)
+	if not itemID then
+		-- link should always have an itemID, or speciesID for battlepets
+		return
+	elseif lType == "item" then
+		local itemName, _, itemRarity, _, itemMinLevel, _, _, _, _, _, _, classID, subClassID = GetItemInfo(link)
 		name = itemName
-		minLevel = itemMinLevel
-		-- typeId = Const.CLASSESREV[itemType] -- ### Legion disabled
-		-- if typeId then
-			-- subtypeId = Const.SUBCLASSESREV[itemType][itemSubType]
-		-- end
-		quality = itemRarity
-	else
-		local lType, speciesID, _, petQuality = strsplit(":", link)
-		lType = lType:sub(-9)
-		speciesID = tonumber(speciesID)
-		if lType == "battlepet" and speciesID then
-			-- it's a pet
-			--local _,_,_,_,iMin, iType = GetItemInfo(82800) -- Pet Cage -- ### Legion disabled
-			-- all caged pets should have the default pet name (custom names are removed when caging)
-			local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
-			name = petName
-			--minLevel = iMin
-			--typeId = Const.CLASSESREV[iType]
-			--subtypeId = petType
-			quality = tonumber(petQuality)
-		end
+		if itemMinLevel and itemMinLevel > 0 then minLevel = itemMinLevel end
+		if itemRarity and itemRarity > 0 then quality = itemRarity end
+		filterData = AucAdvanced.Scan.QueryFilterFromID(classID, subClassID)
+	elseif lType == "epet" then -- last 4 letters of "battlepet"
+		-- all caged pets should have the default pet name (custom names are removed when caging)
+		local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(itemID) -- itemID is speciesID
+		name = petName
+		petQuality = tonumber(petQuality)
+		if petQuality and petQuality > 0 then quality = petQuality end
+		filterData = AucAdvanced.Scan.QueryFilterFromID(LE_ITEM_CLASS_BATTLEPET, Const.AC_PetType2SubClassID[petType])
 	end
-	if not name then return end
+	if not name or name == "" then return end
+	local exact = #name < 30 -- use exact match, except for very long names
 	aucPrint(("Refreshing view of {{%s}}"):format(name))--Refreshing view of {{%s}}
-	if background and type(background) == 'boolean' then
-		--StartPushedScan(name, minLevel, minLevel, nil, typeId, subtypeId, nil, quality, true) -- ### Legion
-		StartPushedScan(name, minLevel, minLevel, nil, quality, true, nil, nil)
+	if background == true then
+		StartPushedScan(name, minLevel, minLevel, nil, quality, exact, filterData)
 	else
 		PushScan()
-		--StartScan(name, minLevel, minLevel, nil, typeId, subtypeId, nil, quality, nil, true) -- ### Legion
-		StartScan(name, minLevel, minLevel, nil, quality, nil, true, nil, nil)
+		StartScan(name, minLevel, minLevel, nil, quality, nil, exact, filterData)
 	end
 end
 

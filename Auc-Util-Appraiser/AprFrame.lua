@@ -1330,8 +1330,8 @@ function private.CreateFrames()
 		frame.GenerateList()
 	end
 
-	function frame.RefreshView(background,link)
-		local itemName, itemMinLevel, itemMinLevel, itemTypeId, itemSubId, itemRarity
+	function frame.RefreshView(background, link)
+		local itemName, itemMinLevel, itemRarity, filterData
 		if not link then
 			link = frame.salebox.link
 			if not link then
@@ -1342,57 +1342,48 @@ function private.CreateFrames()
 			end
 		end
 
-		if strmatch(link, "|Hitem:") then
-			local name, _, quality, _, minlevel, classname, subclassname = GetItemInfo(link)
-			if not name then
-				-- Reuse same error message as above
-			    aucPrint(_TRANS('APPR_Interface_NoItemsSelected') )--No items were selected for refresh.
-				frame.refresh:Enable()
-				return
+		local lType, itemID, _, petQuality = strsplit(":", link)
+		itemID = tonumber(itemID)
+		lType = lType:sub(-4)
+		if not itemID then
+			-- do nothing - itemName is not set so we will display an error message and reset at the end of the function
+		elseif lType == "item" then
+			local name, _, quality, _, minlevel, _, _, _, _, _, _, classID, subClassID = GetItemInfo(link)
+			if name then
+				itemName = name
+				if minlevel and minlevel > 0 then itemMinLevel = minlevel end
+				if quality and quality > 0 then itemRarity = quality end
+				filterData = AucAdvanced.Scan.QueryFilterFromID(classID, subClassID)
 			end
-			itemName = name
-			itemMinLevel = minlevel
-			-- itemTypeId = AucAdvanced.Const.CLASSESREV[classname]
-			-- if itemTypeId then
-				-- itemSubId = AucAdvanced.Const.SUBCLASSESREV[classname][subclassname]
-			-- end
-			itemRarity = quality
-		else
-			local lType, speciesID, _, petQuality = strsplit(":", link)
-			lType = lType:sub(-9)
-			speciesID = tonumber(speciesID)
-			if lType == "battlepet" and speciesID then
-				-- it's a pet
-				local _,_,_,_,iMin, iType = GetItemInfo(82800) -- Pet Cage
-				-- all caged pets should have the default pet name (custom names are removed when caging)
-				local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
-				if not petName then
-					-- Reuse same error message as above
-					aucPrint(_TRANS('APPR_Interface_NoItemsSelected') )--No items were selected for refresh.
-					frame.refresh:Enable()
-					return
-				end
+		elseif lType == "epet" then -- last 4 letters of "battlepet"
+			-- all caged pets should have the default pet name (custom names are removed when caging)
+			local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(itemID)
+			if petName then
 				itemName = petName
-				itemMinLevel = iMin
-				--itemTypeId = AucAdvanced.Const.CLASSESREV[iType]
-				--itemSubId = petType
-				itemRarity = tonumber(petQuality)
-			else
-				-- Reuse same error message as above
-			    aucPrint(_TRANS('APPR_Interface_NoItemsSelected') )--No items were selected for refresh.
-				frame.refresh:Enable()
-				return
+				petQuality = tonumber(petQuality)
+				if petQuality and petQuality > 0 then itemRarity = petQuality end
+				filterData = AucAdvanced.Scan.QueryFilterFromID(LE_ITEM_CLASS_BATTLEPET, Const.AC_PetType2SubClassID[petType])
 			end
+		-- else do nothing - itemName will not be set
 		end
 
-		aucPrint(_TRANS('APPR_Interface_RefreshingView') :format(itemName))--Refreshing view of {{%s}}
-		if background and type(background) == 'boolean' then
-			-- Usage: StartPushedScan(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData, options) -- ### Legion
-			AucAdvanced.Scan.StartPushedScan(itemName, itemMinLevel, itemMinLevel, nil, itemRarity, true, nil, nil)
+		if not itemName then
+			-- Reuse same error message as above
+			aucPrint(_TRANS('APPR_Interface_NoItemsSelected') )--No items were selected for refresh.
+			frame.refresh:Enable()
+			return
 		else
-			AucAdvanced.Scan.PushScan()
-			--Usage: StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options) -- ### Legion
-			AucAdvanced.Scan.StartScan(itemName, itemMinLevel, itemMinLevel, nil, itemRarity, nil, true, nil, nil)
+			local exact = #itemName < 30 -- use exact match, except for very long names
+
+			aucPrint(_TRANS('APPR_Interface_RefreshingView') :format(itemName))--Refreshing view of {{%s}}
+			if background == true then
+				-- Usage: StartPushedScan(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData, options)
+				AucAdvanced.Scan.StartPushedScan(itemName, itemMinLevel, itemMinLevel, nil, itemRarity, exact, filterData)
+			else
+				AucAdvanced.Scan.PushScan()
+				--Usage: StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, GetAll, exactMatch, filterData, options)
+				AucAdvanced.Scan.StartScan(itemName, itemMinLevel, itemMinLevel, nil, itemRarity, nil, exact, filterData)
+			end
 		end
 	end
 
