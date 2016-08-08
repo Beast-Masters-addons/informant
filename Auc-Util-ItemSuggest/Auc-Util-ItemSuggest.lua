@@ -414,15 +414,12 @@ local function GetAuctionValue(hyperlink, quantity, serverKey, additional)
 			return
 		end
 	elseif InformantGetItem then
-		local itemId = additional.itemId or tonumber(strmatch(hyperlink, "item:(%d+):"))
-		if itemId then
-			local data = InformantGetItem(itemId)
-			if data then
-				local bind = data.soulBind -- 1 = BoU, 2 = BoE, 3 = BoP
-				local specialbind = data.specialBind -- bind to account, bind to guild,
-				if (bind == 3) or (specialbind and specialbind > 0) then
-					return
-				end
+		local data = InformantGetItem(hyperlink)
+		if data then
+			local bind = data.soulBind -- 1 = BoU, 2 = BoE, 3 = BoP
+			local specialbind = data.specialBind -- bind to account, bind to guild,
+			if (bind == 3) or (specialbind and specialbind > 0) then
+				return
 			end
 		end
 	end
