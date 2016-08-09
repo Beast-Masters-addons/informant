@@ -548,11 +548,11 @@ const.baseDisenchantTable = {
 
 	-- TODO - determine item ranges
 	-- Legion -- TODO - determine yields
-	[900] =  { {ARKHANA, 1.0, 2.5 } },	-- first Legion green is 665, highest Legion green currently 740
+	[900] =  { {ARKHANA, 1.0, 2.85 } },	-- first Legion green is 665, highest Legion green currently 740
 	
    },
   [const.ARMOR] = {
-   ["bounds"] = { 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 650, 900 },
+   ["bounds"] = { 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
    [15]  = { { STRANGE , 0.80, 1.5 }, { LMAGIC  , 0.20, 1.5 }, },
    [20]  = { { STRANGE , 0.75, 2.5 }, { GMAGIC  , 0.20, 1.5 }, { SGLIMMERING, 0.05, 1.0 }, },
    [25]  = { { STRANGE , 0.75, 5.0 }, { LASTRAL , 0.15, 1.5 }, { SGLIMMERING, 0.10, 1.0 }, },
@@ -578,11 +578,11 @@ const.baseDisenchantTable = {
    [390] = { { SPIRIT, 0.85, 2.5 }, { MYSTERIOUS , 0.15, 1.0 }, },
    [410] = { { SPIRIT, 0.85, 3.0 }, { MYSTERIOUS , 0.15, 1.5 }, },
    [482] = { { SPIRIT, 0.85, 4.0 }, { MYSTERIOUS , 0.15, 2.0 }, },	-- highest level Panda green is 483, but it now gives draenic dust
-   [650] = { { DRAENIC, 1.0, 3.0 } },	-- highest WoD green armor is 640, shard chance appears to have been taken out in patch
+   [645] = { { DRAENIC, 1.0, 3.0 } },	-- highest WoD green armor is 640, shard chance appears to have been taken out in patch
 
 	-- TODO - determine item ranges
 	-- Legion -- TODO - determine yields
-	[900] =  { {ARKHANA, 1.0, 2.5 } },	-- first Legion green is 680, highest Legion green currently 820
+	[900] =  { {ARKHANA, 1.0, 2.85 } },	-- first Legion green is 670, highest Legion green currently 820
    
   },
  },
@@ -611,8 +611,7 @@ const.baseDisenchantTable = {
    [500] = { { ETHERAL,         1.00, 1.0 } },	-- highest level Panda blue is 476
    [700] = { { DRAENIC, 0.85, 10.0 }, { LUMINOUS , 0.15, 1.0 }, },	-- lowest WoD blue is 505, highest WoD blue is 700
 
-	-- Legion, don't list blood of sargaras, because it is a bonus (not in place of)
-   [900] =  { {LEYLIGHT_SHARD, 1.0, 1.0 } },	-- first Legion blue is 700 (ruh roh), highest Legion blue is currently 830
+   [900] =  { {LEYLIGHT_SHARD, 1.0, 1.0 } },	-- first Legion blue is 700 (ruh roh), highest Legion blue is currently 835
 
   },
  },
@@ -632,10 +631,9 @@ const.baseDisenchantTable = {
    [419] = { { MAELSTROM,   1.00, 1.0 } },	-- highest level CATA epic is 416, first Panda epic is 420
    [495] = { { SHA_FRAGMENT,   1.00, 1.0 } },	-- changed in a dot release
    [630] = { { SHA_CRYSTAL, 1.00, 1.0 } },	-- highest level Panda epic so far is 600
-   [750] = { { TEMPORAL, 1.00, 1.0 } },	-- first WoD epic is 640, highest WoD epic is 715
+   [750] = { { TEMPORAL,    1.00, 1.0 } },	-- first WoD epic is 640, highest WoD epic is 715, crossover is between 745 and 775
 
-	-- Legion, don't list blood of sargaras, because it is a bonus (not in place of)
-   [1000] =  { {CHAOS_CRYSTAL, 1.0, 1.0 } },	-- first Legion epic is 800, highest Legion epic is currently 905
+   [1000] =  { {CHAOS_CRYSTAL, 1.00, 1.0 } },	-- first Legion epic is 725 (gives temporal), highest Legion epic is currently 905
    
   },
  },
@@ -661,7 +659,7 @@ const.ReverseDisenchantLevelList = {
 	[NEXUS]       = {  56,  94 }, -- Nexus Crystal
 	
 	[LEYLIGHT_SHARD]  = { 700, 900 }, -- Leylight Shard
-	[LUMINOUS]		  = { 501, 700 }, -- Luminous Shards
+	[LUMINOUS]		  = { 501, 699 }, -- Luminous Shards
 --	[AZURIAN]		  =	{ 501, 800 }, -- Azurian Shards				-- not used
 	[ETHERAL] 		  = { 425, 500 }, -- Etheral Shard
 	[SETHERAL]        = { 380, 424 }, -- Small Etheral Shard
@@ -699,8 +697,8 @@ const.ReverseDisenchantLevelList = {
 	[GMAGIC]      = {  16,  20 }, -- Greater Magic Essence
 	[LMAGIC]      = {   1,  15 }, -- Lesser Magic Essence
 	
-	[ARKHANA]  = { 665, 900 }, -- Arkhana
-	[DRAENIC]  = { 483, 664 }, -- Draenic Dust
+	[ARKHANA]  = { 650, 900 }, -- Arkhana
+	[DRAENIC]  = { 483, 645 }, -- Draenic Dust
 	[SPIRIT]   = { 351, 482 }, -- Spirit Dust
 	[HYPNOTIC] = { 201, 350 }, -- Hypnotic Dust
 	[INFINITE] = { 121, 200 }, -- Infinite Dust

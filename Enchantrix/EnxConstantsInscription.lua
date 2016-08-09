@@ -331,13 +331,13 @@ const.MillableItems = {
 --	[HERB_CHAMELEONLOTUS] = CERULEAN_PEGMENT_LOW,	-- removed in beta
 
 	-- TODO - ccox - determine yields
+	[HERB_YSERALINESEEDS] = ROSEATE_PIGMENT_LOW,
 	[HERB_AETHRIL] = ROSEATE_PIGMENT_MEDIUM,
 	[HERB_DREAMLEAF] = ROSEATE_PIGMENT_MEDIUM,
 	[HERB_FOXFLOWER] = ROSEATE_PIGMENT_MEDIUM,
 	[HERB_FJARNSKAGGL] = ROSEATE_PIGMENT_MEDIUM,
-	[HERB_FELWORT] = ROSEATE_PIGMENT_MEDIUM,	-- could not find any in beta
 	[HERB_STARLIGHTROSE] = ROSEATE_PIGMENT_HIGH,
-	[HERB_YSERALINESEEDS] = ROSEATE_PIGMENT_LOW,
+--	[HERB_FELWORT] = ROSEATE_PIGMENT_MEDIUM,	-- could not obtain any in beta, green quality
 
 }
 
@@ -463,8 +463,8 @@ const.MillGroupYields = {
 	[ROSEATE_PIGMENT_MEDIUM] = {
 		[ROSEATE_PIGMENT] = 2.1,
 		[SALLOW_PIGMENT] = 0.3,
-		[HERB_YSERALINESEEDS] = 0.2,	-- FoxFlower gives more?
-		[HERB_NIGHTMARE_POD] = 0.2,		-- only for Dreamleaf?
+		[HERB_YSERALINESEEDS] = 0.2,		-- FoxFlower gives more?
+		[HERB_NIGHTMARE_POD] = 0.14,		-- only for Dreamleaf?
 	},
 	
 	[ROSEATE_PIGMENT_HIGH] = {		-- just HERB_STARLIGHTROSE

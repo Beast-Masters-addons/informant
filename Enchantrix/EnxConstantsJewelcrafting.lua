@@ -469,6 +469,7 @@ const.ProspectableItems = {
 			},
 
 	-- TODO - ccox - determine yields
+	-- TODO - ccox - colors may not have uniform yields!
 	[LAYSTONE_ORE] = {
 			[GENERICGEMCHIP] = 1.0,
 			
@@ -479,12 +480,12 @@ const.ProspectableItems = {
 			[SKYSTONE] = 0.05,
 			[QUEENSOPAL] = 0.05,
 			
-			[FURYSTONE] = 0.02,
-			[EYEOFPROPHECY] = 0.02,
-			[DAWNLIGHT] = 0.02,
-			[PANDEMONITE] = 0.02,
-			[MAELSTROMSAPPHIRE] = 0.02,
-			[SHADOWRUBY] = 0.02,
+			[FURYSTONE] = 0.015,
+			[EYEOFPROPHECY] = 0.015,
+			[DAWNLIGHT] = 0.015,
+			[PANDEMONITE] = 0.015,
+			[MAELSTROMSAPPHIRE] = 0.015,
+			[SHADOWRUBY] = 0.015,
 			},
 	
 	[FELSLATE_ORE] = {
@@ -497,12 +498,12 @@ const.ProspectableItems = {
 			[SKYSTONE] = 0.15,
 			[QUEENSOPAL] = 0.15,
 			
-			[FURYSTONE] = 0.08,
-			[EYEOFPROPHECY] = 0.08,
-			[DAWNLIGHT] = 0.08,
-			[PANDEMONITE] = 0.08,
-			[MAELSTROMSAPPHIRE] = 0.08,
-			[SHADOWRUBY] = 0.08,
+			[FURYSTONE] = 0.06,
+			[EYEOFPROPHECY] = 0.06,
+			[DAWNLIGHT] = 0.06,
+			[PANDEMONITE] = 0.06,
+			[MAELSTROMSAPPHIRE] = 0.06,
+			[SHADOWRUBY] = 0.06,
 			},
 	
 }
