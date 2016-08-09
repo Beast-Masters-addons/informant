@@ -243,8 +243,6 @@ function lib.RescanAuctionHouse(searchName, minUseLevel, maxUseLevel, isUsable, 
 		end
 	end
 
-	debugPrint(tostringall(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData)) -- ### debug
-
 	if searchName or filterData then
 		if AucAdvanced.Scan.IsScanning() or AucAdvanced.Scan.IsPaused() then
 			AucAdvanced.Scan.StartPushedScan(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData)
