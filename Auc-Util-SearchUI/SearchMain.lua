@@ -200,65 +200,57 @@ else
 		end)
 	end
 end
---The rescan method is a button that is displayed only if the searcher implements a rescan function. The searcher then passes any itemlinks it wants refrreshed data on
---Will accept either full search details or a link (item or battlepet)
-function lib.RescanAuctionHouse(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, filterData)
-	if not name or type(name) ~= "string" then return end
-	-- we should either have a plain name or a link: a link will contain eaxctly 5 '|' characters
-	-- a plain text name should not contain any
-	local _, hasBar, link, _, _, has5Bar, has6Bar = strsplit("|", name)
-	if hasBar then -- contains at least 1 '|'
-		if has6Bar or not has5Bar then -- check there are exactly 5 '|'
-			return
-		end
-		local hyperlink = name
-		name = nil
-		local lType, id, _, quality = strsplit(":", link)
-		-- note: lType should have a leading 'H'
-		if lType == "Hitem" then
-			local na, _, qu, _, ulvl, itype, isub = GetItemInfo(hyperlink)
-			if na then
-				-- override function parameters with values for this link
-				name = na
-				minUseLevel = ulvl
-				maxUseLevel = ulvl
-				-- invTypeIndex = nil
-				-- classIndex = Const.CLASSESREV[itype]
-				-- if classIndex then
-					-- subclassIndex = Const.SUBCLASSESREV[itype][isub]
-				-- else
-					-- subclassIndex = nil
-				-- end
-				isUsable = nil
-				qualityIndex = qu
+--The rescan method is a button that is displayed only if the searcher implements a rescan function. The searcher then passes any itemlinks it wants refreshed data on
+--Will accept either full search details or a hyperlink (item or battlepet)
+function lib.RescanAuctionHouse(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData) -- ### Legion : may need refining
+	if type(searchName) ~= "string" or searchName == "" then
+		searchName = nil -- nil invalid name - we could still search on other params
+	end
+	if searchName then
+		-- we should either have a plain searchName or a link: a link will contain eaxctly 5 '|' characters
+		-- a plain text searchName should not contain any '|' characters
+		local _, hasBar, itemString, _, _, has5Bar, has6Bar = strsplit("|", searchName)
+		if hasBar then -- contains at least 1 '|'
+			if has6Bar or not has5Bar then -- check there are exactly 5 '|'
+				return
 			end
-		elseif lType == "Hbattlepet" then
-			id = tonumber(id)
-			if id then
-				local na, _, ty = C_PetJournal.GetPetInfoBySpeciesID(id)
-				if na then
-					local _, _, _, _, ulvl, itype = GetItemInfo(82800) -- Pet Cage
-					name = na
+			local hyperlink = searchName -- save the full hyperlink
+			-- override any provided function parameters with values for this link
+			searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData = nil, nil, nil, nil, nil, nil, nil
+			local lType, itemID, _, petQuality = strsplit(":", itemString)
+			itemID = tonumber(itemID)
+			if not itemID then return end -- check there is a valid itemID in this link
+			-- note: lType should have a leading 'H'
+			if lType == "Hitem" then
+				local iname, _, qual, _, ulvl, _, _, _, _, _, _, classID, subClassID = GetItemInfo(hyperlink)
+				if not iname then return end
+				searchName = iname
+				if ulvl and ulvl > 0 then
 					minUseLevel = ulvl
 					maxUseLevel = ulvl
-					-- invTypeIndex = nil
-					-- classIndex = Const.CLASSESREV[itype]
-					-- subclassIndex = ty
-					isUsable = nil
-					qualityIndex = tonumber(quality)
 				end
+				if qual and qual > 0 then searchQuality = qual end
+				filterData = AucAdvanced.Scan.QueryFilterFromID(classID, subClassID)
+			elseif lType == "Hbattlepet" then
+				local iname, _, petType = C_PetJournal.GetPetInfoBySpeciesID(itemID)
+				if not iname then return end
+				searchName = iname
+				petQuality = tonumber(petQuality)
+				if petQuality and petQuality > 0 then searchQuality = petQuality end
+				filterData = AucAdvanced.Scan.QueryFilterFromID(LE_ITEM_CLASS_BATTLEPET, Const.AC_PetType2SubClassID[petType])
 			end
+			exactMatch = #searchName < 60 -- use exact match, except for very long names
 		end
 	end
 
-	if name then
+	debugPrint(tostringall(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData)) -- ### debug
+
+	if searchName or filterData then
 		if AucAdvanced.Scan.IsScanning() or AucAdvanced.Scan.IsPaused() then
-			--AucAdvanced.Scan.StartPushedScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex) -- ### Legion
-			AucAdvanced.Scan.StartPushedScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, nil, filterData)
+			AucAdvanced.Scan.StartPushedScan(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData)
 		else
 			AucAdvanced.Scan.PushScan()
-			--AucAdvanced.Scan.StartScan(name, minUseLevel, maxUseLevel, invTypeIndex, classIndex, subclassIndex, isUsable, qualityIndex) -- ### Legion
-			AucAdvanced.Scan.StartScan(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, nil, nil, filterData)
+			AucAdvanced.Scan.StartScan(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, nil, exactMatch, filterData)
 		end
 	end
 end
@@ -1092,6 +1084,7 @@ function private.CreateAuctionFrames()
 	frame.backing:SetPoint("BOTTOMRIGHT", frame.money, "TOPLEFT", 145, 50)
 	frame.backing:SetBackdrop({ bgFile="Interface\\AddOns\\Auc-Advanced\\Textures\\BlackBack", edgeFile="Interface\\AddOns\\Auc-Advanced\\Textures\\WhiteCornerBorder", tile=1, tileSize=8, edgeSize=8, insets={left=3, right=3, top=3, bottom=3} })
 	frame.backing:SetBackdropColor(0,0,0, 0.60)
+	frame.backing:SetFrameLevel(frame:GetFrameLevel())
 
 	frame.scanslabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	frame.scanslabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 72, -19)
@@ -1453,12 +1446,12 @@ function private.MakeGuiConfig()
 				gui.Rescan:SetScript("OnClick", function()
 									if flagRescan then
 										flagRescan = nil
-										--CooldownFrame_SetTimer(private.gui.Rescan.frame, GetTime(), 0, 0) -- ### Legion : removed - what is replacement called?
+										CooldownFrame_Set(gui.Rescan.frame, 0, 0, false) -- ### Legion change check
 										private.gui.Search:Enable()
 										lib.PerformSearch()
 									else
 										searcher.Rescan()
-										--CooldownFrame_SetTimer(gui.Rescan.frame, GetTime(), 2, 1) -- ### Legion : removed - what is replacement called?
+										CooldownFrame_Set(gui.Rescan.frame, GetTime(), 2, true)
 										private.gui.Search:Disable()
 										flagRescan = GetTime()
 									end
@@ -2192,13 +2185,13 @@ function private.OnUpdate(self, elapsed)
 	if flagRescan and private.gui and private.gui.Rescan.frame:IsShown() then
 		--if scan still in progress, keep the button churnin'
 		if flagRescan + 2.5 < GetTime() then
-			CooldownFrame_SetTimer(private.gui.Rescan.frame, GetTime(), 2, 1)
+			CooldownFrame_Set(private.gui.Rescan.frame, GetTime(), 2, true)
 			flagRescan = GetTime()
 		end
 		--are we finished scanning
 		if private.gui.AuctionFrame and private.gui.AuctionFrame.scanscount.last == 0 then
 			flagRescan = nil
-			CooldownFrame_SetTimer(private.gui.Rescan.frame, GetTime(), 0, 0)
+			CooldownFrame_Set(private.gui.Rescan.frame, 0, 0, false)
 			private.gui.Search:Enable()
 			lib.PerformSearch()
 		end

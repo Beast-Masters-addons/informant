@@ -214,26 +214,38 @@ end
 --Rescan is an optional method a searcher can implement that allows it to queue a rescan of teh ah
 --Just pass any item you want rescaned
 function lib.Rescan()
+	local searchName, minUseLevel, maxUseLevel, searchQuality, exactMatch, filterData
+
 	local name = get("general.name")
-	local min = get("general.ulevel.min")
-	local max = get("general.ulevel.max")
-	local quality = get("general.quality")
-
-	--[[ ### Legion temporarily disabled
-	--convert these to the AH API index #
-	local searchtype = get("general.type")
-	local searchsubtype = get("general.subtype")
-
-	local classIndex = AucAdvanced.Const.CLASSESREV[searchtype]
-	local subclassIndex
-	if classIndex then
-		subclassIndex = AucAdvanced.Const.SUBCLASSESREV[searchtype][searchsubtype]
+	if name and name ~= "" and not get("general.name.regexp") and not get("general.name.invert") then
+		searchName = name
+		if get("general.name.exact") and #searchName < 60 then
+			-- set exactMatch based on user setting, unless name is very long (names over 64 bytes will be truncated)
+			exactMatch = true
+		end
 	end
-	--]]
 
-	if name then
-		-- Usage: RescanAuctionHouse(name, minUseLevel, maxUseLevel, isUsable, qualityIndex, filterData)
-		AucSearchUI.RescanAuctionHouse(name, min, max, nil, quality) -- ### Legion todo: use filterData
+	local minlevel, maxlevel = get("general.ulevel.min"), get("general.ulevel.max")
+	if minlevel ~= 0 then minUseLevel = minlevel end
+	if maxlevel ~= Const.MAXUSERLEVEL then maxUseLevel = maxlevel end
+
+	local quality = get("general.quality")
+	if quality > 0 then searchQuality = quality end
+
+	local classID, subClassID = get("general.type"), get("general.subtype")
+
+	-- following line is here in case we have old string values left behind from previous versions
+	-- ### todo : can be removed after a suitable time
+	classID, subClassID = tonumber(classID), tonumber(subClassID)
+
+	if classID ~= -1 then
+		if subClassID == -1 then subClassID = nil end
+		filterData = AucAdvanced.Scan.QueryFilterFromID(classID, subClassID) -- ### todo: add invType
+	end
+
+	if searchName or filterData then
+		-- Usage: RescanAuctionHouse(searchName, minUseLevel, maxUseLevel, isUsable, searchQuality, exactMatch, filterData)
+		AucSearchUI.RescanAuctionHouse(searchName, minUseLevel, maxUseLevel, nil, searchQuality, exactMatch, filterData)
 	end
 end
 
