@@ -1305,7 +1305,8 @@ function private.CreateFrames()
 	frame.scanbutton:SetPoint("LEFT", "AuctionFrameMoneyFrame", "RIGHT", 5,0)
 	frame.scanbutton:SetScript("OnClick", function()
 		if not AucIsScanning() then
-			StartScan("", "", "", AuctionFrameBrowse.selectedInvtypeIndex, AuctionFrameBrowse.selectedClassIndex, AuctionFrameBrowse.selectedSubclassIndex,  nil, nil)
+			local filterData = AucAdvanced.Scan.QueryFilterFromIndex(AuctionFrameBrowse.selectedCategoryIndex, AuctionFrameBrowse.selectedSubCategoryIndex, AuctionFrameBrowse.selectedSubSubCategoryIndex)
+			StartScan(nil, nil, nil, nil, nil, nil, nil, filterData)
 		end
 	end)
 
