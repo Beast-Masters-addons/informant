@@ -273,6 +273,7 @@ function private.prunePostedDB(server, player)
 				for itemString, itemStringData in pairs(itemIDData) do
 					for i = #itemStringData, 1, -1 do
 						local _, _ ,_ ,_ ,_ ,TIME = strsplit(";",  itemStringData[i])
+						TIME = tonumber(TIME) or 0 -- hack to delete invalid strings which may have occurred in Preview version; cause should now be fixed
 						--While the entrys remain 40 days old remove entry
 						if (curTime - TIME) >= 3456000 then
 							table.remove(itemStringData, i)

@@ -520,7 +520,7 @@ function private.unpackString(text)
 	if not deposit or deposit == "" then deposit = "0" end
 	if not fee or fee == "" then fee = "0" end
 	if not buyout or buyout == "" then buyout = "0" end
-	if not big or bid == "" then bid = "0" end
+	if not bid or bid == "" then bid = "0" end
 	if not buyer or buyer == "" then buyer = "0" end
 	if not Time or Time == "" then Time = "0" end
 	if not reason or reason == "" then reason = "0" end
@@ -626,10 +626,10 @@ function private.storeReasonForBid(CallBack)
 			if postCount and postBid and itemID and price and count then
 				if postCount == count and postBid == price then
 					local text = private.packString(postCount, postBid, postSeller, isBuyout, postTimeLeft, postTime, reason)
-						--debugPrint("before", private.playerData.postedBids[itemID][itemString][i])
-						private.playerData.postedBids[itemID][itemString][i] = text
-						--DebugPrintQuick("Stored Reason for ", reason, CallBack, text)
-						--debugPrint("after", private.playerData.postedBids[itemID][itemString][i])
+					--debugPrint("before", private.playerData.postedBids[itemID][itemString][i])
+					private.playerData.postedBids[itemID][itemString][i] = text
+					--DebugPrintQuick("Stored Reason for ", reason, CallBack, text)
+					--debugPrint("after", private.playerData.postedBids[itemID][itemString][i])
 					break
 				else
 					--DebugPrintQuick("item bids did not match", itemID, itemString, postCount, postBid, itemID, price, count)
