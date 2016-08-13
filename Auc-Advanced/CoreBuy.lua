@@ -49,9 +49,12 @@ local lib = AucAdvanced.Buy
 local private = {}
 lib.Private = private
 
-local aucPrint,decode,_,_,replicate,_,get,set,default,debugPrint,fill = AucAdvanced.GetModuleLocals()
+local aucPrint,decode,_,_,replicate,_,get,set,default,debugPrint,fill,L = AucAdvanced.GetModuleLocals()
 local Const = AucAdvanced.Const
 local highlight = "|cffff7f3f"
+
+local ITEMRETRYDELAY = 0.25
+local ITEMRETRYMAX = 10 / ITEMRETRYDELAY
 
 local ErrorText = {
 	NoPrice = "No price provided",
@@ -111,6 +114,22 @@ function private.QueueRemove(index)
 		private.QueueReport()
 		return removed
 	end
+end
+function private.QueueReorder(indexfrom, indexto)
+	-- removes the request at position indexfrom and reinserts it at position indexto
+	-- when indexto > indexfrom, be aware that the remove operation reindexes the table positions after indexfrom, before the reinsert occurs
+	local queuelen = #private.BuyRequests
+	if queuelen < 2 then return end
+	indexfrom = indexfrom or 1
+	if not indexto or indexto > queuelen then
+		indexto = queuelen
+	end
+	if indexfrom == indexto then return end
+	local request = tremove(private.BuyRequests, indexfrom)
+	if not request then return end
+	tinsert(private.BuyRequests, indexto, request)
+	private.QueueReport()
+	return true
 end
 function private.QueueFind(key, value, lastindex)
 	-- search the queue for a request where the entry [key] matches value, and return the index
@@ -226,31 +245,58 @@ function lib.QueueBuy(link, seller, count, minbid, buyout, price, reason, nosear
 end
 
 -- Another helper for QueueBuy
+-- returns 1 : full success
+-- returns false, reason : complete failure (and prints message to chat)
+-- returns -1 : retry: waiting for next retry
+-- returns -2 : retry: retry just failed, but not yet at max count
 function private.SetRequestSearchParams(request)
 	-- calculate and store values needed for searching
 	local link = request.link
-	local lType, itemID, s1, s2 = strsplit(":", link)
+	local lType, itemID, _, petQuality = strsplit(":", link)
 	itemID = tonumber(itemID)
 	if not itemID or itemID == 0 then
 		return QueueBuyErrorHelper(link, "InvalidLink")
 	end
 	lType = lType:sub(-4)
 	if lType == "item" then
+		local retrytime = request.retrytime
+		if retrytime and GetTime() < retrytime then -- too soon to retry, we don't want to spam GetItemInfo too much
+			return -1
+		end
 		local name, _, quality, _, minlevel, _, _, _, _, _, _, classID, subClassID = GetItemInfo(link)
-		if not name then
-			return QueueBuyErrorHelper(link, "NoItem")
+		if not name or name == "" then
+			-- may be due to GetItemInfo not always returning info immediately (after WoW 7.0)
+			if retrytime then
+				local retrycount = (request.retrycount or 0) + 1
+				if retrycount > ITEMRETRYMAX then -- tried too many times, give up
+					return QueueBuyErrorHelper(link, "NoItem")
+				else
+					request.retrycount = retrycount
+					return -2
+				end
+			else
+				-- if the link looks valid, set up to retry next time
+				local checkItemID = tonumber(strmatch(link, "item:(%d+):"))
+				if not checkItemID or checkItemID == 0 then
+					return QueueBuyErrorHelper(link, "NoItem")
+				end
+				if get("ShowPurchaseDebug") then
+					aucPrint("Auctioneer: Unable to find item info for "..link.." at this time, will try again")
+				end
+				request.retrytime = GetTime() + ITEMRETRYDELAY -- waiting period bewteen retries
+				return -1
+			end
 		end
 		request.itemname = name:lower()
 		-- only store uselevel and quality if greater than 0
 		if minlevel and minlevel > 0 then request.uselevel = minlevel end
 		if quality and quality > 0 then request.quality = quality end
 		request.filterData = AucAdvanced.Scan.QueryFilterFromID(classID, subClassID)
-		if #request.itemname < 30 then request.exact = true end -- use exact match, except for very long names
+		if #request.itemname < 60 then request.exact = true end -- use exact match, except for very long names
 	elseif lType == "epet" then -- last 4 characters of "battlepet"
-		-- speciesID = itemID, petQuality is contained in s2. s1 is not used
-		local quality = tonumber(s2)
-		local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(itemID)
-		if not petType then
+		local quality = tonumber(petQuality)
+		local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(itemID) -- speciesID = itemID
+		if not petType or not petName or petName == "" then
 			-- indicates it's not a recognized Pet species
 			return QueueBuyErrorHelper(link, "NoPet")
 		end
@@ -259,11 +305,11 @@ function private.SetRequestSearchParams(request)
 		--request.uselevel always nil. only store quality if greater than 0
 		if quality and quality > 0 then request.quality = quality end
 		request.filterData = AucAdvanced.Scan.QueryFilterFromID(LE_ITEM_CLASS_BATTLEPET, Const.AC_PetType2SubClassID[petType])
-		if #request.itemname < 30 then request.exact = true end -- use exact match, except for very long names
+		if #request.itemname < 60 then request.exact = true end -- use exact match, except for very long names
 	else
 		return QueueBuyErrorHelper(link, "InvalidLink")
 	end
-	return true
+	return 1 -- signal success
 end
 
 --[[
@@ -295,8 +341,23 @@ function private.PushSearch()
 	if AucAdvanced.Scan.IsPaused() then return end
 	local request = private.BuyRequests[1]
 	if not request.itemname then -- itemname should have been stored for every request that reaches this point
-		private.QueueRemove(1)
-		return
+		-- GetItemInfo sometimes fails after WoW7.0, but will work after a brief wait. Pass through SetRequestSearchParams again
+		local result = private.SetRequestSearchParams(request)
+		if not result then
+			-- a chat message should already have been issued
+			private.QueueRemove(1)
+			return
+		elseif result < 0 then -- needs to be retried
+			if result == -2 then
+				private.QueueReorder() -- push first request to back of the queue
+			end
+			return
+		end
+		if not request.itemname then -- ### extra check, just in case
+			geterrorhandler()("CoreBuy: PushSearch unexpectedly found request with no itemname") -- ### debug
+			private.QueueRemove(1)
+			return
+		end
 	end
 	if GetMoney() < request.price then -- check that player still has enough money
 		aucPrint("Auctioneer: Can't buy "..request.link.." : ".."not enough money")
@@ -472,7 +533,7 @@ function private.PerformPurchase()
 		aucPrint(highlight.."Cancelling bid: Bid below minimum bid: "..AucAdvanced.Coins(price))
 		private.HidePrompt()
 		return
-	elseif (curBid and curBid > 0 and price < curBid + minIncrement and price < buyout) then
+	elseif (curBid and curBid > 0 and price < curBid + minIncrement and price < buyout) then -- ### todo: check and fix logic, looks worng here...
 		aucPrint(highlight.."Cancelling bid: Already higher bidder")
 		private.HidePrompt()
 		return
