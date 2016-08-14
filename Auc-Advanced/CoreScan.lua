@@ -2472,9 +2472,10 @@ end
 	-- Caution: do not use EquipEncode values for inventoryType
 --]]
 function lib.QueryFilterFromID(classID, subClassID, inventoryType)
-	if type(classID) ~= "number" or (subClassID ~= nil and type(subClassID) ~= "number") then return end
+	if type(classID) ~= "number" or classID < 0 then return end
+	if subClassID ~= nil and (type(subClassID) ~= "number" or subClassID < 0) then return end
 	if type(inventoryType) == "number" then
-		if not subClassID then return end
+		if inventoryType < 0 or not subClassID then return end
 	elseif inventoryType ~= nil then return end
 
 	return {{ classID = classID, subClassID = subClassID, inventoryType = inventoryType}}
@@ -2501,6 +2502,27 @@ function lib.QueryFilterFromIndex(categoryIndex, subCategoryIndex, subSubCategor
 	end
 
 	return node.filters
+end
+function lib.CreateFilterSig(filterData)
+	if type(filterData) ~= "table" then return end
+	local sig = ""
+	for index, filter in ipairs(filterData) do
+		local separator = "+"
+		if index == 1 then separator = "" end
+		local classID, subClassID, inventoryType = filter.classID, filter.subClassID, filter.inventoryType
+		if classID then
+			if subClassID then
+				if inventoryType then
+					sig = sig .. separator .. classID .. "." .. subClassID .. "." .. inventoryType
+				else
+					sig = sig .. separator .. classID .. "." .. subClassID
+				end
+			else
+				sig = sig .. separator .. classID
+			end
+		end
+	end
+	return sig
 end
 
 --[[ AucAdvanced.Scan.QuerySafeName(name)
@@ -2570,18 +2592,15 @@ function private.QueryScrubParameters(name, minLevel, maxLevel, isUsable, qualit
 	return name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData
 end
 
-function private.CreateQuerySig(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData) -- ### Legion todo: handle filterData
+function private.CreateQuerySig(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData)
 	return strjoin("#",
 		name or "",
 		minLevel or "",
 		maxLevel or "",
-		-- invTypeIndex or "",
-		-- classIndex or "",
-		-- subclassIndex or "",
 		isUsable and "1" or "", -- can't concatenate booleans
 		qualityIndex or "",
 		exactMatch and "1" or "",
-		filterData and tostring(filterData) or "" -- ### use stringified table ref as temp fix; todo: parse the table and make a sub-sig (which could be quite long)
+		lib.CreateFilterSig(filterData) or "" -- filter sigs contain "+" and "." separators
 	) -- can use strsplit("#", sig) to extract params
 end
 
@@ -2648,7 +2667,7 @@ function private.NewQueryTable(name, minLevel, maxLevel, isUsable, qualityIndex,
 			and (not query.quality)
 			and (not query.exactMatch)) then
 		qryinfo.scanSize = "Full"
-	elseif (query.name and query.filterData and query.quality) then
+	elseif (query.name and query.filterData) then
 		qryinfo.scanSize = "Micro"
 	else
 		qryinfo.scanSize = "Partial"

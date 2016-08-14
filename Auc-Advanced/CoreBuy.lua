@@ -341,6 +341,10 @@ function private.PushSearch()
 	if AucAdvanced.Scan.IsPaused() then return end
 	local request = private.BuyRequests[1]
 	if not request.itemname then -- itemname should have been stored for every request that reaches this point
+		if request.nosearch then -- this request should have been removed earlier, extra check just in case
+			private.QueueRemove(1)
+			return
+		end
 		-- GetItemInfo sometimes fails after WoW7.0, but will work after a brief wait. Pass through SetRequestSearchParams again
 		local result = private.SetRequestSearchParams(request)
 		if not result then
@@ -372,7 +376,7 @@ function private.PushSearch()
 	-- acts as a flag to show that the request existed before the current scan started
 	-- (when the scan finishes, only requests with .querysig entries may be deleted)
 	for _, req in ipairs(private.BuyRequests) do
-		if not req.querysig then
+		if req.itemname and not req.querysig then
 			-- Usage CreateQuerySig(name, minLevel, maxLevel, isUsable, qualityIndex, exactMatch, filterData)
 			req.querysig = AucAdvanced.Scan.CreateQuerySig(req.itemname, req.uselevel, req.uselevel, nil, req.quality, req.exact, req.filterData)
 		end
