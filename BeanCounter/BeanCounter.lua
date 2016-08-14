@@ -461,7 +461,12 @@ function private.onEventDisenchant(frame, event, arg, spell, _, _, spellID)
 		private.bag = {}
 	elseif event == "ITEM_LOCK_CHANGED" and inDEState then
 		local bagID, slot = arg, spell
-		local link = GetContainerItemLink(bagID, slot)
+		local link
+		if slot then
+			link = GetContainerItemLink(bagID, slot)
+		else
+			link = GetInventoryItemLink("player", bagID)
+		end
 		private.bag["DElink"] = link
 	elseif event == "LOOT_OPENED" and inDEState then --what did it DE into
 		for slot = 1, GetNumLootItems() do
@@ -641,7 +646,7 @@ function private.storeReasonForBid(CallBack)
 	else
 		--DebugPrintQuick("Could not find item in bids", itemID, itemString, private.playerData.postedBids[itemID] )
 	end
-	
+
 end
 
 --Get item Info or a specific subset. accepts itemID or "itemString" or "itemName ONLY IF THE ITEM IS IN PLAYERS BAG" or "itemLink"
