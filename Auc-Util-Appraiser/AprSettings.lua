@@ -33,7 +33,9 @@ if not AucAdvanced then return end
 
 local lib = AucAdvanced.Modules.Util.Appraiser
 if not lib then return end
-local private = lib.Private
+local private = lib.Private_AprSettings
+if not private then return end
+lib.Private_AprSettings = nil
 local print,_,_,_,_,_,get,set,default,_,fill, _TRANS = AucAdvanced.GetModuleLocals()
 local coins = AucAdvanced.Coins
 

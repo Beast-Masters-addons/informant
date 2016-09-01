@@ -32,8 +32,9 @@
 if not AucAdvanced then return end
 
 local libType, libName = "Util", "Appraiser"
-local lib,parent,private = AucAdvanced.NewModule(libType, libName)
+local lib = AucAdvanced.NewModule(libType, libName, nil, true) -- no Private table
 if not lib then return end
+local private = {}
 local aucPrint,decode,_,_,replicate,_,get,set,default,debugPrint,fill, _TRANS = AucAdvanced.GetModuleLocals()
 
 -- reduce global lookups
@@ -465,5 +466,9 @@ function lib.GetOwnAuctionDetails()
 	end
 end
 Stubby.RegisterEventHook("AUCTION_OWNED_LIST_UPDATE", "Auc-Util-Appraiser", lib.GetOwnAuctionDetails)
+
+-- Pass the private table to other files; each file reads and then deletes its own entry, and will not load if the entry is missing.
+lib.Private_AprFrame = private
+lib.Private_AprSettings = private
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
