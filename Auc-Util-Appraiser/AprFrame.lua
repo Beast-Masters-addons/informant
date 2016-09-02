@@ -416,6 +416,12 @@ function private.CreateFrames()
 	-- Multiple updates without changing the selected item are throttled to 3 seconds
 	-- Exception: CheckImageUpdate allows the throttle to be overridden if required
 	local query = {} -- query table used for QueryImage
+	local tleftlookup = {
+		"|cff000001|cffe5e5e530m", -- 30m
+		"|cff000002|cffe5e5e52h",  --2h
+		"|cff000003|cffe5e5e512h", --12h
+		"|cff000004|cffe5e5e548h"  --48h
+	}
 	function private.DelayedImageUpdate()
 		local sig = frame.salebox.sig
 		if not sig then -- sanity check
@@ -485,12 +491,7 @@ function private.CreateFrames()
 		local style = {}
 		for i = 1, #results do
 			local result = results[i]
-			local tLeft = result[Const.TLEFT]
-			if (tLeft == 1) then tLeft = "30m"
-			elseif (tLeft == 2) then tLeft = "2h"
-			elseif (tLeft == 3) then tLeft = "12h"
-			elseif (tLeft == 4) then tLeft = "48h"
-			end
+			local tLeft = tleftlookup[result[Const.TLEFT]] or ""
 			local count = result[Const.COUNT]
 			data[i] = {
 				--result[Const.NAME],
