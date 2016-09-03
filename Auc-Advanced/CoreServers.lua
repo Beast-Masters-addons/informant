@@ -62,6 +62,7 @@
 
 local AucAdvanced = AucAdvanced
 if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreServers")
 local coremodule, internal = AucAdvanced.GetCoreModule("CoreServers")
 if not (coremodule and internal) then return end
 
@@ -475,3 +476,4 @@ AucAdvanced.SplitServerKey = SplitServerKey
 
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreServers")

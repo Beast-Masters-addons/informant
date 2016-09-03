@@ -45,6 +45,7 @@
 	The function AucAdvanced.API.GetSigFromLink(link) may be used to construct a valid sig
 ]]
 if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CorePost")
 local coremodule, internal = AucAdvanced.GetCoreModule("CorePost")
 -- internal is a shared space only accessible to code that can call GetCoreModule,
 -- which is only the .lua files in Auc-Advanced.  Basically, we have an internal use only area.
@@ -1388,3 +1389,4 @@ private.Prompt.DragBottom:SetScript("OnMouseUp", DragStop)
 
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CorePost")

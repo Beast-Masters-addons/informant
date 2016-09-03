@@ -75,6 +75,7 @@ Usage:
 
 ]]
 if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreSettings")
 local coremodule, internal = AucAdvanced.GetCoreModule("CoreSettings")
 if not coremodule or not internal then return end -- Someone has explicitely broken us
 
@@ -796,3 +797,4 @@ function private.CheckObsolete()
 end
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreSettings")

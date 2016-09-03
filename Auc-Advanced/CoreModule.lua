@@ -43,6 +43,7 @@
 
 
 if not AucAdvanced then return end
+AucAdvanced.CoreFileCheckIn("CoreModule")
 local lib = AucAdvanced
 
 local _, internal = ...
@@ -155,3 +156,4 @@ end
 
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreModule")

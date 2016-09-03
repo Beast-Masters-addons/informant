@@ -33,6 +33,7 @@
 ]]
 if not AucAdvanced then return end
 local AucAdvanced = AucAdvanced
+AucAdvanced.CoreFileCheckIn("CoreAPI")
 local coremodule, internal = AucAdvanced.GetCoreModule("CoreAPI")
 if not (coremodule and internal) then return end -- Someone has explicitely broken us
 
@@ -1567,3 +1568,4 @@ end
 
 
 AucAdvanced.RegisterRevision("$URL$", "$Rev$")
+AucAdvanced.CoreFileCheckOut("CoreAPI")
