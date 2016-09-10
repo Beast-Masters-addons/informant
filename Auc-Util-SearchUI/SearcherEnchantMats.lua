@@ -87,16 +87,21 @@ local SHA_CRYSTAL_FRAGMENT = 105718
 local ETHERAL = 74247
 local SETHERAL = 74252
 local SPIRIT = 74249
---local GMYSTERIOUS = 74251		-- doesn't seem to be used
+--local GMYSTERIOUS = 74251		-- unused
 local MYSTERIOUS = 74250
 
 local DRAENIC = 109693
 local SLUMINOUS = 115502
 local LUMINOUS = 111245
---local AZURIAN = 113589		-- might be taken out
+--local AZURIAN = 113589		-- taken out
 local TEMPORAL = 113588
 local FRACTEMPORAL = 115504
---local BLACKFIRE = 111247		-- doesn't seem to be used
+--local BLACKFIRE = 111247		-- unused
+
+local ARKHANA	= 124440
+local LEYLIGHT_SHARD = 124441
+local CHAOS_CRYSTAL = 124442
+
 
 -- a table we can check for item ids
 local validReagents =
@@ -157,6 +162,10 @@ local validReagents =
 	[LUMINOUS] = true,
 	[SLUMINOUS] = true,
 	[DRAENIC] = true,
+	
+	[ARKHANA] = true,
+	[LEYLIGHT_SHARD] = true,
+	[CHAOS_CRYSTAL] = true,
 	
 	}
 
@@ -226,9 +235,12 @@ default("enchantmats.PriceAdjust."..SHA_CRYSTAL_FRAGMENT, 100)
 default("enchantmats.PriceAdjust."..DRAENIC, 100)
 default("enchantmats.PriceAdjust."..SLUMINOUS, 100)
 default("enchantmats.PriceAdjust."..LUMINOUS, 100)
---default("enchantmats.PriceAdjust."..AZURIAN, 100)
 default("enchantmats.PriceAdjust."..TEMPORAL, 100)
 default("enchantmats.PriceAdjust."..FRACTEMPORAL, 100)
+
+default("enchantmats.PriceAdjust."..ARKHANA, 100)
+default("enchantmats.PriceAdjust."..LEYLIGHT_SHARD, 100)
+default("enchantmats.PriceAdjust."..CHAOS_CRYSTAL, 100)
 
 
 function private.doValidation()
@@ -307,6 +319,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LASTRAL, 0, 200, 1, "Lesser Astral Essence %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LMAGIC, 0, 200, 1, "Lesser Magic Essence %s%%")
 	
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..ARKHANA, 0, 200, 1, "Arkhana %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..DRAENIC, 0, 200, 1, "Draenic Dust %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SPIRIT, 0, 200, 1, "Spirit Dust %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..HYPNOTIC, 0, 200, 1, "Hypnotic Dust %s%%" )
@@ -318,6 +331,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SOUL, 0, 200, 1, "Soul Dust %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..STRANGE, 0, 200, 1, "Strange Dust %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LEYLIGHT_SHARD, 0, 200, 1, "Leylight Shard %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..LUMINOUS, 0, 200, 1, "Luminous Shard %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..ETHERAL, 0, 200, 1, "Ethereal Shard %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..HEAVENLY_SHARD, 0, 200, 1, "Heavenly Shard %s%%" )
@@ -338,6 +352,7 @@ function lib:MakeGuiConfig(gui)
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SGLOWING, 0, 200, 1, "Small Glowing Shard %s%%")
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SGLIMMERING, 0, 200, 1, "Small Glimmering Shard %s%%")
 
+	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..CHAOS_CRYSTAL, 0, 200, 1, "Chaos Crystal %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..TEMPORAL, 0, 200, 1, "Temporal Crystal %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..FRACTEMPORAL, 0, 200, 1, "Fractured Temporal Crystal %s%%" )
 	gui:AddControl(id, "WideSlider", 0, 1, "enchantmats.PriceAdjust."..SHA_CRYSTAL, 0, 200, 1, "Sha Crystal %s%%" )
