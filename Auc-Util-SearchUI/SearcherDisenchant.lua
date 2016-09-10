@@ -146,7 +146,7 @@ function lib.Search(item)
 		return false, "Skill not high enough to disenchant"
 	end
 
-	local data = Enchantrix.Storage.GetItemDisenchants(item[Const.ITEMID])
+	local data = Enchantrix.Storage.GetItemDisenchants(item[Const.LINK])	-- was Const.ITEMID
 	if not data then
 		return false, "Item not Disenchantable"
 	end
