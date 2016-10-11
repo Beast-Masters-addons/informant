@@ -2515,7 +2515,7 @@ function lib.CreateFilterSig(filterData)
 	return sig
 end
 function private.CompareFilterData(data1, data2)
-	if data1 == data2 or (not data1 and notdata2) then
+	if data1 == data2 or (not data1 and not data2) then
 		-- either the same table or both are (nil or false)
 		return true
 	end
