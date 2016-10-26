@@ -76,6 +76,7 @@ local ScanTip4 = _G["AppraiserTipTextLeft4"]
 local ScanTip5 = _G["AppraiserTipTextLeft5"]
 local ScanTip6 = _G["AppraiserTipTextLeft6"]
 local ScanTip7 = _G["AppraiserTipTextLeft7"]
+local ScanTip8 = _G["AppraiserTipTextLeft8"]
 
 -- control constants used in the posting mechanism
 local LAG_ADJUST = (4 / 1000)
@@ -538,7 +539,7 @@ function lib.IsAuctionable(bag, slot)
 	ScanTip:ClearLines()
 	ScanTip:SetBagItem(bag, slot)
 	local test = BindTypes[ScanTip2:GetText()] or BindTypes[ScanTip3:GetText()]	or BindTypes[ScanTip4:GetText()]
-		or BindTypes[ScanTip5:GetText()] or BindTypes[ScanTip6:GetText()] or BindTypes[ScanTip7:GetText()]
+		or BindTypes[ScanTip5:GetText()] or BindTypes[ScanTip6:GetText()] or BindTypes[ScanTip7:GetText()] or BindTypes[ScanTip8:GetText()]
 	ScanTip:Hide()
 	if test then
 		return false, test
