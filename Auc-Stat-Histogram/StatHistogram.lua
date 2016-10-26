@@ -530,8 +530,7 @@ function lib.SetWorkingItem(link)
 	if not itemID then return end
 	local texture
 	if linktype == "item" then
-		local _, _, _, _, _, _, _, _, _, t = GetItemInfo(link)
-		texture = t
+		texture = GetItemIcon(link)
 	elseif linktype == "battlepet" then
 		local speciesID = tonumber(strmatch(link, "battlepet:(%d+)"))
 		if speciesID then
