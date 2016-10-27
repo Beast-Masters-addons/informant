@@ -2515,9 +2515,16 @@ function lib.CreateFilterSig(filterData)
 	return sig
 end
 function private.CompareFilterData(data1, data2)
-	if data1 == data2 or (not data1 and not data2) then
-		-- either the same table or both are (nil or false)
-		return true
+	if data1 == data2 then
+		return true -- same table
+	elseif not data1 then
+		if not data2 then
+			return true -- both nil or false
+		else
+			return false -- one nil, one table
+		end
+	elseif not data2 then
+		return false -- one table, one nil
 	end
 	-- assume both are tables at this point, as we should have pre-checked this
 	local count = #data1
