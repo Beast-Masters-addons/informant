@@ -502,7 +502,7 @@ function showPrompt(link, bag, slot, value, spell)
 	auto_de_prompt.link, auto_de_prompt.bag, auto_de_prompt.slot, auto_de_prompt.count = link, bag, slot, count
 	auto_de_prompt.time = GetTime()		-- not yet used
 
-	local _, _, _, _, _, _, _, _, _, texture = GetItemInfo(auto_de_prompt.link)
+	local texture = GetItemIcon(auto_de_prompt.link)
 	auto_de_prompt.Item:SetNormalTexture(texture)
 	debugSpam("item link used:", auto_de_prompt.link, itemStringFromLink(auto_de_prompt.link), auto_de_prompt.bag, auto_de_prompt.slot)
 	
