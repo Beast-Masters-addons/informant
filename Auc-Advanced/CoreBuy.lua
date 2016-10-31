@@ -369,6 +369,9 @@ function private.PushSearch()
 		private.QueueRemove(1)
 		return
 	end
+	
+	local isScanning, isGetAll = AucAdvanced.Scan.IsScanning()
+	if (isScanning and isGetAll) then return end -- we must wait on getall, and PushScan failure is too noisy for something fired every frame
 
 	AucAdvanced.Scan.PushScan()
 	if AucAdvanced.Scan.IsScanning() then return end -- check that PushScan succeeded
