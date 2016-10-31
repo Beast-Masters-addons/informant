@@ -212,7 +212,9 @@ function lib.merchantShow()
 	private.eventframe:RegisterEvent("BAG_UPDATE")
 	if (get("util.automagic.autovendor")) then
 		--first lib.vendorAction call will sell all grays, bypassing promopt. Run lib.vendorAction to add anything remaining to the prompt window
-		if (get("util.automagic.autosellgreynoprompt")) then
+		if (get("util.automagic.autosellgreynoprompt") or get("util.automagic.autoselllistnoprompt") 
+				or (get("util.automagic.vendorunusablebop") and get("util.automagic.autosellbopnoprompt"))
+				or (get("util.automagic.autosellreason") and get("util.automagic.autosellreasonnoprompt"))) then
 			lib.vendorAction(true)
 		end
 		lib.vendorAction()
