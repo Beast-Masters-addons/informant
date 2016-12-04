@@ -55,6 +55,7 @@ local outbidLocale = AUCTION_OUTBID_MAIL_SUBJECT:gsub("%%s", "(.+)")
 local cancelledLocale = AUCTION_REMOVED_MAIL_SUBJECT:gsub("%%s", "")
 local successLocale = AUCTION_SOLD_MAIL_SUBJECT:gsub("%%s", "")
 local wonLocale = AUCTION_WON_MAIL_SUBJECT:gsub("%%s", "")
+local retrievingData = RETRIEVING_DATA
 
 local reportTotalMail, reportReadMail = 0, 0 --Used as a debug check on mail scanning engine
 
@@ -85,7 +86,7 @@ function private.isAuctionHouseMail(sender, subject)
 	-- try to 'learn' Auction House sender localized name by inspecting subject
 	-- temporary fix - this is slow and will trigger for every non-AH mail
 	-- also, potentially prone to accidental matches?
-	if subject and subject ~= "" then
+	if subject and subject ~= "" and subject ~= retrievingData then
 		if subject:match(expiredLocale) or subject:match(outbidLocale) or subject:match(successLocale) or subject:match(wonLocale) or subject:match(cancelledLocale) then
 			if not BeanCounterMailPatch then
 				BeanCounterMailPatch = {}
@@ -160,14 +161,14 @@ function private.updateInboxStart()
 	local skipString = ""
 	for n = reportTotalMail, 1, -1 do
 		local _, _, sender, subject, money, _, daysLeft, _, wasRead, _, _, _ = GetInboxHeaderInfo(n)
-		if subject == "" then
+		if not subject or subject == "" or subject == retrievingData then
+			-- mail info is incomplete, will be retried
 			if skipString == "" then
 				skipString = tostring(n)
 			else
 				skipString = tostring(n) .. "," .. skipString
 			end
-		end
-		if sender and subject and subject ~= "" and (not wasRead or private.mailReadOveride[n]) then -- subject ~= "" when the server fails, this will prevent us from reading the mail giving the server more time to get its shit togather
+		elseif not wasRead or private.mailReadOveride[n] then
 			local auctionHouse --A, H, N flag for which AH the trxn came from
 			if private.isAuctionHouseMail(sender, subject) then
 				auctionHouse = factionEncode[private.playerSettings.faction]
@@ -191,7 +192,7 @@ function private.updateInboxStart()
 				reportReadMail = reportReadMail + 1
 			end
 		end
-		private.lastCheckedMail = GetTime() --this keeps us from hiding the mail UI to early and causing flicker
+		private.lastCheckedMail = GetTime() --this keeps us from hiding the mail UI too early and causing flicker
 	end
 	if skipString ~= "" and skipString ~= private.lastSkipString then
 		debugPrint("Skipping mail #", skipString, "The server is not sending the subject data. Mail will be left unread and we will retry")
