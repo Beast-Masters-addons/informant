@@ -67,6 +67,8 @@ local factionEncode = {
 
 local senderAuctionHouse
 function private.isAuctionHouseMail(sender, subject)
+	if not sender or sender == "" then return end
+
 	if not senderAuctionHouse then
 		senderAuctionHouse = {}
 		senderAuctionHouse[_BC('MailSenderAuctionHouse')] = true -- from BeanCounterStrings.lua
@@ -158,24 +160,18 @@ end
 --Mailbox Snapshots
 function private.updateInboxStart()
 	reportTotalMail = GetInboxNumItems()
-	local skipString = ""
+	local skipString
 	for n = reportTotalMail, 1, -1 do
 		local _, _, sender, subject, money, _, daysLeft, _, wasRead, _, _, _ = GetInboxHeaderInfo(n)
 		if not subject or subject == "" or subject == retrievingData then
 			-- mail info is incomplete, will be retried
-			if skipString == "" then
+			if not skipString then
 				skipString = tostring(n)
 			else
 				skipString = tostring(n) .. "," .. skipString
 			end
 		elseif not wasRead or private.mailReadOveride[n] then
-			local auctionHouse --A, H, N flag for which AH the trxn came from
 			if private.isAuctionHouseMail(sender, subject) then
-				auctionHouse = factionEncode[private.playerSettings.faction]
-			end
-
-
-			if auctionHouse then
 				private.HideMailGUI(true)
 				wasRead = wasRead and 1 or 0 -- three possible states 0=unread 1=read by addon 2=read by player
 				private.mailReadOveride[n] = false -- set back to false so we don't read the same message more than once
@@ -186,7 +182,8 @@ function private.updateInboxStart()
 				subject = subject:gsub("%s-%(%d-%)", "") --strips off the count (x) from the itemName
 				tinsert(private.inboxStart, {["n"] = n, ["sender"]=sender, ["subject"]=subject,["money"]=money, ["read"]=wasRead, ["age"] = daysLeft,
 						["invoiceType"] = invoiceType, ["itemName"] = itemName, ["Seller/buyer"] = playerName, ['bid'] = bid, ["buyout"] = buyout,
-						["deposit"] = deposit, ["fee"] = consignment, ["retrieved"] = retrieved, ["startTime"] = startTime, ["itemLink"] = itemLink, ["stack"] = stack, ["auctionHouse"] = auctionHouse,
+						["deposit"] = deposit, ["fee"] = consignment, ["retrieved"] = retrieved, ["startTime"] = startTime, ["itemLink"] = itemLink,
+						["stack"] = stack, ["auctionHouse"] = factionEncode[private.playerSettings.faction],
 						})
 				private.GetInboxText(n) --read message
 				reportReadMail = reportReadMail + 1
@@ -194,7 +191,7 @@ function private.updateInboxStart()
 		end
 		private.lastCheckedMail = GetTime() --this keeps us from hiding the mail UI too early and causing flicker
 	end
-	if skipString ~= "" and skipString ~= private.lastSkipString then
+	if skipString and skipString ~= private.lastSkipString then
 		debugPrint("Skipping mail #", skipString, "The server is not sending the subject data. Mail will be left unread and we will retry")
 		private.lastSkipString = skipString
 	end
