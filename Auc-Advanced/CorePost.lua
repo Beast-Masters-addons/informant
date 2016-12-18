@@ -964,10 +964,46 @@ function private.LoadAuctionSlot(request)
 	end
 
 	if totalCount < request.count * request.stacks then
-		-- not enough items to complete this request; abort whole request
-		private.ClearAuctionSlot() -- Put it back in the bags
-		private.QueueRemove()
-		return nil, "NotEnough", nil
+		local doAbort = true
+		-- Provisional fix for GetAuctionSellItemInfo sometimes returning incorrect counts
+		-- This only appears to be a problem when multiposting items with a stack size of 1
+		if request.count == 1 and request.stacks > 1 and totalCount > 0 then
+			local _, countAvail, unpostable = lib.CountAvailableItems(request.sig)
+			if countAvail then
+				local newTotalCount = countAvail -- store unadjusted count to store into totalCount at end of this block
+				if unpostable then countAvail = countAvail - unpostable end
+				if countAvail >= request.count * request.stacks then
+					-- looks like we have enough items to fulfil request, but GetAuctionSellItemInfo is returning incorrect count
+					-- we won't be able to post them all in one go; post as many as we can and requeue the remainder
+					-- we should be able to post totalCount stacks immediately, so we should requeue request.stacks - totalCount
+					doAbort = false
+					-- queue a new request to post the remainder
+					lastPostId = lastPostId + 1
+					local newrequest = {
+						sig = request.sig,
+						count = request.count, -- this will always be 1
+						bid = request.bid,
+						buy = request.buy,
+						duration = request.duration,
+						stacks = request.stacks - totalCount, -- try to post the remainder in one go; if this fails again this code should split it again, unless size reaches 1
+						id = lastPostId,
+						posted = 0,
+						linkType = request.linkType,
+					}
+					private.QueueInsert(newrequest)
+					-- change current request to only post totalCount stacks
+					request.stacks = totalCount
+					-- Use correct totalCount below (stored in request.totalcount)
+					totalCount = newTotalCount
+				end
+			end
+		end
+		if doAbort then
+			-- not enough items to complete this request; abort whole request
+			private.ClearAuctionSlot() -- Put it back in the bags
+			private.QueueRemove()
+			return nil, "NotEnough", nil
+		end
 	end
 	if GetMoney() < CalculateAuctionDeposit(request.duration, request.count) * request.stacks then
 		-- not enough money to pay the deposit
