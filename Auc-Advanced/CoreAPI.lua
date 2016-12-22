@@ -1192,10 +1192,7 @@ do -- Auctioneer bonusID handling functions
 	function private.InitBonusIDHandlers()
 		private.InitBonusIDHandlers = nil
 		-- Build Lookups
-		for _, x in ipairs(Data.BonusSingleSuffixList) do
-			local y = tostring(x)
-			LookupSuffix[y] = y
-		end
+		LookupSuffix = Data.BonusSuffixMap
 		for _, x in ipairs(Data.BonusPrimaryStatList) do
 			local y = tostring(x)
 			LookupStat[y] = y
@@ -1260,26 +1257,10 @@ do -- Auctioneer bonusID handling functions
 	end
 
 	-- Function to identify bonusIDs representing suffixes, and to return a normlized version of that suffix
-	-- For suffixes representing pairs of secondary stats, there are 21 variants of each pair (i.e. there are 21 variants of "of the Fireflash")
-	-- We map these 21 variants to a single value: the middle (11th) variant is chosen (i.e. all bonusIDs representing "of the Fireflash" return "29")
-	-- For bonusIDs representing a single secondary stat there is only one bonusID for each stat, so we use a lookup table for those
+	-- All variants of a particular suffix are mapped to a single value (e.g. all bonusIDs representing "of the Fireflash" return "29")
 	-- The parameter 'bonus' must be a string containing a single bonusID, not the full 'bonuses' string
 	function lib.GetNormalizedBonusIDSuffix(bonus)
-		local suffix = LookupSuffix[bonus]
-		if suffix then return suffix end
-
-		bonus = tonumber(bonus)
-		if not bonus then return end
-
-		if bonus >= 19 and bonus <= 39 then -- Fireflash block
-			suffix = "29" -- middle of the range
-		elseif bonus >= 45 and bonus <= 170 then
-			suffix = tostring(floor((bonus - 45) / 21) * 21 + 55)
-		elseif bonus >= 175 and bonus <= 447 then
-			suffix = tostring(floor((bonus - 175) / 21) * 21 + 185)
-		end
-
-		return suffix
+		return LookupSuffix[bonus]
 	end
 
 	-- Generate a signature for a set of bonusIDs, contained in bonuses string
