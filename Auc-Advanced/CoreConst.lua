@@ -148,7 +148,7 @@ local lib = {
 }
 AucAdvanced.Const = lib
 
-lib.CompactRealm = lib.PlayerRealm:gsub(" ", "") -- CompactRealm is realm name with spaces removed
+lib.CompactRealm = lib.PlayerRealm:gsub("[ %-]", "") -- CompactRealm is realm name with spaces and dashes removed
 
 -- *** AuctionCategory tables (AC_*) ***
 -- Indexed list of class IDs
