@@ -320,8 +320,8 @@ function private.HookAH()
 					local pos = private.headers.pos
 					if pos == 1 then col = "minbidbuyout" -- Buy
 					elseif pos == 2 then col = "bid" -- Bid
-					--elseif pos == 3 then <?> -- BuyEach
-					--elseif pos == 4 then <?> -- BidEach
+					elseif pos == 3 then col = "unitprice" -- BuyEach
+					elseif pos == 4 then col = "unitprice" -- BidEach -- there is no BidEach server sort command, so we just use "unitprice" here
 					end
 				--elseif sort == 8 then <?> -- PriceLevel
 				end
