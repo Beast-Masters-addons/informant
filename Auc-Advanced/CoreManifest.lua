@@ -52,9 +52,9 @@ AucAdvanced = {Modules = {Filter={}, Match={}, Stat={}, Util={}}, Data = {}}
 local lib = AucAdvanced
 
 -- Manifest Constants
-local DEV_VERSION = "7.0.DEV"
-local MINIMUM_TOC = 70000
-local MINIMUM_CLIENT = "7.0.3"
+local DEV_VERSION = "7.4.DEV"
+local MINIMUM_TOC = 70100
+local MINIMUM_CLIENT = "7.1.0"
 -- MINIMUM_BUILD is optional, and should only be used where TOC is not sufficient; otherwise it should be commented out
 -- local MINIMUM_BUILD = 00000
 
