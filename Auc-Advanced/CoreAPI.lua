@@ -1430,6 +1430,15 @@ do -- Auctioneer bonusID handling functions
 
 end -- end bonusID functions
 
+-- Timer functions
+
+-- Wrapper around C_Timer.After with parameter checks
+function lib.TimerCallback(duration, callback)
+	if type(duration) ~= "number" or type(callback) ~= "function" then return end
+	return C_Timer.After(duration, callback)
+end
+
+
 -------------------------------------------------------------------------------
 -- Statistical devices created by Matthew 'Shirik' Del Buono
 -- For Auctioneer

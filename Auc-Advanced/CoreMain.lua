@@ -336,6 +336,7 @@ local function OnEnteringWorld(frame)
 
 	frame:RegisterEvent("ITEM_LOCK_CHANGED")
 	frame:RegisterEvent("BAG_UPDATE")
+	frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 	-- Following items are for experimental scan processor modifications
 	frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
 	frame:RegisterEvent("AUCTION_OWNED_LIST_UPDATE")
@@ -370,8 +371,10 @@ local function OnEvent(self, event, arg1, arg2, ...)
 		internal.Scan.NotifyOwnedListUpdated()
 	elseif (event == "ITEM_LOCK_CHANGED" and arg2) or event == "BAG_UPDATE" then
 		if arg1 >= 0 and arg1 <= 4 then
-			ScheduleMessage("inventory", 0.05) -- collect multiple events for same bag change using a slight delay
+			ScheduleMessage("inventory", 0.15) -- collect multiple events for same bag change using a slight delay
 		end
+	elseif event == "GET_ITEM_INFO_RECEIVED" then
+		ScheduleMessage("iteminfoupdate", 0.15)
 	elseif event == "ADDON_LOADED" then
 		OnLoad(arg1)
 	elseif event == "SAVED_VARIABLES_TOO_LARGE" then
