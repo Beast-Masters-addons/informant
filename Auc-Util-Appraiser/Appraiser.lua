@@ -103,6 +103,15 @@ function lib.Processors.inventory(callbackType, ...)
 	end
 end
 
+function lib.Processors.iteminfoupdate()
+	if private.needListRefresh then
+		private.needListRefresh = nil
+		if private.frame and private.frame:IsVisible() then
+			private.frame.GenerateList()
+		end
+	end
+end
+
 function lib.Processors.scanstats()
 	-- flush all caches
 	if private.frame then

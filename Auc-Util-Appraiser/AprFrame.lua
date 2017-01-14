@@ -80,10 +80,7 @@ function private.CreateFrames()
 			for slot=1,GetContainerNumSlots(bag) do
 				local link = GetContainerItemLink(bag,slot)
 				if link then
-					local isDirect = false
-					if frame.direct and frame.direct == link then
-						isDirect = true
-					end
+					local isDirect = frame.direct == link
 
 					if AucAdvanced.Post.IsAuctionable(bag, slot) or isDirect then
 						local sig, linkType = SigFromLink(link)
@@ -108,6 +105,9 @@ function private.CreateFrames()
 									if linkType == "item" then
 										local na, _,ra,_,_,_,_, st = GetItemInfo(link)
 										name, rarity, stack = na, ra, st
+										if not name then
+											private.needListRefresh = true
+										end
 									elseif linkType == "battlepet" then
 										local _, id, _, qu = strsplit(":", link)
 										id = tonumber(id)
@@ -152,8 +152,12 @@ function private.CreateFrames()
 
 					if not found then
 						local _,_,_,_,_,_,_,stack = GetItemInfo(itemId)
+						if not stack then
+							private.needListRefresh = true
+							stack = 1
+						end
 						local item = {
-							sig, name, texture, quality, stack or 1, count, link,
+							sig, name, texture, quality, stack, count, link,
 							auction=true
 						}
 						if get('util.appraiser.item.'..sig..".ignore") then
