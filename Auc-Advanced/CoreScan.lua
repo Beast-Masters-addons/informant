@@ -1007,13 +1007,13 @@ local Commitfunction = function()
 		local stage1throttle = get("core.scan.stage1throttle")
 		if stage1throttle >= Const.ALEVEL_HI then
 			breakinterval, timeadjust = 500, 0.1
-			itemcachedelay = 8 -- ### Legion item cache patch
+			itemcachedelay = 5 -- ### Legion item cache patch
 		elseif stage1throttle >= Const.ALEVEL_MED then
 			breakinterval, timeadjust = 2000, 0.4
-			itemcachedelay = 6 -- ### Legion item cache patch
+			itemcachedelay = 4 -- ### Legion item cache patch
 		elseif stage1throttle >= Const.ALEVEL_LOW then
 			breakinterval, timeadjust = 5000, 1
-			itemcachedelay = 4 -- ### Legion item cache patch
+			itemcachedelay = 3 -- ### Legion item cache patch
 		else -- OFF
 			breakinterval, timeadjust = nil, 1
 			itemcachedelay = 2 -- ### Legion item cache patch
@@ -1783,33 +1783,34 @@ do
 	function private.InitItemInfoCache()
 		ItemTried, PetTried = {}, {}
 	end
-	local function GetItemInfoCache(link, itemID, bonuses, scanthrottle) -- ### Legion : revised, check
-		local cachekey = itemID
+	local function GetItemInfoCache(link, itemID, bonuses, scanthrottle)
 		if bonuses and bonuses ~= "" then
-			cachekey = cachekey .. ":" .. bonuses
+			-- for now we won't try to cache items with bonusIDs
+			local _,_,_,iLevel,uLevel,_,_,_,equipLoc,_,_,classID,subClassID = GetItemInfo(link)
+			return classID, subClassID, Const.EquipEncode[equipLoc], iLevel, uLevel or 0
 		end
-		local data = ItemInfoCache[cachekey]
+		local data = ItemInfoCache[itemID]
 		if data then
-			return data
+			return unpack(data, 1, 5)
 		end
-		if scanthrottle and ItemTried and ItemTried[cachekey] then
+		if scanthrottle and ItemTried and ItemTried[itemID] then
 			-- if GetItemInfo previously failed for a link with this cachekey in this processing pass (ItemTried is reset each pass)
 			return
 		end
 		local _,_,_,iLevel,uLevel,_,_,_,equipLoc,_,_,classID,subClassID = GetItemInfo(link)
 		if not classID then
 			if scanthrottle then
-				ItemTried[cachekey] = true
+				ItemTried[itemID] = true
 			end
 			return
 		end
 		-- not all values are used; only store the ones we want
 		data = {classID, subClassID, Const.EquipEncode[equipLoc], iLevel, uLevel or 0}
-		ItemInfoCache[cachekey] = data
-		return data
+		ItemInfoCache[itemID] = data
+		return unpack(data, 1, 5)
 	end
 
-	local function GetPetInfoCache(speciesID, scanthrottle) -- ### Legion : revised, check
+	local function GetPetInfoCache(speciesID, scanthrottle)
 		local subtype = PetInfoCache[speciesID]
 		if not subtype then
 			if scanthrottle and PetTried and PetTried[speciesID] then
@@ -1892,15 +1893,14 @@ do
 				end
 			end
 			if not itemData[Const.CLASSID] then
-				local itemInfo = GetItemInfoCache(itemLink, itemID, itemData[Const.BONUSES], scanthrottle) -- {iType, iSubtype, Const.EquipEncode[equipLoc], iLevel, uLevel}
-				if itemInfo then
-					itemData[Const.CLASSID] = itemInfo[1]
-					itemData[Const.SUBCLASSID] = itemInfo[2]
-					itemData[Const.IEQUIP] = itemInfo[3]
+				local classID, subClassID, equipCode, iLevel, uLevel = GetItemInfoCache(itemLink, itemID, itemData[Const.BONUSES], scanthrottle) -- {iType, iSubtype, Const.EquipEncode[equipLoc], iLevel, uLevel}
+				if classID then
+					itemData[Const.CLASSID] = classID
+					itemData[Const.SUBCLASSID] = subClassID
+					itemData[Const.IEQUIP] = equipCode
 					-- Prefer iLevel and/or uLevel values provided by GetAuctionItemInfo over those from GetItemInfo
-					-- (because we used itemID, it is possible for values from GetItemInfo to be incorrect)
-					itemData[Const.ILEVEL] = itemData[Const.ILEVEL] or itemInfo[4]
-					itemData[Const.ULEVEL] = itemData[Const.ULEVEL] or itemInfo[5]
+					itemData[Const.ILEVEL] = itemData[Const.ILEVEL] or iLevel
+					itemData[Const.ULEVEL] = itemData[Const.ULEVEL] or uLevel
 				end
 			end
 		end
