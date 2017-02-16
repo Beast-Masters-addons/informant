@@ -1159,7 +1159,6 @@ local Commitfunction = function()
 				progresscounter = progresscounter + 5 -- We just wiped the entry from the db, so other steps won't see it.
 			end
 		end
-		private.ResetItemInfoCache() -- free up cache memory
 		local tolerance = 0
 		if scanCount > TOLERANCE_LOWERLIMIT then -- don't use tolerance for tiny scans
 			tolerance = get("core.scan.unresolvedtolerance")
@@ -1770,18 +1769,16 @@ end
 
 -- Mechanism to limit repeated calls to GetItemInfo and C_PetJournal.GetPetInfoBySpeciesID during processing
 do
-	local ItemInfoCache, PetInfoCache = {}, {}
-	local ItemTried, PetTried
+	local ItemInfoCache, PetInfoCache, ItemTried, PetTried = {}, {}, {}, {}
 	local lookupPetType2SubClassID = Const.AC_PetType2SubClassID
 	local GetPetInfoBySpeciesID = C_PetJournal.GetPetInfoBySpeciesID
 
 	function private.ResetItemInfoCache()
-		wipe(ItemInfoCache)
-		wipe(PetInfoCache)
-		ItemTried, PetTried = nil, nil
+		ItemInfoCache, PetInfoCache, ItemTried, PetTried = {}, {}, {}, {}
 	end
 	function private.InitItemInfoCache()
-		ItemTried, PetTried = {}, {}
+		wipe(ItemTried)
+		wipe(PetTried)
 	end
 	local function GetItemInfoCache(link, itemID, bonuses, scanthrottle)
 		if bonuses and bonuses ~= "" then
@@ -2171,6 +2168,7 @@ local StorePageFunction = function()
 	local processingTime = 800 / get("scancommit.targetFPS")
 	local debugprofilestop = debugprofilestop
 	local nextPause = debugprofilestop() + processingTime
+	local fillduringscan = get("core.scan.fillduringscan")
 
 	local breakcount = 10000 -- additional limiter: yield every breakcount auctions scanned
 	local scannerthrottle = get("core.scan.scannerthrottle")
@@ -2197,10 +2195,11 @@ local StorePageFunction = function()
 		remissedCounts[i] = 0
 	end
 
+
 	if not private.breakStorePage and (page > qryinfo.page) then
 		-- First pass
 		local retries = { }
-		private.InitItemInfoCache() -- ### Legion item cache patch
+		private.InitItemInfoCache()
 		for i = 1, numBatchAuctions do
 			if isGetAll then -- only yield for GetAll scans
 				if debugprofilestop() > nextPause or i % breakcount == 0 then
@@ -2218,7 +2217,9 @@ local StorePageFunction = function()
 			if (itemData) then
 				local isComplete, completeMinusSeller = private.isComplete(itemData)
 				if (isComplete) then
-					--private.GetAuctionItemFillIn(itemData, true) -- ### Legion item cache patch
+					if fillduringscan then
+						private.GetAuctionItemFillIn(itemData, true)
+					end
 					tinsert(curScan, itemData)
 					storecount = storecount + 1
 				else
@@ -2251,7 +2252,7 @@ local StorePageFunction = function()
 			needsRetries = false
 			sellerOnly = true
 			tryCount = tryCount + 1
-			private.InitItemInfoCache() -- ### Legion item cache patch
+			private.InitItemInfoCache()
 			-- must use GetTime to time this pause, as debugprofilestop is unsafe across yields
 			local nextWait = GetTime() + 1
 			while GetTime() < nextWait do
@@ -2278,7 +2279,9 @@ local StorePageFunction = function()
 				if (itemData) then
 					local isComplete, completeMinusSeller = private.isComplete(itemData)
 					if (isComplete) then
-						--private.GetAuctionItemFillIn(itemData, true) -- ### Legion item cache patch
+						if fillduringscan then
+							private.GetAuctionItemFillIn(itemData, true)
+						end
 						tinsert(curScan, itemData)
 						storecount = storecount + 1
 					else
@@ -2381,7 +2384,6 @@ local StorePageFunction = function()
 			qryinfo.unresolved = (qryinfo.unresolved or 0) + all_missed + links_missed + link_data_missed + ld_and_names_missed
 		end
 	end
-	--private.ResetItemInfoCache() -- ### Legion item cache patch
 
 	if EventFramesRegistered then
 		for _, frame in pairs(EventFramesRegistered) do
@@ -3269,7 +3271,9 @@ end
 
 function coremodule.Processors.auctionclose(event)
 	-- clearup memory usage when AH closed
-	private.ResetItemInfoCache()
+	if not get("core.scan.keepinfocacheonclose") then
+		private.ResetItemInfoCache()
+	end
 	private.clearImageCaches(event)
 	lib.Interrupt()
 end

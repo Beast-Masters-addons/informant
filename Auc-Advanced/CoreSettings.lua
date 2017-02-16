@@ -148,10 +148,12 @@ local settingDefaults = {
 	["core.scan.sellernamedelay"] = false,
 	["core.scan.unresolvedtolerance"] = 0,
 	["core.scan.scanallqueries"] = true,
+	["core.scan.fillduringscan"] = false,
 	["core.scan.scannerthrottle"] = Const.ALEVEL_MIN,
 	["core.scan.stage1throttle"] = Const.ALEVEL_OFF,
 	["core.scan.stage3garbage"] = Const.ALEVEL_OFF,
 	["core.scan.stage5garbage"] = false,
+	["core.scan.keepinfocacheonclose"] = false,
 	["core.tooltip.altchatlink_leftclick"] = false,
 	["core.tooltip.enableincombat"] = false,
 	["core.tooltip.depositcost"] = true,
@@ -594,6 +596,8 @@ function private._MakeGuiConfig() -- Name mangled to block gui creation at first
 	gui:AddControl(id, "Subhead", 0, "Experimental Settings (consult the forums before using these)")
 	gui:AddControl(id, "Selectbox",  0, 1, AucAdvanced.selectorActivityLevelB, "core.scan.scannerthrottle", 80, "Scanner stage: Throttle during fast scans")
 	gui:AddTip(id, "Slow down the Scanning stage during Getall scans. May help avoid disconnects during this stage. May result in missed auctions and incomplete scans")
+	gui:AddControl(id, "Checkbox",	0, 1, "core.scan.fillduringscan", "Scanner stage: Read extra item data early")
+	gui:AddTip(id, "Perform additional data gathering during the Scanning stage. This item data will otherwise be gathered during Processing Stage 1. This option may speed up overall scanning. Alternatively it may cause system freezes.")
 
 	gui:AddControl(id, "Selectbox",  0, 1, AucAdvanced.selectorActivityLevelA, "core.scan.stage1throttle", 80, "Processing Stage 1: Throttle processing speed")
 	gui:AddTip(id, "Throttle the speed of Stage 1 Processing. Applying this setting may help if you get disconnects during Stage 1")
@@ -601,6 +605,10 @@ function private._MakeGuiConfig() -- Name mangled to block gui creation at first
 	gui:AddTip(id, "Perform extra memory cleanup during Processing Stage 3. Will cause momentary freezes, and will cause Processing to take longer")
 	gui:AddControl(id, "Checkbox",	0, 1, "core.scan.stage5garbage", "Processing Finished: Extra memory cleanup")
 	gui:AddTip(id, "Perform extra memory cleanup when scan processing finishes. Will cause a momentary freeze at the end of every scan")
+	gui:AddControl(id, "Checkbox",	0, 1, "core.scan.keepinfocacheonclose", "Keep data in Item Info cache when AuctionHouse closed")
+	gui:AddTip(id, "Auctioneer Scanner stores some item data to help reduce the number of server calls it makes. Normally this is cleared when the AuctionHouse is closed, to free up some memory. Enabling this option retains the data until the end of the session.")
+
+
 
 	gui:AddHelp(id, "why show summation",
 		_TRANS('ADV_Help_WhyShowSummation'), --"What is the post scan summary?",
