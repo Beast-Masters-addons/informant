@@ -406,7 +406,13 @@ function private.OnEnterSnatch(button, row, index)
 		if link then
 			GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 			if link:match("|Hitem:%d") then
-				GameTooltip:SetHyperlink(link)
+				-- Some old-style links may be saved, which can cause problems for other Addons
+				-- As a workaround we shall pass them through GetItemInfo to 'fix' them
+				-- todo: fix saved copies of all links
+				local _, fixedlink = GetItemInfo(link)
+				if fixedlink then
+					GameTooltip:SetHyperlink(fixedlink)
+				end
 			elseif link:match("|Hbattlepet:%d") then
 				local _, speciesID, level, breedQuality, maxHealth, power, speed, battlePetID = strsplit(":", link)
 				-- BattlePetToolTip_Show gets the anchor point from GameTooltip
@@ -475,8 +481,8 @@ function lib.Search(item)
 	end
 	return false, "Not in snatch list"
 end
---Rescan is an optional method a searcher can implement that allows it to queue a rescan of teh ah
---Just pass any itemlinks you want rescaned
+--Rescan is an optional method a searcher can implement that allows it to queue a rescan of the AH
+--Just pass any itemlinks you want rescanned
 function lib.Rescan()
 	for itemsig, iteminfo in pairs(private.snatchList) do
 		local link = iteminfo.link
@@ -486,7 +492,7 @@ function lib.Rescan()
 	end
 end
 
---[[Snatch GUI functinality code]]
+--[[Snatch GUI functionality code]]
 function lib.AddSnatch(itemlink, price, percent, count)
 	local itemsig = GetSnatchSig(itemlink)
 	if not itemsig then return end
