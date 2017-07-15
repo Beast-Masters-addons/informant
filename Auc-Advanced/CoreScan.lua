@@ -999,6 +999,43 @@ local Commitfunction = function()
 	local dirtyCount, undirtyCount, expiredCount, corruptCount, matchedCount = 0, 0, 0, 0, 0
 	local filterDeleteCount, earlyDeleteCount, expiredDeleteCount, corruptDeleteCount = 0, 0, 0, 0
 
+	local printSummary, scanSize = false, ""
+	scanSize = TempcurQuery.qryinfo.scanSize
+	if scanSize=="Full" then
+		printSummary = get("scandata.summaryonfull");
+	elseif scanSize=="Partial" then
+		printSummary = get("scandata.summaryonpartial")
+	else -- scanSize=="Micro"
+		printSummary = get("scandata.summaryonmicro")
+	end
+	if (wasEndPagesOnly) then
+		scanSize = "TailScan-"..scanSize
+		printSummary = get("scandata.summaryonpartial") -- todo: do we want a separate "summary on end pages only" option?
+	elseif (TempcurQuery.qryinfo.nosummary) then
+		printSummary = false
+		scanSize = "NoSum-"..scanSize
+	end
+
+	local processors = {}
+	local modules = AucAdvanced.GetAllModules("AuctionFilter", "Filter")
+	for pos, engineLib in ipairs(modules) do
+		if (not processors.Filter) then processors.Filter = {} end
+		local x = {}
+		x.Name = engineLib.GetName()
+		x.Func = engineLib.AuctionFilter
+		tinsert(processors.Filter, x)
+	end
+	modules = AucAdvanced.GetAllModules("ScanProcessors")
+	for pos, engineLib in ipairs(modules) do
+		for op, func in pairs(engineLib.ScanProcessors) do
+			if (not processors[op]) then processors[op] = {} end
+			local x = {}
+			x.Name = engineLib.GetName()
+			x.Func = func
+			tinsert(processors[op], x)
+		end
+	end
+
 	do --[[ *** Stage 1 : pre-process the new scan ]]--
 		lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 1")
 		coroutine.yield() -- yield here to allow the bar to display, and help the frame rate a little
@@ -1172,6 +1209,25 @@ local Commitfunction = function()
 		end
 	end --[[ of Stage 1 ]]--
 
+	-- Send ScanProcessor message "begin"
+	-- This was previously sent before Stage 3, but has been moved to before Stage 2
+	-- (this means matchCount can no longer be included)
+	coroutine.yield()
+	local querySizeInfo = {
+		wasIncomplete = wasIncomplete,
+		wasGetAll = wasGetAll,
+		scanStarted = scanStarted,
+		wasUnrestricted = wasUnrestricted,
+		wasEarlyTerm = wasEarlyTerm,
+		hadGetError = hadGetError,
+		wasEndPagesOnly = wasEndPagesOnly,
+		Query = TempcurCommit.Query,
+		scanCount = scanCount,
+		printSummary = printSummary,
+		FallbackScanData = private.FallbackScanData,
+	}
+	processBeginEndStats(processors, "begin", querySizeInfo, nil)
+
 	--[[ *** Stage 2 : Pre-process image table : Mark all matching auctions as DIRTY, and build a LookUpTable *** ]]--
 	lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 2")
 	coroutine.yield() -- yield to allow updated bar to display
@@ -1230,57 +1286,6 @@ local Commitfunction = function()
 	lib.ProgressBars("CommitProgressBar", 100*progresscounter/progresstotal, true, "Auctioneer: Processing Stage 3")
 	coroutine.yield()
 
-	local processors = {}
-	local modules = AucAdvanced.GetAllModules("AuctionFilter", "Filter")
-	for pos, engineLib in ipairs(modules) do
-		if (not processors.Filter) then processors.Filter = {} end
-		local x = {}
-		x.Name = engineLib.GetName()
-		x.Func = engineLib.AuctionFilter
-		tinsert(processors.Filter, x)
-	end
-	modules = AucAdvanced.GetAllModules("ScanProcessors")
-	for pos, engineLib in ipairs(modules) do
-		for op, func in pairs(engineLib.ScanProcessors) do
-			if (not processors[op]) then processors[op] = {} end
-			local x = {}
-			x.Name = engineLib.GetName()
-			x.Func = func
-			tinsert(processors[op], x)
-		end
-	end
-
-	local printSummary, scanSize = false, ""
-	scanSize = TempcurQuery.qryinfo.scanSize
-	if scanSize=="Full" then
-		printSummary = get("scandata.summaryonfull");
-	elseif scanSize=="Partial" then
-		printSummary = get("scandata.summaryonpartial")
-	else -- scanSize=="Micro"
-		printSummary = get("scandata.summaryonmicro")
-	end
-	if (wasEndPagesOnly) then
-		scanSize = "TailScan-"..scanSize
-		printSummary = get("scandata.summaryonpartial") -- todo: do we want a separate "summary on end pages only" option?
-	elseif (TempcurQuery.qryinfo.nosummary) then
-		printSummary = false
-		scanSize = "NoSum-"..scanSize
-	end
-
-	local querySizeInfo = { }
-	querySizeInfo.wasIncomplete = wasIncomplete
-	querySizeInfo.wasGetAll = wasGetAll
-	querySizeInfo.scanStarted = scanStarted
-	querySizeInfo.wasUnrestricted = wasUnrestricted
-	querySizeInfo.wasEarlyTerm = wasEarlyTerm
-	querySizeInfo.hadGetError = hadGetError
-	querySizeInfo.wasEndPagesOnly = wasEndPagesOnly
-	querySizeInfo.Query = TempcurCommit.Query
-	querySizeInfo.matchCount = dirtyCount
-	querySizeInfo.scanCount = scanCount
-	querySizeInfo.printSummary = printSummary
-	querySizeInfo.FallbackScanData = private.FallbackScanData
-
 	local maskNotDirtyUnseen = bitnot(bitor(Const.FLAG_DIRTY, Const.FLAG_UNSEEN)) -- only calculate mask for clearing these flags once
 	local messageCreate = private.FallbackScanData and "fallbackcreate" or "create"
 
@@ -1294,9 +1299,6 @@ local Commitfunction = function()
 		garbageinterval = 10000
 	end
 
-	processBeginEndStats(processors, "begin", querySizeInfo, nil)
-
-	coroutine.yield()
 	nextPause = debugprofilestop() + processingTime
 	lastTime = time()
 	for index, data in ipairs(TempcurScan) do
