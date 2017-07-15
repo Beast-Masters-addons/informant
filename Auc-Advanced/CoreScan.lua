@@ -195,8 +195,8 @@ function private.LoadScanData()
 			private.FallbackScanData = reason
 		else
 			private.loadingScanData = "block" -- prevents re-entry to this function during the LoadAddOn call
-			load, reason = LoadAddOn("Auc-ScanData")
-			if load then
+			local loaded, reason = LoadAddOn("Auc-ScanData")
+			if loaded then
 				private.loadingScanData = "loading"
 			elseif reason then
 				private.loadingScanData = "fallback"
@@ -236,6 +236,8 @@ function private.LoadScanData()
 			serverKey = ResolveServerKey(serverKey)
 			if serverKey == Resources.ServerKey then
 				return scandata
+			else
+				return nil, "No Data"
 			end
 		end
 		-- fallback message
@@ -980,8 +982,18 @@ local Commitfunction = function()
 	end
 
 	local serverKey = Resources.ServerKey
-	local scandata = private.GetScanData(serverKey)
-	assert(scandata, "Critical error: scandata does not exist for serverKey "..serverKey)
+	local scandata, reason = private.GetScanData(serverKey)
+	if not scandata then
+		-- Critical Error Diagnostics
+		local scandatatext = "Unloaded"
+		local scanmodule = AucAdvanced.Modules.Util.ScanData
+		if scanmodule and scanmodule.GetAddOnInfo then
+			local ready, version = scanmodule.GetAddOnInfo()
+			scandatatext = strjoin(" ", "Loaded", tostringall(ready, version))
+		end
+		error(format("Critical error: scandata does not exist for serverKey %s\nReason = %s\nAuc-ScanData = %s\nFallback = %s",
+			tostringall(serverKey, reason, scandatatext, private.FallbackScanData)))
+	end
 	local now = time()
 	if get("scancommit.progressbar") then
 		lib.ProgressBars("CommitProgressBar", 0, true)

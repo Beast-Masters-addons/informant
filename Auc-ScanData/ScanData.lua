@@ -377,11 +377,13 @@ end
 
 private.dataCache = {}
 function lib.GetScanData(serverKey)
-	if not private.isLoaded then return end
+	if not private.isLoaded then
+		return nil, "Not Loaded"
+	end
 	serverKey = ResolveServerKey(serverKey)
 	if not serverKey then
 		debugPrint("AucScanData: invalid serverKey passed to GetScanData", "ScanData", "Invalid serverKey", "Error")
-		return
+		return nil, "Invalid serverKey"
 	end
 
 	local cache = private.dataCache[serverKey]
@@ -401,7 +403,10 @@ function lib.GetScanData(serverKey)
 			scandata = clone
 		end
 	else -- no scandata for this serverKey
-		if not livedata then return end -- don't create new scandata if not 'live'
+		if not livedata then
+			-- don't create new scandata if not 'live'
+			return nil, "No Data"
+		end
 		scandata = {image = {}, scanstats = {ImageUpdated = time()}}
 		AucScanData.scans[serverKey] = scandata
 	end
@@ -539,7 +544,7 @@ local function OnLoadRunOnce()
 	aucPrint("Auctioneer: {{ScanData}} loaded.")
 	private.UpgradeDB()
 	if LookForOldData then LookForOldData() end
-	private.isLoaded = Resources.Active
+	private.isLoaded = private.isLoaded or Resources.Active
 	lib.GetScanData() -- force unpack of home data
 end
 function lib.OnLoad()
