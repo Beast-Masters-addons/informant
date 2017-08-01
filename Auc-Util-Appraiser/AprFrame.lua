@@ -1909,6 +1909,9 @@ function private.CreateFrames()
 	frame.itembox:SetWidth(240)
 	frame.itembox:SetHeight(340)
 
+	local soundCheckBoxOn = PlaySoundKitID and "igMainMenuOptionCheckBoxOn" or SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON -- HYBRID73
+	local soundCheckBoxOff = PlaySoundKitID and "igMainMenuOptionCheckBoxOff" or SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF -- HYBRID73
+
 	-- "Show Auctions" checkbox
 	frame.itembox.showAuctions = CreateFrame("CheckButton", "Auc_Util_Appraiser_ShowAuctions", frame.itembox, "OptionsCheckButtonTemplate")
 	frame.itembox.showAuctions:SetScript("OnEnter", function(self) return frame.SetButtonTooltip(self, _TRANS('APPR_HelpTooltip_IncludeAuctionsListing') ) end)--Include own auctions in the item listing
@@ -1921,7 +1924,7 @@ function private.CreateFrames()
 	frame.itembox.showAuctions:SetScript("OnClick", function(self)
 		frame.showAuctions = self:GetChecked()
 		frame.GenerateList(true)
-		PlaySound(frame.showAuctions and "igMainMenuOptionCheckBoxOn" or "igMainMenuOptionCheckBoxOff");
+		PlaySound(frame.showAuctions and soundCheckBoxOn or soundCheckBoxOff) -- HYBRID73
 	end)
 
 	-- "Show Hidden" checkbox
@@ -1936,7 +1939,7 @@ function private.CreateFrames()
 	frame.itembox.showHidden:SetScript("OnClick", function(self)
 		frame.showHidden = self:GetChecked()
 		frame.GenerateList(true)
-		PlaySound(frame.showHidden and "igMainMenuOptionCheckBoxOn" or "igMainMenuOptionCheckBoxOff");
+		PlaySound(frame.showHidden and soundCheckBoxOn or soundCheckBoxOff) -- HYBRID73
 	end)
 
 	-- "Show:" label

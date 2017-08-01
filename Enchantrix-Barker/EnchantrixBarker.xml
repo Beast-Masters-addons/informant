@@ -58,7 +58,7 @@ xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 	<Button name="Enchantrix_BarkerOptions_FrameTabTemplate" inherits="CharacterFrameTabButtonTemplate" virtual="true">
 		<Scripts>
 			<OnClick>
-				PlaySound("igCharacterInfoTab");
+				PlaySound(PlaySoundKitID  and "igCharacterInfoTab" or SOUNDKIT.IG_CHARACTER_INFO_TAB); -- HYBRID73
 
 				local frame = self:GetParent()
 				PanelTemplates_SetTab(frame, self:GetID());
