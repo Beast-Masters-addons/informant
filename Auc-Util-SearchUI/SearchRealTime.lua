@@ -338,6 +338,20 @@ function lib.ScanPage()
 	wipe(private.searchertable)
 end
 
+
+-- Conversion table for PlaySound change -- HYBRID73
+local lookupSound
+if SOUNDKIT then
+	lookupSound = {
+		["LEVELUP"] = 888, -- not in SOUNDKIT
+		["AuctionWindowOpen"] = SOUNDKIT.AUCTION_WINDOW_OPEN,
+		["AuctionWindowClose"] = SOUNDKIT.AUCTION_WINDOW_CLOSE,
+		["RaidWarning"] = SOUNDKIT.RAID_WARNING,
+	}
+else
+	lookupSound = {}
+end
+
 --private.alert()
 --alerts the user that a deal has been found,
 --both by opening the searchUI panel and playing a sound
@@ -361,7 +375,7 @@ function private.alert(link, cost, reason)
 		if SoundPath == "DoorBell" then
 			PlaySoundFile(embedpath.."Auc-Util-SearchUI\\DoorBell.mp3")
 		else
-			PlaySound(SoundPath)
+			PlaySound(lookupSound[SoundPath] or SoundPath) -- HYBRID73
 		end
 	end
 end
