@@ -237,7 +237,7 @@ function private.LoadScanData()
 			if serverKey == Resources.ServerKey then
 				return scandata
 			else
-				return nil, "No Data"
+				return nil, "No Fallback Data"
 			end
 		end
 		-- fallback message
@@ -270,8 +270,11 @@ function private.GetScanData(serverKey)
 		local newfunc = private.LoadScanData()
 		if newfunc then
 			return newfunc(serverKey)
+		else
+			return nil, "Stub Loader Still Loading"
 		end
 	end
+	return nil, "Stub Loader Failed"
 end
 
 -- AucAdvanced.Scan.ClearScanData(serverKey)
@@ -991,8 +994,8 @@ local Commitfunction = function()
 			local ready, version = scanmodule.GetAddOnInfo()
 			scandatatext = strjoin(" ", "Loaded", tostringall(ready, version))
 		end
-		error(format("Critical error: scandata does not exist for serverKey %s\nReason = %s\nAuc-ScanData = %s\nFallback = %s",
-			tostringall(serverKey, reason, scandatatext, private.FallbackScanData)))
+		error(format("Critical error: scandata does not exist for serverKey %s\nReason = %s\nAuc-ScanData = %s\nFallback = %s , %s",
+			tostringall(serverKey, reason, scandatatext, private.FallbackScanData, private.loadingScanData)))
 	end
 	local now = time()
 	if get("scancommit.progressbar") then
