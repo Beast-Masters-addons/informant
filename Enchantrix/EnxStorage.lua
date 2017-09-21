@@ -245,6 +245,7 @@ end
 
 
 function getItemDisenchants(link)
+	local sig
 	local iType = Enchantrix.Util.GetIType(link)
 		
 	if (not iType) then
