@@ -323,7 +323,6 @@ end
 local function OnEnteringWorld(frame)
 	frame:UnregisterEvent("PLAYER_ENTERING_WORLD") -- we only want the first instance of this event
 	OnEnteringWorld = nil
-	if not AucAdvanced then return end -- Shouldn't happen as CoreManifest creates the basic table first thing
 	AucAdvanced.CoreFileCheckOut() -- calling with no filename to finalize check in/out process
 	if AucAdvanced.ABORTLOAD then
 		-- something's gone wrong - abort loading
@@ -333,6 +332,7 @@ local function OnEnteringWorld(frame)
 		print("Auctioneer load aborted: "..AucAdvanced.ABORTLOAD)
 		return
 	end
+	AucAdvanced.Print(format("Auctioneer loaded (version %s)", AucAdvanced.Version))
 
 	frame:RegisterEvent("ITEM_LOCK_CHANGED")
 	frame:RegisterEvent("BAG_UPDATE")

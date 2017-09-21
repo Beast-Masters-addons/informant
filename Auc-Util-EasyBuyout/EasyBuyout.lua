@@ -63,7 +63,7 @@ function lib.Processors.configchanged(callbackType, ...)
 end
 
 function lib.OnLoad()
-	print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
+	--print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
 
 	-- Silent Mode Option
 	AucAdvanced.Settings.SetDefault("util.EasyBuyout.silentmode", false);

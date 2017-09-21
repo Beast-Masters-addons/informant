@@ -64,7 +64,7 @@ lib.Processors.config = lib.Processor
 lib.Processors.configchanged = lib.Processor
 
 function lib.OnLoad()
-	print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
+	--print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
 	AucAdvanced.Settings.SetDefault("util.scanstart.activated", true)
 	AucAdvanced.Settings.SetDefault("util.scanstart.debug", false)
 

@@ -76,7 +76,7 @@ lib.Processors = {
 }
 
 function lib.OnLoad()
-	aucPrint("Auctioneer: {{"..libType..":"..libName.."}} loaded!")
+	--aucPrint("Auctioneer: {{"..libType..":"..libName.."}} loaded!")
 	default("util.scanfinish.activated", true)
 	default("util.scanfinish.shutdown", false)
 	default("util.scanfinish.logout", false)

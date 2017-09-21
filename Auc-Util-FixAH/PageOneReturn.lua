@@ -85,7 +85,7 @@ end
 function lib.OnLoad()
 	--This function is called when your variables have been loaded.
 	--You should also set your Configator defaults here
-	print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
+	--print("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
 	AucAdvanced.Settings.SetDefault("util.fixah.pageonereturn", true)
 end
 

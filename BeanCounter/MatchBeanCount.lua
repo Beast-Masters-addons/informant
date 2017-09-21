@@ -126,7 +126,7 @@ function lib.GetMatchArray(hyperlink, marketprice, serverKey)
 end
 
 function lib.OnLoad()
-	aucPrint("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
+	--aucPrint("AucAdvanced: {{"..libType..":"..libName.."}} loaded!")
 	default("match.beancount.enable", false)
 	default("match.beancount.daterange", false)
 	--default("match.beancount.matchstacksize", false)
