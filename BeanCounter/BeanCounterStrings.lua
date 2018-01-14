@@ -624,6 +624,7 @@ BeanCounterLocalizations = {
 		["MailAllianceAuctionHouse"]	= "Hôtel des ventes de l'Alliance";
 		["MailHordeAuctionHouse"]	= "Hôtel des ventes de la Horde";
 		["MailNeutralAuctionHouse"]	= "Maison des ventes aux-enchères de Blackwater";
+		["MailSenderAuctionHouse"]	= "Hotel des ventes";
 
 		-- Section: Tooltip Messages
 		["TTDateString"]	= "Entrez le format voulu d'affichage de votre date.Par défaut c'est %c";
