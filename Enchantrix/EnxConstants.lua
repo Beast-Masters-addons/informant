@@ -45,7 +45,6 @@ const.StaticPrices = {
 	[52722] =  100000, -- Maelstrom Crystal
 	[34057] =   50000, -- Abyss Crystal
 	[22450] =   10000, -- Void Crystal
-	[20725] =   10000, -- Nexus Crystal
 
 	[111245] = 100000, -- Luminous Shard
 	[74247] =   50000, -- Etheral Shard
@@ -53,30 +52,18 @@ const.StaticPrices = {
 	[34052] =   70000, -- Dream Shard
 	[22449] =   50000, -- Large Prismatic Shard
 	[14344] =   25000, -- Large Brilliant Shard
-	[11178] =  110000, -- Large Radiant Shard
-	[11139] =   10000, -- Large Glowing Shard
-	[11084] =    6000, -- Large Glimmering Shard
 
 	[115502] =  70000, -- Small Luminous Shard
---	[113589] =    100, -- Azurian Shard				-- not used
 	[74252] =   40000, -- Small Etheral Shard
 	[52720] =   12000, -- Small Heavenly Shard
 	[34053] =   10000, -- Small Dream Shard
 	[22448] =   20000, -- Small Prismatic Shard
 	[14343] =   23000, -- Small Brilliant Shard
-	[11177] =   20000, -- Small Radiant Shard
-	[11138] =    1000, -- Small Glowing Shard
-	[10978] =     700, -- Small Glimmering Shard
 
---	[111247] =    100, -- Blackfire Essence			-- never used
---	[74251] =  500000, -- Greater Mysterious Essence - never used
 	[52719] =   20000, -- Greater Celestial Essence
 	[34055] =   20000, -- Greater Cosmic Essence
 	[22446] =   10000, -- Greater Planar Essence
 	[16203] =   10000, -- Greater Eternal Essence
-	[11175] =    7000, -- Greater Nether Essence
-	[11135] =    7000, -- Greater Mystic Essence
-	[11082] =    7000, -- Greater Astral Essence
 	[10939] =    7000, -- Greater Magic Essence
 
 	[74250] =   50000, -- Mysterious Essence
@@ -84,9 +71,6 @@ const.StaticPrices = {
 	[34056] =   35000, -- Lesser Cosmic Essence
 	[22447] =   28000, -- Lesser Planar Essence
 	[16202] =   22500, -- Lesser Eternal Essence
-	[11174] =   15000, -- Lesser Nether Essence
-	[11134] =    7500, -- Lesser Mystic Essence
-	[10998] =    5000, -- Lesser Astral Essence
 	[10938] =    6000, -- Lesser Magic Essence
 
 	[109693] =  50000, -- Draenic Dust
@@ -95,9 +79,6 @@ const.StaticPrices = {
 	[34054] =   27500, -- Infinite Dust
 	[22445] =   12500, -- Arcane Dust
 	[16204] =   15000, -- Illusion Dust
-	[11176] =   10000, -- Dream Dust
-	[11137] =    8000, -- Vision Dust
-	[11083] =    5000, -- Soul Dust
 	[10940] =    7000, -- Strange Dust
 	
 	--- Legion - needs update
@@ -368,34 +349,36 @@ const.InventoryTypes = {
 
 -- Enchanting reagents
 local VOID = 22450
-local NEXUS = 20725
+--local NEXUS = 20725
 local LPRISMATIC = 22449
 local LBRILLIANT = 14344
-local LRADIANT = 11178
-local LGLOWING = 11139
-local LGLIMMERING = 11084
+--local LRADIANT = 11178
+--local LGLOWING = 11139
+--local LGLIMMERING = 11084
 local SPRISMATIC = 22448
 local SBRILLIANT = 14343
-local SRADIANT = 11177
-local SGLOWING = 11138
-local SGLIMMERING = 10978
+--local SRADIANT = 11177
+--local SGLOWING = 11138
+--local SGLIMMERING = 10978
 local GPLANAR = 22446
 local GETERNAL = 16203
-local GNETHER = 11175
-local GMYSTIC = 11135
-local GASTRAL = 11082
+--local GNETHER = 11175
+--local GMYSTIC = 11135
+--local GASTRAL = 11082
 local GMAGIC = 10939
 local LPLANAR = 22447
 local LETERNAL = 16202
-local LNETHER = 11174
-local LMYSTIC = 11134
-local LASTRAL = 10998
+--local LNETHER = 11174
+--local LMYSTIC = 11134
+--local LASTRAL = 10998
 local LMAGIC = 10938
 local ARCANE = 22445
+
+local RILLUSION = 156930
 local ILLUSION = 16204
-local DREAM = 11176
-local VISION = 11137
-local SOUL = 11083
+--local DREAM = 11176
+--local VISION = 11137
+--local SOUL = 11083
 local STRANGE = 10940
 
 local DREAM_SHARD = 34052
@@ -445,7 +428,6 @@ const.DisenchantReagentList = {
 	MAELSTROM,
 	ABYSS,
 	VOID,
-	NEXUS,
 
 	LEYLIGHT_SHARD,
 	LUMINOUS,
@@ -454,30 +436,18 @@ const.DisenchantReagentList = {
 	34052, -- Dream Shard
 	22449, -- Large Prismatic Shard
 	14344, -- Large Brilliant Shard
-	11178, -- Large Radiant Shard
-	11139, -- Large Glowing Shard
-	11084, -- Large Glimmering Shard
 
 	SLUMINOUS,
---	AZURIAN, -- not used
 	SETHERAL,
 	52720, -- Small Heavenly Shard
 	34053, -- Small Dream Shard
 	22448, -- Small Prismatic Shard
 	14343, -- Small Brilliant Shard
-	11177, -- Small Radiant Shard
-	11138, -- Small Glowing Shard
-	10978, -- Small Glimmering Shard
 
---	BLACKFIRE, -- not used
---	GMYSTERIOUS, -- never used
 	52719, -- Greater Celestial Essence
 	34055, -- Greater Cosmic Essence
 	22446, -- Greater Planar Essence
 	16203, -- Greater Eternal Essence
-	11175, -- Greater Nether Essence
-	11135, -- Greater Mystic Essence
-	11082, -- Greater Astral Essence
 	10939, -- Greater Magic Essence
 
 	74250, -- Mysterious Essence
@@ -485,22 +455,17 @@ const.DisenchantReagentList = {
 	34056, -- Lesser Cosmic Essence
 	22447, -- Lesser Planar Essence
 	16202, -- Lesser Eternal Essence
-	11174, -- Lesser Nether Essence
-	11134, -- Lesser Mystic Essence
-	10998, -- Lesser Astral Essence
 	10938, -- Lesser Magic Essence
 
 	ARKHANA,
 	DRAENIC,
 	SPIRIT,
-	52555, -- Hypnotic Dust
-	34054, -- Infinite Dust
-	22445, -- Arcane Dust
-	16204, -- Illusion Dust
-	11176, -- Dream Dust
-	11137, -- Vision Dust
-	11083, -- Soul Dust
-	10940, -- Strange Dust
+	 52555, -- Hypnotic Dust
+	 34054, -- Infinite Dust
+	 22445, -- Arcane Dust
+	156930,	-- Rich Illusion Dust
+	 16204, -- Light Illusion Dust
+	 10940, -- Strange Dust
 
 }
 
@@ -518,18 +483,14 @@ local EPIC = 4
 const.baseDisenchantTable = {
  [UNCOMMON] = {
   [const.WEAPON] = {
-   ["bounds"] = { 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
-   [15]  = { { STRANGE , 0.20, 1.5 }, { LMAGIC  , 0.80, 1.5 }, },
-   [20]  = { { STRANGE , 0.20, 2.5 }, { GMAGIC  , 0.75, 1.5 }, { SGLIMMERING, 0.05, 1.0 }, },
-   [25]  = { { STRANGE , 0.15, 5.0 }, { LASTRAL , 0.75, 1.5 }, { SGLIMMERING, 0.10, 1.0 }, },
-   [30]  = { { SOUL    , 0.20, 1.5 }, { GASTRAL , 0.75, 1.5 }, { LGLIMMERING, 0.05, 1.0 }, },
-   [35]  = { { SOUL    , 0.20, 3.5 }, { LMYSTIC , 0.75, 1.5 }, { SGLOWING   , 0.05, 1.0 }, },
-   [40]  = { { VISION  , 0.20, 1.5 }, { GMYSTIC , 0.75, 1.5 }, { LGLOWING   , 0.05, 1.0 }, },
-   [45]  = { { VISION  , 0.20, 3.5 }, { LNETHER , 0.75, 1.5 }, { SRADIANT   , 0.05, 1.0 }, },
-   [50]  = { { DREAM   , 0.20, 1.5 }, { GNETHER , 0.75, 1.5 }, { LRADIANT   , 0.05, 1.0 }, },
-   [55]  = { { DREAM   , 0.20, 3.5 }, { LETERNAL, 0.75, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
-   [60]  = { { ILLUSION, 0.20, 1.5 }, { GETERNAL, 0.75, 1.5 }, { LBRILLIANT , 0.05, 1.0 }, },
-   [65]  = { { ILLUSION, 0.20, 3.5 }, { GETERNAL, 0.75, 2.5 }, { LBRILLIANT , 0.05, 1.0 }, },
+   ["bounds"] = { 15, 20, 25, 45, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
+   [15]  = { { STRANGE, 0.20, 1.5 }, { LMAGIC, 0.80, 1.5 } },
+   [20]  = { { STRANGE, 0.25, 2.5 }, { GMAGIC, 0.75, 1.5 } },
+   [25]  = { { STRANGE, 0.25, 5.0 }, { GMAGIC, 0.75, 1.5 } },
+   
+   [45]  = { { ILLUSION , 0.20, 1.5 }, { LETERNAL, 0.75, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [65]  = { { RILLUSION, 0.20, 1.5 }, { GETERNAL, 0.75, 1.5 }, { LBRILLIANT , 0.05, 1.0 }, },
+   
    [99]  = { { ARCANE  , 0.20, 2.5 }, { LPLANAR , 0.75, 2.5 }, { SPRISMATIC , 0.05, 1.0 }, },
    [120] = { { ARCANE  , 0.20, 3.5 }, { GPLANAR , 0.75, 1.5 }, { LPRISMATIC , 0.05, 1.0 }, },	-- highest level BC green
    [151] = { { INFINITE, 0.20, 2.5 }, { LCOSMIC , 0.75, 1.5 }, { SDREAM_SHARD, 0.05, 1.0 }, },
@@ -551,18 +512,14 @@ const.baseDisenchantTable = {
 	
    },
   [const.ARMOR] = {
-   ["bounds"] = { 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
-   [15]  = { { STRANGE , 0.80, 1.5 }, { LMAGIC  , 0.20, 1.5 }, },
-   [20]  = { { STRANGE , 0.75, 2.5 }, { GMAGIC  , 0.20, 1.5 }, { SGLIMMERING, 0.05, 1.0 }, },
-   [25]  = { { STRANGE , 0.75, 5.0 }, { LASTRAL , 0.15, 1.5 }, { SGLIMMERING, 0.10, 1.0 }, },
-   [30]  = { { SOUL    , 0.75, 1.5 }, { GASTRAL , 0.20, 1.5 }, { LGLIMMERING, 0.05, 1.0 }, },
-   [35]  = { { SOUL    , 0.75, 3.5 }, { LMYSTIC , 0.20, 1.5 }, { SGLOWING   , 0.05, 1.0 }, },
-   [40]  = { { VISION  , 0.75, 1.5 }, { GMYSTIC , 0.20, 1.5 }, { LGLOWING   , 0.05, 1.0 }, },
-   [45]  = { { VISION  , 0.75, 3.5 }, { LNETHER , 0.20, 1.5 }, { SRADIANT   , 0.05, 1.0 }, },
-   [50]  = { { DREAM   , 0.75, 1.5 }, { GNETHER , 0.20, 1.5 }, { LRADIANT   , 0.05, 1.0 }, },
-   [55]  = { { DREAM   , 0.75, 3.5 }, { LETERNAL, 0.20, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
-   [60]  = { { ILLUSION, 0.75, 1.5 }, { GETERNAL, 0.20, 1.5 }, { LBRILLIANT , 0.05, 1.0 }, },
-   [65]  = { { ILLUSION, 0.75, 3.5 }, { GETERNAL, 0.20, 2.5 }, { LBRILLIANT , 0.05, 1.0 }, },
+   ["bounds"] = { 15, 20, 25, 45, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
+   [15]  = { { STRANGE, 0.80, 1.5 }, { LMAGIC, 0.20, 1.5 } },
+   [20]  = { { STRANGE, 0.75, 2.5 }, { GMAGIC, 0.25, 1.5 } },
+   [25]  = { { STRANGE, 0.75, 5.0 }, { GMAGIC, 0.25, 1.5 } },
+   
+   [45]  = { { ILLUSION , 0.75, 1.5 }, { LETERNAL, 0.20, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [65]  = { { RILLUSION, 0.75, 1.5 }, { GETERNAL, 0.20, 1.5 }, { LBRILLIANT , 0.05, 1.0 }, },
+   
    [99]  = { { ARCANE  , 0.75, 2.5 }, { LPLANAR , 0.20, 2.5 }, { SPRISMATIC , 0.05, 1.0 }, },
    [120] = { { ARCANE  , 0.75, 3.5 }, { GPLANAR , 0.20, 1.5 }, { LPRISMATIC , 0.05, 1.0 }, },	-- highest level BC green
    [151] = { { INFINITE, 0.75, 2.5 }, { LCOSMIC , 0.20, 1.5 }, { SDREAM_SHARD, 0.05, 1.0 }, },
@@ -588,15 +545,11 @@ const.baseDisenchantTable = {
  	-- weapon lookups will fall back to the armor table
  	-- 1% chance for better shard appears to have been removed in Cataclysm
   [const.ARMOR] = {
-   ["bounds"] = { 25, 30, 35, 40, 45, 50, 55, 65, 99, 120, 164, 200, 316, 380, 424, 449, 450, 500, 700, 900 },
-   [25]  = { { SGLIMMERING,     1.00, 1.0 } },
-   [30]  = { { LGLIMMERING,     1.00, 1.0 } },
-   [35]  = { { SGLOWING,        1.00, 1.0 } },
-   [40]  = { { LGLOWING,        1.00, 1.0 } },
-   [45]  = { { SRADIANT,        1.00, 1.0 } },
-   [50]  = { { LRADIANT,        1.00, 1.0 } },
-   [55]  = { { SBRILLIANT,      1.00, 1.0 } },
-   [65]  = { { LBRILLIANT,      1.00, 1.0 } },
+   ["bounds"] = { 30, 45, 60, 99, 120, 164, 200, 316, 380, 424, 449, 450, 500, 700, 900 },
+   [30]  = { { GMAGIC,      	1.00, 2.0 } },
+   [45]  = { { SBRILLIANT,      1.00, 1.0 } },
+   [60]  = { { LBRILLIANT,      1.00, 1.0 } },
+   
    [99]  = { { SPRISMATIC,      1.00, 1.0 } },
    [120] = { { LPRISMATIC,      1.00, 1.0 } },
    [164] = { { SDREAM_SHARD,    1.00, 1.0 } },
@@ -616,13 +569,9 @@ const.baseDisenchantTable = {
  [EPIC] = {
  	-- weapon lookups will fall back to the armor table
   [const.ARMOR] = {
-   ["bounds"] = { 40, 45, 50, 55, 60, 94, 99, 164, 299, 419, 495, 630, 750, 1000 },
-   [40]  = { { SRADIANT,    1.00, 3.0 } },
-   [45]  = { { SRADIANT,    1.00, 3.5 } },
-   [50]  = { { LRADIANT,    1.00, 3.5 } },
-   [55]  = { { SBRILLIANT,  1.00, 3.5 } },
-   [60]  = { { NEXUS,       1.00, 1.0 } },
-   [94]  = { { NEXUS,       1.00, 1.5 } },	-- highest level classic item is 94, first BC epic is 95
+   ["bounds"] = { 55, 94, 99, 164, 299, 419, 495, 630, 750, 1000 },
+   [55]  = { { SBRILLIANT,  1.00, 1.5 } },
+   [94]  = { { LBRILLIANT,  1.00, 1.0 } },	-- highest level classic item is 94, first BC epic is 95
    [99]  = { { VOID,        1.00, 1.0 } },
    [164] = { { VOID,        1.00, 1.5 } },	-- highest level BC epic is 164, first LK epic is 200
    [299] = { { ABYSS,       1.00, 1.0 } },	-- highest level LK epic is 284, first Cata epic is 300
@@ -631,7 +580,7 @@ const.baseDisenchantTable = {
    [630] = { { SHA_CRYSTAL, 1.00, 1.0 } },	-- highest level Panda epic so far is 600
    [750] = { { TEMPORAL,    1.00, 1.0 } },	-- first WoD epic is 640, highest WoD epic is 715, crossover is between 745 and 775
 
-   [1000] =  { {CHAOS_CRYSTAL, 1.00, 1.0 } },	-- first Legion epic is 725 (gives temporal), highest Legion epic is currently 905
+   [1200] =  { {CHAOS_CRYSTAL, 1.00, 1.0 } },	-- first Legion epic is 725 (gives temporal), highest Legion epic is currently 1000
    
   },
  },
@@ -648,17 +597,15 @@ const.ReverseDisenchantLevelList = {
 	
 	[CHAOS_CRYSTAL] = { 750, 900 },	-- Chaos Crystal
 	[TEMPORAL]	  = { 631, 749 }, -- Temporal Crystal
---	[FRACTEMPORAL]	  = { 601, 800 }, -- Fractured Temporal Crystal			-- doesn't seem to come from Disenchanting, unless underskilled
+--	[FRACTEMPORAL]	  = { 601, 800 }, -- Fractured Temporal Crystal			-- underskilled result
 	[SHA_CRYSTAL] = { 496, 630 }, -- Sha Crystal
 	[SHA_FRAGMENT] = { 420, 495 }, -- Sha Crystal Fragment
 	[MAELSTROM]   = { 300, 419 }, -- Maelstrom Crystal
 	[ABYSS]       = { 165, 299 }, -- Abyss Crystal
 	[VOID]        = {  95, 164 }, -- Void Crystal
-	[NEXUS]       = {  56,  94 }, -- Nexus Crystal
 	
 	[LEYLIGHT_SHARD]  = { 700, 900 }, -- Leylight Shard
 	[LUMINOUS]		  = { 501, 699 }, -- Luminous Shards
---	[AZURIAN]		  =	{ 501, 800 }, -- Azurian Shards				-- not used
 	[ETHERAL] 		  = { 425, 500 }, -- Etheral Shard
 	[SETHERAL]        = { 380, 424 }, -- Small Etheral Shard
 	[HEAVENLY_SHARD]  = { 317, 379 }, -- Heavenly Shard
@@ -668,15 +615,8 @@ const.ReverseDisenchantLevelList = {
 	[LPRISMATIC]      = { 100, 120 }, -- Large Prismatic Shard
 	[SPRISMATIC]      = {  66,  99 }, -- Small Prismatic Shard
 	[LBRILLIANT]      = {  56,  65 }, -- Large Brilliant Shard
-	[SBRILLIANT]      = {  51,  55 }, -- Small Brilliant Shard
-	[LRADIANT]        = {  46,  50 }, -- Large Radiant Shard
-	[SRADIANT]        = {  41,  45 }, -- Small Radiant Shard
-	[LGLOWING]        = {  36,  40 }, -- Large Glowing Shard
-	[SGLOWING]        = {  31,  35 }, -- Small Glowing Shard
-	[LGLIMMERING]     = {  26,  30 }, -- Large Glimmering Shard
-	[SGLIMMERING]     = {  1,   25 }, -- Small Glimmering Shard
+	[SBRILLIANT]      = {  51,  55 }, -- Small Brilliant Shard	-- TODO - update levels!
 	
---	[BLACKFIRE]	  = { 451, 800 }, -- Blackfire Essence					-- not used
 	[MYSTERIOUS]  = { 351, 450 }, -- Mysterious Essence
 	[GCELESTIAL]  = { 306, 350 }, -- Greater Celestial Essence
 	[LCELESTIAL]  = { 201, 305 }, -- Lesser Celestial Essence
@@ -684,15 +624,9 @@ const.ReverseDisenchantLevelList = {
 	[LCOSMIC]     = { 121, 151 }, -- Lesser Cosmic Essence
 	[GPLANAR]     = { 100, 120 }, -- Greater Planar Essence
 	[LPLANAR]     = {  66,  99 }, -- Lesser Planar Essence
-	[GETERNAL]    = {  56,  65 }, -- Greater Eternal Essence
-	[LETERNAL]    = {  51,  55 }, -- Lesser Eternal Essence
-	[GNETHER]     = {  46,  50 }, -- Greater Nether Essence
-	[LNETHER]     = {  41,  45 }, -- Lesser Nether Essence
-	[GMYSTIC]     = {  36,  40 }, -- Greater Mystic Essence
-	[LMYSTIC]     = {  31,  35 }, -- Lesser Mystic Essence
-	[GASTRAL]     = {  26,  30 }, -- Greater Astral Essence
-	[LASTRAL]     = {  21,  25 }, -- Lesser Astral Essence
-	[GMAGIC]      = {  16,  20 }, -- Greater Magic Essence
+	[GETERNAL]    = {  46,  65 }, -- Greater Eternal Essence	-- TODO - update levels!
+	[LETERNAL]    = {  26,  45 }, -- Lesser Eternal Essence
+	[GMAGIC]      = {  16,  25 }, -- Greater Magic Essence
 	[LMAGIC]      = {   1,  15 }, -- Lesser Magic Essence
 	
 	[ARKHANA]  = { 650, 900 }, -- Arkhana
@@ -701,10 +635,8 @@ const.ReverseDisenchantLevelList = {
 	[HYPNOTIC] = { 201, 350 }, -- Hypnotic Dust
 	[INFINITE] = { 121, 200 }, -- Infinite Dust
 	[ARCANE]   = {  66, 120 }, -- Arcane Dust
-	[ILLUSION] = {  56,  65 }, -- Illusion Dust
-	[DREAM]    = {  46,  55 }, -- Dream Dust
-	[VISION]   = {  36,  45 }, -- Vision Dust
-	[SOUL]     = {  26,  35 }, -- Soul Dust
+	[RILLUSION] = { 46,  65 }, -- Rich Illusion Dust
+	[ILLUSION] = {  26,  45 }, -- Light Illusion Dust
 	[STRANGE]  = {   1,  25 }, -- Strange Dust
 
 }
@@ -750,21 +682,21 @@ const.BackupReagentItemInfo = {
 	[10938] = "Lesser Magic Essence#|cff1eff00|Hitem:10938:0:0:0:0:0:0:0:100:105:0:0:0|h[Lesser Magic Essence]|h|r#2#10#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceMagicSmall.blp",
 	[10939] = "Greater Magic Essence#|cff1eff00|Hitem:10939:0:0:0:0:0:0:0:100:105:0:0:0|h[Greater Magic Essence]|h|r#2#15#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceMagicLarge.blp",
 	[10940] = "Strange Dust#|cffffffff|Hitem:10940:0:0:0:0:0:0:0:100:105:0:0:0|h[Strange Dust]|h|r#1#10#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustStrange.blp",
-	[10978] = "Small Glimmering Shard#|cff0070dd|Hitem:10978:0:0:0:0:0:0:0:100:267:0:0:0|h[Small Glimmering Shard]|h|r#3#20#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlimmeringSmall.blp",
-	[10998] = "Lesser Astral Essence#|cff1eff00|Hitem:10998:0:0:0:0:0:0:0:100:261:0:0:0|h[Lesser Astral Essence]|h|r#2#20#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceAstralSmall.blp",
-	[11082] = "Greater Astral Essence#|cff1eff00|Hitem:11082:0:0:0:0:0:0:0:100:104:0:0:0|h[Greater Astral Essence]|h|r#2#25#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceAstralLarge.blp",
-	[11083] = "Soul Dust#|cffffffff|Hitem:11083:0:0:0:0:0:0:0:100:104:0:0:0|h[Soul Dust]|h|r#1#25#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustSoul.blp",
-	[11084] = "Large Glimmering Shard#|cff0070dd|Hitem:11084:0:0:0:0:0:0:0:100:104:0:0:0|h[Large Glimmering Shard]|h|r#3#25#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlimmeringLarge.blp",
-	[11134] = "Lesser Mystic Essence#|cff1eff00|Hitem:11134:0:0:0:0:0:0:0:100:251:0:0:0|h[Lesser Mystic Essence]|h|r#2#30#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceMysticalSmall.blp",
-	[11135] = "Greater Mystic Essence#|cff1eff00|Hitem:11135:0:0:0:0:0:0:0:100:261:0:0:0|h[Greater Mystic Essence]|h|r#2#35#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceMysticalLarge.blp",
-	[11137] = "Vision Dust#|cffffffff|Hitem:11137:0:0:0:0:0:0:0:100:105:0:0:0|h[Vision Dust]|h|r#1#35#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustVision.blp",
-	[11138] = "Small Glowing Shard#|cff0070dd|Hitem:11138:0:0:0:0:0:0:0:100:251:0:0:0|h[Small Glowing Shard]|h|r#3#30#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlowingSmall.blp",
-	[11139] = "Large Glowing Shard#|cff0070dd|Hitem:11139:0:0:0:0:0:0:0:100:261:0:0:0|h[Large Glowing Shard]|h|r#3#35#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlowingLarge.blp",
-	[11174] = "Lesser Nether Essence#|cff1eff00|Hitem:11174:0:0:0:0:0:0:0:100:105:0:0:0|h[Lesser Nether Essence]|h|r#2#40#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceNetherSmall.blp",
-	[11175] = "Greater Nether Essence#|cff1eff00|Hitem:11175:0:0:0:0:0:0:0:100:251:0:0:0|h[Greater Nether Essence]|h|r#2#45#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceNetherLarge.blp",
-	[11176] = "Dream Dust#|cffffffff|Hitem:11176:0:0:0:0:0:0:0:100:251:0:0:0|h[Dream Dust]|h|r#1#45#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustDream.blp",
-	[11177] = "Small Radiant Shard#|cff0070dd|Hitem:11177:0:0:0:0:0:0:0:100:105:0:0:0|h[Small Radiant Shard]|h|r#3#40#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardRadientSmall.blp",
-	[11178] = "Large Radiant Shard#|cff0070dd|Hitem:11178:0:0:0:0:0:0:0:100:251:0:0:0|h[Large Radiant Shard]|h|r#3#45#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardRadientLarge.blp",
+--	[10978] = "Small Glimmering Shard#|cff0070dd|Hitem:10978:0:0:0:0:0:0:0:100:267:0:0:0|h[Small Glimmering Shard]|h|r#3#20#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlimmeringSmall.blp",
+--	[10998] = "Lesser Astral Essence#|cff1eff00|Hitem:10998:0:0:0:0:0:0:0:100:261:0:0:0|h[Lesser Astral Essence]|h|r#2#20#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceAstralSmall.blp",
+--	[11082] = "Greater Astral Essence#|cff1eff00|Hitem:11082:0:0:0:0:0:0:0:100:104:0:0:0|h[Greater Astral Essence]|h|r#2#25#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceAstralLarge.blp",
+--	[11083] = "Soul Dust#|cffffffff|Hitem:11083:0:0:0:0:0:0:0:100:104:0:0:0|h[Soul Dust]|h|r#1#25#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustSoul.blp",
+--	[11084] = "Large Glimmering Shard#|cff0070dd|Hitem:11084:0:0:0:0:0:0:0:100:104:0:0:0|h[Large Glimmering Shard]|h|r#3#25#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlimmeringLarge.blp",
+--	[11134] = "Lesser Mystic Essence#|cff1eff00|Hitem:11134:0:0:0:0:0:0:0:100:251:0:0:0|h[Lesser Mystic Essence]|h|r#2#30#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceMysticalSmall.blp",
+--	[11135] = "Greater Mystic Essence#|cff1eff00|Hitem:11135:0:0:0:0:0:0:0:100:261:0:0:0|h[Greater Mystic Essence]|h|r#2#35#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceMysticalLarge.blp",
+--	[11137] = "Vision Dust#|cffffffff|Hitem:11137:0:0:0:0:0:0:0:100:105:0:0:0|h[Vision Dust]|h|r#1#35#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustVision.blp",
+--	[11138] = "Small Glowing Shard#|cff0070dd|Hitem:11138:0:0:0:0:0:0:0:100:251:0:0:0|h[Small Glowing Shard]|h|r#3#30#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlowingSmall.blp",
+--	[11139] = "Large Glowing Shard#|cff0070dd|Hitem:11139:0:0:0:0:0:0:0:100:261:0:0:0|h[Large Glowing Shard]|h|r#3#35#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardGlowingLarge.blp",
+--	[11174] = "Lesser Nether Essence#|cff1eff00|Hitem:11174:0:0:0:0:0:0:0:100:105:0:0:0|h[Lesser Nether Essence]|h|r#2#40#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceNetherSmall.blp",
+--	[11175] = "Greater Nether Essence#|cff1eff00|Hitem:11175:0:0:0:0:0:0:0:100:251:0:0:0|h[Greater Nether Essence]|h|r#2#45#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceNetherLarge.blp",
+--	[11176] = "Dream Dust#|cffffffff|Hitem:11176:0:0:0:0:0:0:0:100:251:0:0:0|h[Dream Dust]|h|r#1#45#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustDream.blp",
+--	[11177] = "Small Radiant Shard#|cff0070dd|Hitem:11177:0:0:0:0:0:0:0:100:105:0:0:0|h[Small Radiant Shard]|h|r#3#40#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardRadientSmall.blp",
+--	[11178] = "Large Radiant Shard#|cff0070dd|Hitem:11178:0:0:0:0:0:0:0:100:251:0:0:0|h[Large Radiant Shard]|h|r#3#45#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardRadientLarge.blp",
 	[12361] = "Blue Sapphire#|cff1eff00|Hitem:12361:0:0:0:0:0:0:0:100:251:0:0:0|h[Blue Sapphire]|h|r#2#55#0#Gem#Simple#200##Interface\\ICONS\\INV_Misc_Gem_Sapphire_02.blp",
 	[12364] = "Huge Emerald#|cff1eff00|Hitem:12364:0:0:0:0:0:0:0:100:251:0:0:0|h[Huge Emerald]|h|r#2#60#0#Gem#Simple#200##Interface\\ICONS\\INV_Misc_Gem_Emerald_01.blp",
 	[12799] = "Large Opal#|cff1eff00|Hitem:12799:0:0:0:0:0:0:0:100:251:0:0:0|h[Large Opal]|h|r#2#55#0#Gem#Simple#200##Interface\\ICONS\\INV_Misc_Gem_Opal_01.blp",
@@ -780,7 +712,7 @@ const.BackupReagentItemInfo = {
 	[16203] = "Greater Eternal Essence#|cff1eff00|Hitem:16203:0:0:0:0:0:0:0:100:251:0:0:0|h[Greater Eternal Essence]|h|r#2#55#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_EssenceEternalLarge.blp",
 	[16204] = "Illusion Dust#|cffffffff|Hitem:16204:0:0:0:0:0:0:0:100:251:0:0:0|h[Illusion Dust]|h|r#1#55#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustIllusion.blp",
 	[18256] = "Imbued Vial#|cffffffff|Hitem:18256:0:0:0:0:0:0:0:62|h[Imbued Vial]|h|r#1#55#0#Trade Goods#Other#20##Interface\\Icons\\INV_Alchemy_ImbuedVial",
-	[20725] = "Nexus Crystal#|cffa335ee|Hitem:20725:0:0:0:0:0:0:0:100:251:0:0:0|h[Nexus Crystal]|h|r#4#60#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardNexusLarge.blp",
+--	[20725] = "Nexus Crystal#|cffa335ee|Hitem:20725:0:0:0:0:0:0:0:100:251:0:0:0|h[Nexus Crystal]|h|r#4#60#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_ShardNexusLarge.blp",
 	[21886] = "Primal Life#|cff1eff00|Hitem:21886:0:0:0:0:0:0:0:73|h[Primal Life]|h|r#2#65#0#Trade Goods#Elemental#20##Interface\\Icons\\INV_Elemental_Primal_Life",
 	[21929] = "Flame Spessarite#|cff1eff00|Hitem:21929:0:0:0:0:0:0:0:100:251:0:0:0|h[Flame Spessarite]|h|r#2#65#0#Gem#Orange#200##Interface\\ICONS\\INV_Misc_Gem_FlameSpessarite_03.blp",
 	[22445] = "Arcane Dust#|cffffffff|Hitem:22445:0:0:0:0:0:0:0:100:105:0:0:0|h[Arcane Dust]|h|r#1#60#0#Trade Goods#Enchanting#200##Interface\\ICONS\\INV_Enchant_DustArcane.blp",

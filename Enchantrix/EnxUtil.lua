@@ -402,20 +402,6 @@ function getReagentPrice(reagentID, extra)
 end
 
 
---[[
--- Return item level (rounded up to nearest 5 levels), quality and type as string,
--- e.g. "20:2:Armor" for uncommon level 20 armor
--- ccox - only used in old code
-function getItemType(id)
-	if (id) then
-		local _, _, quality, ilevel, _, _, _, _, equip = GetItemInfo(id)
-		if (quality and quality >= 2 and Enchantrix.Constants.InventoryTypes[equip]) then
-			return ("%d:%d:%s"):format(Enchantrix.Util.RoundUp(ilevel, 5), quality, Enchantrix.Constants.InventoryTypes[equip])
-		end
-	end
-end
---]]
-
 -- Return item id as integer
 function getItemIdFromSig(sig)
 	if type(sig) == "string" then
@@ -431,36 +417,6 @@ function getItemIdFromLink(link)
 		return itemId
 	end
 end
-
---[[
--- ccox - this appears to be unused!
-function getIType(link)
-	assert(type(link) == "string")
-	local iId = getItemIdFromLink(link)
-	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, invTexture = GetItemInfo(link)
-	if ((itemRarity < 2) or (itemRarity > 4)) then
-		--Enchantrix.DebugPrint("GetIType", ENX_INFO, "Quality too low", "The quality for " .. link .. " is not disenchantable (" .. iQual .. ")")
-		return
-	end
-
-	-- Legion (Wow 7.0) currently has artifact relics disenchantable, but they don't follow normal equipment rules, and are a subtype of Gem
-	-- convert this to a type we can handle
-	if (itemType == "Gem" and  itemSubType == "Artifact Relic") then
-		itemEquipLoc = "INVTYPE_TRINKET"
-	end
-	
-	if not itemEquipLoc then
-		--Enchantrix.DebugPrint("GetIType", ENX_INFO, "Item not equippable", "The item " .. link .. " is not equippable")
-		return
-	end
-	local class = Enchantrix.Constants.InventoryTypes[itemEquipLoc] or 0
-	if not class then
-		Enchantrix.DebugPrint("GetIType", ENX_INFO, "Unrecognized equip slot", "The item " .. link .. " has an equip slot (" .. itemEquipLoc .. ") that is not recognized")
-		return
-	end
-	return ("%d:%d:%d:%d"):format(itemLevel, itemRarity, class, iId)
-end
---]]
 
 
 -- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
@@ -484,24 +440,6 @@ function getSigFromLink(link)
 		Enchantrix.Util.DebugPrint("getSigFromLink", ENX_INFO, "failed to get sig from link", "could not get sig for: " .. trimmed .. ", ".. id ..", ".. rand.. ", ".. link)
 	end
 end
-
-
---[[
--- ccox - this is wrong, but where is it used?
--- ccox - unused as far as I can tell!
--- itemId:enchantId:jewelId1:jewelId2:jewelId3:jewelId4:suffixId:uniqueId:linkLevel:reforgeId
-function getItems(str)
-	if (not str) then return end
-	local itemList = {};
-	local itemKey;
-
-	for itemID, randomProp, enchant, uniqID in str:gmatch("|Hitem:(%d+):(%d+):(%d+):(%d+)|h") do
-		itemKey = itemID..":"..randomProp..":"..enchant;
-		table.insert(itemList, itemKey)
-	end
-	return itemList;
-end
---]]
 
 
 -----------------------------------
@@ -802,6 +740,9 @@ function Enchantrix.Util.DisenchantSkillRequiredForItemLevel(level, quality)
 	end
 
 
+--[[
+-- low level requirements appear to have been removed in 7.3.5
+
 	-- WoD items all require skill level 1
 	-- Legion continues this
 	if (quality == 2 and level >= 483) then
@@ -888,6 +829,7 @@ function Enchantrix.Util.DisenchantSkillRequiredForItemLevel(level, quality)
 		end
 		return temp;
 	end
+--]]
 
 	if (quality > 2) then
 		return 25;
@@ -999,14 +941,10 @@ local function balanceEssencePrices(scanReagentTable, style)
 	-- lesser_itemid = greater_itemid
 	local essenceTable = {
 		[10938] = 10939,	-- magic
-		[10998] = 11082,	-- astral
-		[11134] = 11135,	-- mystic
-		[11174] = 11175,  	-- nether
 		[16202] = 16203,  	-- eternal
 		[22447] = 22446,	-- planar
 		[34056] = 34055,	-- cosmic
 		[52718] = 52719,	-- celestial
---		[74250] = 74251,	-- Mysterious	-- greater doesn't seem to be used
 	};
 
 	for lesser, greater in pairs(essenceTable) do
