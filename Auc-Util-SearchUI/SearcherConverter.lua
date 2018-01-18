@@ -43,7 +43,6 @@ local findConvertable = {}
 do
 	-- Set our constants
 	--Essences
-	-- Greater Mysterious Essence is not used
 	local ETHERAL = 74247
 	local SETHERAL = 74252
 	local GCELESTIAL = 52719
@@ -51,17 +50,13 @@ do
 	local GCOSMIC = 34055
 	local GPLANAR = 22446
 	local GETERNAL = 16203
-	local GNETHER = 11175
-	local GMYSTIC = 11135
-	local GASTRAL = 11082
 	local GMAGIC = 10939
 	local LCOSMIC = 34056
 	local LPLANAR = 22447
 	local LETERNAL = 16202
-	local LNETHER = 11174
-	local LMYSTIC = 11134
-	local LASTRAL = 10998
 	local LMAGIC = 10938
+	local LILLUSION = 16204
+	local RILLUSION = 156930		
 	--Motes/Primals
 	local PAIR = 22451
 	local MAIR = 22572
@@ -123,9 +118,7 @@ do
 		[LCOSMIC] = GCOSMIC,
 		[LPLANAR] = GPLANAR,
 		[LETERNAL] = GETERNAL,
-		[LNETHER] = GNETHER,
-		[LMYSTIC] = GMYSTIC,
-		[LASTRAL] = GASTRAL,
+		[LILLUSION] = RILLUSION,
 		[LMAGIC] = GMAGIC,
 	}
 	local crystallized_eternal = {
