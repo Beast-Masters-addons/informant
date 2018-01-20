@@ -145,6 +145,13 @@ local isGem =
 	[130181] = true,--Pandemonite
 	[130182] = true,--MaelstromSapphire
 	[130183] = true,--ShadowRuby
+	--Legion Argus
+	[151721] = true,--Hesselian
+	[151579] = true,--Labradorite
+	[151719] = true,--Lightsphene
+	[151720] = true,--Chemirine
+	[151718] = true,--Argulite
+	[151722] = true,--FloridMalachite
 	--Legion Other
 	[129100] = true,--GemChip
 }
@@ -336,6 +343,7 @@ local isHerb =
 	[124105] = true,--StarlightRose
 	[124106] = true,--Felwort
 	[128304] = true,--YserallineSeed
+	[151565] = true,--AstralGlory
 	}
 
 --Inv slot types, used to help define what gear is usable via tooltip parse
