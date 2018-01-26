@@ -142,7 +142,7 @@ local lib = {
 
 	MAXSKILLLEVEL = 800,
 	MAXUSERLEVEL = 110,
-	MAXITEMLEVEL = 950,
+	MAXITEMLEVEL = 1100,
 	MAXBIDPRICE = 99999999999, -- copy from Blizzard_AuctionUI.lua, so it is available before AH loads
 }
 AucAdvanced.Const = lib
