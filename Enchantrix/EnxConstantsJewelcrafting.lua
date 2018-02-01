@@ -60,8 +60,9 @@ local BLACK_TRILLIUM_ORE = 72094
 -- Legion
 local LAYSTONE_ORE = 123918
 local FELSLATE_ORE = 123919
+local EMPYRIUM_ORE = 151564
 
-
+-- misc results
 local COPPERPOWDER = 24186
 local TINPOWDER = 24188
 local IRONPOWDER = 24190
@@ -179,6 +180,13 @@ local GREENGEMCHIP = 130202
 local BLUEGEMCHIP = 130203
 local PURPLEGEMCHIP = 130204
 
+local ARGULITE = 151718
+local LIGHTSPHENE = 151719
+local CHEMIRINE = 151720
+local HESSELIAN = 151721
+local FLORIDMALACHITE = 151722
+local LABRADORITE = 151579
+
 
 --[[
 	Prospectable ores and skill to prospect them
@@ -206,6 +214,7 @@ const.ProspectMinLevels = {
 --	[TRUEIRON] = 600,			-- not prospectable
 	[LAYSTONE_ORE] = 1,
 	[FELSLATE_ORE] = 1,
+	[EMPYRIUM_ORE] = 1,
 }
 
 
@@ -468,16 +477,16 @@ const.ProspectableItems = {
 			[SUNSRADIANCE] = 0.10,
 			},
 
-	-- TODO - ccox - colors may not have uniform yields! Need a LOT more data to confirm that!
+	-- TODO - ccox - colors do not have uniform yields!
 	[LAYSTONE_ORE] = {
 			[GENERICGEMCHIP] = 1.0,
 			
-			[SANGRITE] = 0.04,
-			[DEEPAMBER] = 0.04,
-			[AZSUNITE] = 0.04,
-			[CHAOTICSPINEL] = 0.04,
-			[SKYSTONE] = 0.04,
-			[QUEENSOPAL] = 0.04,
+			[SANGRITE] = 0.05,
+			[DEEPAMBER] = 0.05,
+			[AZSUNITE] = 0.05,
+			[CHAOTICSPINEL] = 0.05,
+			[SKYSTONE] = 0.05,
+			[QUEENSOPAL] = 0.05,
 			
 			[FURYSTONE] = 0.011,
 			[EYEOFPROPHECY] = 0.011,
@@ -490,20 +499,31 @@ const.ProspectableItems = {
 	[FELSLATE_ORE] = {
 			[GENERICGEMCHIP] = 1.0,
 			
-			[SANGRITE] = 0.15,
-			[DEEPAMBER] = 0.15,
-			[AZSUNITE] = 0.15,
-			[CHAOTICSPINEL] = 0.15,
-			[SKYSTONE] = 0.15,
-			[QUEENSOPAL] = 0.15,
+			[SANGRITE] = 0.2,
+			[DEEPAMBER] = 0.2,
+			[AZSUNITE] = 0.2,
+			[CHAOTICSPINEL] = 0.2,
+			[SKYSTONE] = 0.2,
+			[QUEENSOPAL] = 0.2,
 			
-			[FURYSTONE] = 0.025,
-			[EYEOFPROPHECY] = 0.025,
-			[DAWNLIGHT] = 0.025,
-			[PANDEMONITE] = 0.025,
-			[MAELSTROMSAPPHIRE] = 0.025,
-			[SHADOWRUBY] = 0.025,
+			[FURYSTONE] = 0.03,
+			[EYEOFPROPHECY] = 0.03,
+			[DAWNLIGHT] = 0.03,
+			[PANDEMONITE] = 0.03,
+			[MAELSTROMSAPPHIRE] = 0.03,
+			[SHADOWRUBY] = 0.03,
 			},
+	
+	[EMPYRIUM_ORE] = {
+			[GENERICGEMCHIP] = 1.0,
+
+			[ARGULITE] = 0.03,
+			[LIGHTSPHENE] = 0.03,
+			[CHEMIRINE] = 0.03,
+			[HESSELIAN] = 0.03,
+			[FLORIDMALACHITE] = 0.03,
+			[LABRADORITE] = 0.03,
+	},
 	
 }
 
@@ -619,6 +639,13 @@ const.ReverseProspectingSources = {
 	[BLUEGEMCHIP] = {LAYSTONE_ORE, FELSLATE_ORE },
 	[PURPLEGEMCHIP] = {LAYSTONE_ORE, FELSLATE_ORE },
 	[GENERICGEMCHIP] = {LAYSTONE_ORE, FELSLATE_ORE },
+	
+	[ARGULITE] = { EMPYRIUM_ORE },
+	[LIGHTSPHENE] = { EMPYRIUM_ORE },
+	[CHEMIRINE] = { EMPYRIUM_ORE },
+	[HESSELIAN] = { EMPYRIUM_ORE },
+	[FLORIDMALACHITE] = { EMPYRIUM_ORE },
+	[LABRADORITE] = { EMPYRIUM_ORE },
 
 }
 

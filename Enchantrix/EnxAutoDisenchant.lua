@@ -151,7 +151,9 @@ end
 
 local function getDisenchantOrProspectValue(link, count)
 	local _, _, quality, level = GetItemInfo(link)
-	if not (quality and level) then return end
+	if not (quality and level) then
+		--debugSpam("Item ", link, "quality and level nil" );
+	return end
 
 	if quality >= 2 then
 		local enchSkillRequired = Enchantrix.Util.DisenchantSkillRequiredForItemLevel(level, quality)
@@ -198,15 +200,18 @@ local function getDisenchantOrProspectValue(link, count)
 					local value = (hsp or 0) * yield
 					prospectValue = prospectValue + value
 				end
-				--if (prospectValue == 0) then debugSpam("Item ", link, "has zero prospect value?" ); end	-- TODO - DEBUGGING
+				--if (prospectValue == 0) then debugSpam("Item ", link, "has zero prospect value?" ); end	-- DEBUGGING
 				return prospectValue, _ENCH('ArgSpellProspectingName')
 			end
 		end
 
 		local inscriptionSkillRequired = Enchantrix.Util.InscriptionSkillRequiredForItem(link)
+		--debugSpam("Item ", link, "skill required", inscriptionSkillRequired );
 		if (inscriptionSkillRequired and inscriptionSkillRequired > 0) and Enchantrix.Util.GetUserInscriptionSkill() >= inscriptionSkillRequired then
+			--debugSpam("Item ", link, "skill passed" ); 
 			local milling = Enchantrix.Storage.GetItemMilling(link)
 			if milling then
+				--debugSpam("Item ", link, "mill results passed" );
 				local millingValue = 0
 				for result, yield in pairs(milling) do
 					local hsp, median, baseline, valFive = Enchantrix.Util.GetReagentPrice(result)
@@ -222,7 +227,7 @@ local function getDisenchantOrProspectValue(link, count)
 					local value = (hsp or 0) * yield
 					millingValue = millingValue + value
 				end
-				--if (millingValue == 0) then debugSpam("Item ", link, "has zero milling value?" ); end	-- TODO - DEBUGGING
+				--if (millingValue == 0) then debugSpam("Item ", link, "has zero milling value?" ); end	 -- DEBUGGING
 				return millingValue, _ENCH('ArgSpellMillingName')
 			end
 		end

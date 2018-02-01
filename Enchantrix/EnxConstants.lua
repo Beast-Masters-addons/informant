@@ -51,43 +51,44 @@ const.StaticPrices = {
 	[52721] =   50000, -- Heavenly Shard
 	[34052] =   70000, -- Dream Shard
 	[22449] =   50000, -- Large Prismatic Shard
-	[14344] =   25000, -- Large Brilliant Shard
+	[14344] =  200000, -- Large Brilliant Shard
 
 	[115502] =  70000, -- Small Luminous Shard
 	[74252] =   40000, -- Small Etheral Shard
 	[52720] =   12000, -- Small Heavenly Shard
 	[34053] =   10000, -- Small Dream Shard
 	[22448] =   20000, -- Small Prismatic Shard
-	[14343] =   23000, -- Small Brilliant Shard
+	[14343] =   25000, -- Small Brilliant Shard
 
 	[52719] =   20000, -- Greater Celestial Essence
 	[34055] =   20000, -- Greater Cosmic Essence
 	[22446] =   10000, -- Greater Planar Essence
-	[16203] =   10000, -- Greater Eternal Essence
-	[10939] =    7000, -- Greater Magic Essence
+	[16203] =   80000, -- Greater Eternal Essence
+	[10939] =   70000, -- Greater Magic Essence
 
 	[74250] =   50000, -- Mysterious Essence
 	[52718] =   20000, -- Lesser Celestial Essence
 	[34056] =   35000, -- Lesser Cosmic Essence
 	[22447] =   28000, -- Lesser Planar Essence
-	[16202] =   22500, -- Lesser Eternal Essence
-	[10938] =    6000, -- Lesser Magic Essence
+	[16202] =   32500, -- Lesser Eternal Essence
+	[10938] =   15000, -- Lesser Magic Essence
 
 	[109693] =  50000, -- Draenic Dust
 	[74249] =   20000, -- Spirit Dust
 	[52555] =   10000, -- Hypnotic Dust
 	[34054] =   27500, -- Infinite Dust
 	[22445] =   12500, -- Arcane Dust
-	[16204] =   15000, -- Illusion Dust
-	[10940] =    7000, -- Strange Dust
+	[156930] = 150000, -- Rich Illusion Dust
+	[16204] =   45000, -- Illusion Dust
+	[10940] =   12000, -- Strange Dust
 	
 	--- Legion - needs update
-	[124440] = 	 50000, -- Arkhana
-	[124441] =  200000, -- Laylight Shard
-	[124442] = 1000000, -- Chaos Crystal
+	[124440] = 	150000, -- Arkhana
+	[124441] =  600000, -- Laylight Shard
+	[124442] = 2000000, -- Chaos Crystal
 	[124124] =       1, -- Blood of Sargaras (can't sell it, but needs a value)
 
--- needs update
+-- needs update - some items no longer available
 	[2772] =   11500, -- Iron Ore
 	[3356] =   11000, -- Kingsblood
 	[3371] =      20, -- Empty Vial		-- should use vendor price
@@ -189,11 +190,10 @@ const.StaticPrices = {
 	[79253] =   70000,   -- MISTY_PIGMENT
 	[114931] =  50000, 	-- Cerulean Pigment
 	
-	-- Legion, needs update
-	[129032] = 100000, -- Roseate Pigment
-	[129034] = 500000, -- Salllow Pigment
+	-- Legion
+	[129032] =  180000, -- Roseate Pigment
+	[129034] = 1000000, -- Salllow Pigment
 
--- needs update
 	[818] =      7500, 	-- TIGERSEYE
 	[774] =      5000, 	-- MALACHITE
 	[1210] =    20000,	-- SHADOWGEM
@@ -208,12 +208,12 @@ const.StaticPrices = {
 	[12799] =   70000, 	-- LARGEOPAL
 	[12364] =   50000, 	-- HUGEEMERALD
 	
-	[23077] =    7000, 	-- BLOODGARNET
-	[21929] =    7000, 	-- FLAMESPESSARITE
-	[23112] =    7000, 	-- GOLDENDRAENITE
-	[23079] =    7000, 	-- DEEPPERIDOT
-	[23117] =    7000, 	-- AZUREMOONSTONE
-	[23107] =    7000, 	-- SHADOWDRAENITE
+	[23077] =   50000, 	-- BLOODGARNET
+	[21929] =   50000, 	-- FLAMESPESSARITE
+	[23112] =   50000, 	-- GOLDENDRAENITE
+	[23079] =   50000, 	-- DEEPPERIDOT
+	[23117] =   50000, 	-- AZUREMOONSTONE
+	[23107] =   50000, 	-- SHADOWDRAENITE
 	
 	[23436] =   10000,	-- LIVINGRUBY
 	[23439] =   10000, 	-- NOBLETOPAZ
@@ -222,71 +222,78 @@ const.StaticPrices = {
 	[23438] =   10000, 	-- STAROFELUNE
 	[23441] =   10000, 	-- NIGHTSEYE
 	
-	[36923] =   10000, 	-- Chalcedony
-	[36929] =   10000, 	-- Huge Citrine
-	[36917] =   10000, 	-- Bloodstone
-	[36926] =   10000, 	-- Shadow Crystal
-	[36920] =   10000, 	-- Sun Crystal
-	[36932] =   10000, 	-- Dark Jade
+	[36923] =   60000, 	-- Chalcedony
+	[36929] =   60000, 	-- Huge Citrine
+	[36917] =   60000, 	-- Bloodstone
+	[36926] =   60000, 	-- Shadow Crystal
+	[36920] =   60000, 	-- Sun Crystal
+	[36932] =   60000, 	-- Dark Jade
 	
-	[36933] =   10000, 	-- Forest Emerald
-	[36918] =   10000, 	-- Scarlet Ruby
-	[36927] =   10000, 	-- Twilight Opal
-	[36930] =   10000, 	-- Monarch Topaz
-	[36924] =   10000, 	-- Sky Sapphire
-	[36921] =   10000, 	-- Autumn's Glow
+	[36933] =  100000, 	-- Forest Emerald
+	[36918] =  100000, 	-- Scarlet Ruby
+	[36927] =  100000, 	-- Twilight Opal
+	[36930] =  100000, 	-- Monarch Topaz
+	[36924] =  100000, 	-- Sky Sapphire
+	[36921] =  100000, 	-- Autumn's Glow
 	
-	[36925] =   20000, 	-- MAJESTICZIRCON
-	[36931] =   20000, 	-- AMETRINE
-	[36922] =   20000, 	-- KINGSAMBER
-	[36928] =   20000, 	-- DREADSTONE
-	[36919] =   20000, 	-- CARDINALRUBY
-	[36934] =   20000, 	-- EYEOFZUL
+	[36925] =  200000, 	-- MAJESTICZIRCON
+	[36931] =  200000, 	-- AMETRINE
+	[36922] =  200000, 	-- KINGSAMBER
+	[36928] =  200000, 	-- DREADSTONE
+	[36919] =  200000, 	-- CARDINALRUBY
+	[36934] =  200000, 	-- EYEOFZUL
 
-	[52177] =   10000,  -- CARNELIAN
-	[52178] =   10000,  -- ZEPHYRITE
-	[52179] =   10000,  -- ALICITE
-	[52180] =   10000,  -- NIGHTSTONE
-	[52181] =   10000,  -- HESSONITE
-	[52182] =   10000,  -- JASPER
+	[52177] =   80000,  -- CARNELIAN
+	[52178] =   80000,  -- ZEPHYRITE
+	[52179] =   80000,  -- ALICITE
+	[52180] =   80000,  -- NIGHTSTONE
+	[52181] =   80000,  -- HESSONITE
+	[52182] =   80000,  -- JASPER
 
-	[52190] =   10000,  -- INFERNORUBY
-	[52191] =   10000,  -- OCEANSAPPHIRE
-	[52192] =   10000,  -- DREAMEMERALD
-	[52193] =   10000,  -- EMBERTOPAZ
-	[52194] =   10000,  -- DEMONSEYE
-	[52195] =   10000,  -- AMBERJEWEL
+	[52190] =   100000,  -- INFERNORUBY
+	[52191] =   100000,  -- OCEANSAPPHIRE
+	[52192] =   100000,  -- DREAMEMERALD
+	[52193] =   100000,  -- EMBERTOPAZ
+	[52194] =   100000,  -- DEMONSEYE
+	[52195] =   100000,  -- AMBERJEWEL
 	
-	[76130] =   10000,	-- TIGEROPAL
-	[76133] =   10000,	-- LAPISLAZULI
-	[76134] =   10000,	-- SUNSTONE
-	[76135] =   10000,	-- ROGUESTONE
-	[76136] =   10000,	-- PANDARIANGARNET
-	[76137] =   10000,	-- ALEXANDRITE
+	[76130] =   200000,	-- TIGEROPAL
+	[76133] =   200000,	-- LAPISLAZULI
+	[76134] =   200000,	-- SUNSTONE
+	[76135] =   200000,	-- ROGUESTONE
+	[76136] =   200000,	-- PANDARIANGARNET
+	[76137] =   200000,	-- ALEXANDRITE
 	
-	[76131] =   40000,	-- PRIMORDIALRUBY
-	[76138] =   40000,	-- RIVERSHEART
-	[76139] =   40000,	-- WILDJADE
-	[76140] =   40000,	-- VERMILIONONYX
-	[76141] =   40000,	-- IMPERIALAMETHYST
-	[76142] =   40000,	-- SUNSRADIANCE
+	[76131] =  1000000,	-- PRIMORDIALRUBY
+	[76138] =  1000000,	-- RIVERSHEART
+	[76139] =  1000000,	-- WILDJADE
+	[76140] =  1000000,	-- VERMILIONONYX
+	[76141] =  1000000,	-- IMPERIALAMETHYST
+	[76142] =  1000000,	-- SUNSRADIANCE
 
 	-- WoD has no raw gems
 
-	-- Legion Gems, needs update
-	[130172] = 90000, -- SANGRITE
-	[130173] = 90000, -- DEEPAMBER
-	[130174] = 90000, -- AZSUNITE
-	[130175] = 90000, -- CHAOTICSPINEL
-	[130176] = 90000, -- SKYSTONE
-	[130177] = 90000, -- QUEENSOPAL
+	-- Legion Gems
+	[130172] =  200000, -- SANGRITE
+	[130173] =  200000, -- DEEPAMBER
+	[130174] =  200000, -- AZSUNITE
+	[130175] =  200000, -- CHAOTICSPINEL
+	[130176] =  200000, -- SKYSTONE
+	[130177] =  200000, -- QUEENSOPAL
 
-	[130178] = 400000, -- FURYSTONE
-	[130179] = 400000, -- EYEOFPROPHECY
-	[130180] = 400000, -- DAWNLIGHT
-	[130181] = 400000, -- PANDEMONITE
-	[130182] = 400000, -- MAELSTROMSAPPHIRE
-	[130183] = 400000, -- SHADOWRUBY
+	[130178] =  900000, -- FURYSTONE
+	[130179] =  900000, -- EYEOFPROPHECY
+	[130180] =  900000, -- DAWNLIGHT
+	[130181] =  900000, -- PANDEMONITE
+	[130182] =  900000, -- MAELSTROMSAPPHIRE
+	[130183] =  900000, -- SHADOWRUBY
+	
+	[151718] = 6000000, -- ARGULITE
+	[151719] = 6000000, -- LIGHTSPHENE
+	[151720] = 6000000, -- CHEMIRINE
+	[151721] = 6000000, -- HESSELIAN
+	[151722] = 6000000, -- FLORIDMALACHITE
+	[151579] = 6000000, -- LABRADORITE
 
 	[129099] = 1, -- REDGEMCHIP
 	[129100] = 1, -- GENERICGEMCHIP
@@ -483,13 +490,19 @@ local EPIC = 4
 const.baseDisenchantTable = {
  [UNCOMMON] = {
   [const.WEAPON] = {
-   ["bounds"] = { 15, 20, 25, 45, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
-   [15]  = { { STRANGE, 0.20, 1.5 }, { LMAGIC, 0.80, 1.5 } },
-   [20]  = { { STRANGE, 0.25, 2.5 }, { GMAGIC, 0.75, 1.5 } },
-   [25]  = { { STRANGE, 0.25, 5.0 }, { GMAGIC, 0.75, 1.5 } },
+   ["bounds"] = { 15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
+   [15]  = { { STRANGE, 0.20, 2.0 }, { LMAGIC, 0.80, 1.5 } },
+   [20]  = { { STRANGE, 0.20, 3.5 }, { GMAGIC, 0.80, 1.6 } },
+   [25]  = { { STRANGE, 0.20, 5.0 }, { GMAGIC, 0.80, 2.5 } },
    
-   [45]  = { { ILLUSION , 0.20, 1.5 }, { LETERNAL, 0.75, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
-   [65]  = { { RILLUSION, 0.20, 1.5 }, { GETERNAL, 0.75, 1.5 }, { LBRILLIANT , 0.05, 1.0 }, },
+   [30]  = { { ILLUSION , 0.20, 1.6 }, { LETERNAL, 0.75, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [35]  = { { ILLUSION , 0.20, 3.5 }, { LETERNAL, 0.75, 2.0 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [40]  = { { ILLUSION , 0.20, 4.5 }, { LETERNAL, 0.75, 2.5 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [45]  = { { ILLUSION , 0.20, 4.5 }, { LETERNAL, 0.75, 3.0 }, { SBRILLIANT , 0.05, 1.5 }, },
+   
+   [50]  = { { RILLUSION, 0.20, 1.5 }, { GETERNAL, 0.75, 1.0 }, { LBRILLIANT , 0.05, 1.0 }, },
+   [55]  = { { RILLUSION, 0.20, 2.0 }, { GETERNAL, 0.75, 2.0 }, { LBRILLIANT , 0.05, 1.0 }, },
+   [65]  = { { RILLUSION, 0.20, 3.0 }, { GETERNAL, 0.75, 2.5 }, { LBRILLIANT , 0.05, 1.0 }, },
    
    [99]  = { { ARCANE  , 0.20, 2.5 }, { LPLANAR , 0.75, 2.5 }, { SPRISMATIC , 0.05, 1.0 }, },
    [120] = { { ARCANE  , 0.20, 3.5 }, { GPLANAR , 0.75, 1.5 }, { LPRISMATIC , 0.05, 1.0 }, },	-- highest level BC green
@@ -508,17 +521,23 @@ const.baseDisenchantTable = {
    [645] = { { DRAENIC, 1.0, 3.0 } },	-- highest WoD green weapon is 640, shard chance appears to have been taken out in patch, or reduced to less than 1%
 
 	-- TODO - determine item ranges
-	[900] =  { {ARKHANA, 1.0, 2.90 } },	-- first Legion green is 665, highest Legion green currently 820
+   [900] =  { {ARKHANA, 1.0, 2.80 } },	-- first Legion green is 665, highest Legion green currently 820
 	
    },
   [const.ARMOR] = {
-   ["bounds"] = { 15, 20, 25, 45, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
-   [15]  = { { STRANGE, 0.80, 1.5 }, { LMAGIC, 0.20, 1.5 } },
-   [20]  = { { STRANGE, 0.75, 2.5 }, { GMAGIC, 0.25, 1.5 } },
-   [25]  = { { STRANGE, 0.75, 5.0 }, { GMAGIC, 0.25, 1.5 } },
+   ["bounds"] = { 15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 99, 120, 151, 200, 275, 290, 305, 315, 325, 350, 380, 390, 410, 482, 645, 900 },
+   [15]  = { { STRANGE, 0.80, 2.0 }, { LMAGIC, 0.20, 1.5 } },
+   [20]  = { { STRANGE, 0.80, 3.5 }, { GMAGIC, 0.20, 1.6 } },
+   [25]  = { { STRANGE, 0.80, 5.0 }, { GMAGIC, 0.20, 2.5 } },
    
-   [45]  = { { ILLUSION , 0.75, 1.5 }, { LETERNAL, 0.20, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
-   [65]  = { { RILLUSION, 0.75, 1.5 }, { GETERNAL, 0.20, 1.5 }, { LBRILLIANT , 0.05, 1.0 }, },
+   [30]  = { { ILLUSION , 0.75, 1.6 }, { LETERNAL, 0.20, 1.5 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [35]  = { { ILLUSION , 0.75, 3.5 }, { LETERNAL, 0.20, 2.0 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [40]  = { { ILLUSION , 0.75, 4.5 }, { LETERNAL, 0.20, 2.5 }, { SBRILLIANT , 0.05, 1.0 }, },
+   [45]  = { { ILLUSION , 0.75, 4.5 }, { LETERNAL, 0.20, 3.0 }, { SBRILLIANT , 0.05, 1.5 }, },
+   
+   [50]  = { { RILLUSION, 0.75, 1.5 }, { GETERNAL, 0.20, 1.0 }, { LBRILLIANT , 0.05, 1.0 }, },
+   [55]  = { { RILLUSION, 0.75, 2.0 }, { GETERNAL, 0.20, 2.0 }, { LBRILLIANT , 0.05, 1.0 }, },
+   [65]  = { { RILLUSION, 0.75, 3.0 }, { GETERNAL, 0.20, 2.5 }, { LBRILLIANT , 0.05, 1.0 }, },
    
    [99]  = { { ARCANE  , 0.75, 2.5 }, { LPLANAR , 0.20, 2.5 }, { SPRISMATIC , 0.05, 1.0 }, },
    [120] = { { ARCANE  , 0.75, 3.5 }, { GPLANAR , 0.20, 1.5 }, { LPRISMATIC , 0.05, 1.0 }, },	-- highest level BC green
@@ -536,20 +555,20 @@ const.baseDisenchantTable = {
    [482] = { { SPIRIT, 0.85, 4.0 }, { MYSTERIOUS , 0.15, 2.0 }, },	-- highest level Panda green is 483, but it now gives draenic dust
    [645] = { { DRAENIC, 1.0, 3.0 } },	-- highest WoD green armor is 640, shard chance appears to have been taken out in patch
 
-	-- TODO - determine item ranges
-	[900] =  { {ARKHANA, 1.0, 2.90 } },	-- first Legion green is 670, highest Legion green currently 820
+   [900] =  { {ARKHANA, 1.0, 2.80 } },	-- first Legion green is 670, highest Legion green currently 820
    
   },
  },
  [RARE] = {
  	-- weapon lookups will fall back to the armor table
- 	-- 1% chance for better shard appears to have been removed in Cataclysm
   [const.ARMOR] = {
-   ["bounds"] = { 30, 45, 60, 99, 120, 164, 200, 316, 380, 424, 449, 450, 500, 700, 900 },
-   [30]  = { { GMAGIC,      	1.00, 2.0 } },
-   [45]  = { { SBRILLIANT,      1.00, 1.0 } },
-   [60]  = { { LBRILLIANT,      1.00, 1.0 } },
-   
+   ["bounds"] = { 25, 35, 45, 55, 70, 99, 120, 164, 200, 316, 380, 424, 449, 450, 500, 700, 900 },
+   [25]  = { { GMAGIC,      	1.00, 2.0 } },
+   [35]  = { { SBRILLIANT,      1.00, 1.5 } },
+   [45]  = { { SBRILLIANT,      0.80, 2.25 }, { LBRILLIANT, 0.20, 1.5 } },
+   [55]  = { { LBRILLIANT,      0.80, 1.5 },  { GETERNAL, 0.20, 1.5 }, },
+   [70]  = { { LBRILLIANT,      0.80, 2.0 },  { GETERNAL, 0.20, 2.5 }, },
+
    [99]  = { { SPRISMATIC,      1.00, 1.0 } },
    [120] = { { LPRISMATIC,      1.00, 1.0 } },
    [164] = { { SDREAM_SHARD,    1.00, 1.0 } },
@@ -569,18 +588,18 @@ const.baseDisenchantTable = {
  [EPIC] = {
  	-- weapon lookups will fall back to the armor table
   [const.ARMOR] = {
-   ["bounds"] = { 55, 94, 99, 164, 299, 419, 495, 630, 750, 1000 },
-   [55]  = { { SBRILLIANT,  1.00, 1.5 } },
-   [94]  = { { LBRILLIANT,  1.00, 1.0 } },	-- highest level classic item is 94, first BC epic is 95
+   ["bounds"] = { 55, 94, 99, 164, 299, 419, 495, 630, 750, 1100 },
+   [55]  = { { GETERNAL,  1, 2.0 } },
+   [94]  = { { LBRILLIANT,  0.65, 4.0 }, { GETERNAL, 0.25, 3.5 }, { RILLUSION, 0.10, 4.5 }, },	-- highest level classic item is 94, first BC epic is 95
    [99]  = { { VOID,        1.00, 1.0 } },
    [164] = { { VOID,        1.00, 1.5 } },	-- highest level BC epic is 164, first LK epic is 200
    [299] = { { ABYSS,       1.00, 1.0 } },	-- highest level LK epic is 284, first Cata epic is 300
    [419] = { { MAELSTROM,   1.00, 1.0 } },	-- highest level CATA epic is 416, first Panda epic is 420
-   [495] = { { SHA_FRAGMENT,   1.00, 1.0 } },	-- changed in a dot release
+   [495] = { { SHA_FRAGMENT, 1.00, 1.0 } },	-- changed in a dot release
    [630] = { { SHA_CRYSTAL, 1.00, 1.0 } },	-- highest level Panda epic so far is 600
    [750] = { { TEMPORAL,    1.00, 1.0 } },	-- first WoD epic is 640, highest WoD epic is 715, crossover is between 745 and 775
 
-   [1200] =  { {CHAOS_CRYSTAL, 1.00, 1.0 } },	-- first Legion epic is 725 (gives temporal), highest Legion epic is currently 1000
+   [1100] =  { {CHAOS_CRYSTAL, 1.00, 1.0 } },	-- first Legion epic is 725 (gives temporal), highest Legion epic is currently 1000
    
   },
  },

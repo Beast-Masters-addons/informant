@@ -698,13 +698,13 @@ Enchantrix.Util = {
 
 function Enchantrix.Util.GetIType(link)
 	if not link then return end
-	--Enchantrix.Util.DebugPrintQuick("GetIType type: ", type(link), " link: ", link )	-- DEBUGGING
+	--Enchantrix.Util.DebugPrintQuick("GetIType type: ", type(link), " link: ", link, tooltip:DecodeLink(link) )	-- DEBUGGING
 	
 	local const = Enchantrix.Constants
 	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, invTexture = GetItemInfo(link)
 
 	if not (itemName and itemEquipLoc and itemRarity and itemLevel) then
-		Enchantrix.Util.DebugPrint("GetIType", ENX_INFO, "GetItemInfo failed, bad link", "could not get item info for: " .. link)
+		-- Enchantrix.Util.DebugPrintQuick("GetIType could not get item info for: ", link, itemName , itemEquipLoc , itemRarity , itemLevel, tooltip:DecodeLink(link) )
 		return
 	end
 
@@ -851,6 +851,7 @@ function Enchantrix.Util.InscriptionSkillRequiredForItem(link)
 	end
 	local resultBracket = Enchantrix.Constants.MillableItems[item];
 	if (not resultBracket) then
+		--Enchantrix.Util.DebugPrintQuick( "no mill result bracket from link", link )
 		return 0
 	end
 	return Enchantrix.Constants.MillingSkillRequired[resultBracket];
@@ -942,6 +943,7 @@ local function balanceEssencePrices(scanReagentTable, style)
 	local essenceTable = {
 		[10938] = 10939,	-- magic
 		[16202] = 16203,  	-- eternal
+		[16204] = 156930,	-- illusion dust
 		[22447] = 22446,	-- planar
 		[34056] = 34055,	-- cosmic
 		[52718] = 52719,	-- celestial

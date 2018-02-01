@@ -409,11 +409,8 @@ function onEvent(funcVars, event, player, spell, rank, target)
 					if reagentID then
 						-- for prospecting and milling, we need to save the whole list
 						reagentList[ reagentID ] = (reagentList[ reagentID ] or 0) + quantity
-						if (isDisenchant and i == 1) then
-							-- disenchant only yields one item, so we can pass it in one at a time
-							-- also, we want to ignore bonus materials, so only take the first one
-							Enchantrix.Storage.SaveDisenchant(sig, reagentID, quantity, itemLink)
-						end
+-- disenchanting in 7.3.5 will result in more than one item, sometimes 3! (epic level 66 is great example)
+						Enchantrix.Storage.SaveDisenchant(sig, reagentID, quantity, itemLink)
 					end
 				end
 			end
