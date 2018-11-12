@@ -864,6 +864,7 @@ local function updateMerchantName()
 	-- TODO - we are not currently using the faction information for vendors
 
 	local vendorGUID = UnitGUID("NPC")
+	if not vendorGUID then return end -- very rarely this may be nil; bail out (and hope we get a valid ID in an update event)
 	local vendorID = select(6,strsplit("-", vendorGUID))
 	vendorID = tonumber(vendorID)
 
@@ -888,6 +889,7 @@ local function doUpdateMerchant()
 	if (not Informant.Settings.GetSetting('auto-update')) then return end
 
 	local vendorID = updateMerchantName()
+	if not vendorID then return end
 	updateBuyPricesFromMerchant( vendorID )
 	updateSellPricesFromMerchant()
 
