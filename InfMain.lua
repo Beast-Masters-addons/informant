@@ -181,7 +181,13 @@ function getItem(itemLink, static)
 	-- this must use the full itemLink, not just the item ID To get the data correct
 	local itemName, _link, itemQuality, itemLevel, itemUseLevel, itemType, itemSubType, itemStackSize, itemEquipLoc,
 		itemTexture, itemSell, itemClassID, itemSubClassID, itemBindType, itemExpacID, itemSetID, itemReagent = GetItemInfo(itemLink)
-	--debugPrintQuick("GetItem : ", itemLink, itemLink:match("item:([^|]+)"), GetItemInfo(itemLink) )	-- GetItemInfo is returning base level, not the level with upgrades!
+
+    -- get item level with upgrades
+    local effLevel = GetDetailedItemLevelInfo(itemLink)
+    if effLevel then
+        itemLevel = effLevel
+    end
+
 	local incompleteFlag = not itemName -- flag if GetItemInfo returns nils, so we know not to cache it
 
 	local itemID = idFromLink(itemLink)	-- not optimal, but needed for other code
@@ -754,6 +760,12 @@ local function updateSellPricesFromMerchant()
 							-- is this item sell price correct in our database? or missing from our database?
 							local itemName, itemLink, itemQuality, itemLevel, itemUseLevel, itemType, itemSubType, itemStackSize, itemEquipLoc, itemTexture = GetItemInfo(scanningLink)
 
+                            -- get item level with upgrades
+                            local effLevel = GetDetailedItemLevelInfo(scanningLink)
+                            if effLevel then
+                                itemLevel = effLevel
+                            end
+
 							local cleanString = cleanStringFromLink( scanningLink )
 							local newItemInfo = InformantLocalUpdates.items[ cleanString ]
 							if (not newItemInfo) then newItemInfo = {} end
@@ -790,6 +802,12 @@ local function updateBuyPricesFromMerchant( vendorID )
 					-- is this item buy price correct in our database? or missing from our database?
 
 					local itemName, itemLink, itemQuality, itemLevel, itemUseLevel, itemType, itemSubType, itemStackSize, itemEquipLoc, itemTexture = GetItemInfo(link)
+
+                    -- get item level with upgrades
+                    local effLevel = GetDetailedItemLevelInfo(link)
+                    if effLevel then
+                        itemLevel = effLevel
+                    end
 
 -- ccox - currently this will hit often, because we don't take reputation discounts into account for buy pricing
 -- should we try to get rep discounts, or just update the price as seen?  Then they'll be wrong for alts!
