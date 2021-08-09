@@ -27,21 +27,25 @@
 		since that is its designated purpose as per:
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
-Informant_RegisterRevision("$URL$","$Rev$")
-
-INFORMANT_VERSION = "<%version%>"
-if (INFORMANT_VERSION == "<".."%version%>") then
-	INFORMANT_VERSION = "5.2.DEV"
-end
 
 local _G=_G
+local Informant = _G.Informant
+if not Informant then return end
+
+Informant_RegisterRevision("$URL$","$Rev$")
+
+local VERSION = "<%version%>"
+if (VERSION == "<".."%version%>") then
+	VERSION = "6.0.DEV"
+end
+_G.INFORMANT_VERSION = VERSION -- ### keep this global for now
+
 local type,pairs,ipairs,select = type,pairs,ipairs,select
 local tonumber,tostring,strmatch = tonumber,tostring,strmatch
 local strsplit,strsub,format = strsplit,strsub,format
 local tinsert,wipe = tinsert,wipe
 local GetItemInfo = GetItemInfo
-local Informant
--- GLOBALS: INFORMANT_VERSION, _TRANS, this, LibStub
+-- GLOBALS: INFORMANT_VERSION, _TRANS, LibStub
 -- GLOBALS: InformantLocalUpdates, InformantConfig
 -- GLOBALS: InformantFrame, InformantFrameScrollBar
 -- GLOBALS: UIParent, MerchantFrame
@@ -96,10 +100,10 @@ local tooltip = LibStub("nTipHelper:1")
 
 -- GLOBAL VARIABLES
 
-BINDING_HEADER_INFORMANT_HEADER = _TRANS('INF_Interface_BindingHeader')
+BINDING_HEADER_INFORMANT_HEADER = _TRANS('INF_Interface_BindingHeader') -- ### TODO: move to InfLocale; set these after Locale is initialized
 BINDING_NAME_INFORMANT_POPUPDOWN = _TRANS('INF_Interface_BindingTitle')
 
-InformantConfig = {}
+InformantConfig = {} -- ### TODO: do this proprly during ADDOB_LOADED, move to InfSettings.lua
 
 -- LOCAL DEFINES
 
@@ -413,7 +417,7 @@ function getItem(itemLink, static)
 
 	if not incompleteFlag then
 		-- only save cache/static if data complete
-		-- todo: consider caching partial data, with a flag to try to obtain missing data next time?
+		-- TODO: consider caching partial data, with a flag to try to obtain missing data next time?
 		if static then
 			-- we adjusted the static table, if called with static = true
 			-- so save the link info for future calls
@@ -448,6 +452,7 @@ end
 
 --Implementation of GetSellValue API proposed by Tekkub at http://www.wowwiki.com/API_GetSellValue
 -- May not be accurate if an itemID is passed in
+-- ### TODO: is this still valid or useful?
 local origGetSellValue = GetSellValue
 function GetSellValue(item)
 	local itemName, itemLink, _, _, _, _, _, _, _, _, itemSellPrice = GetItemInfo(item)
@@ -539,7 +544,7 @@ function setCraftCount(craft_counts)
 	Informant.SetCraftCount = nil -- Set only once
 end
 
-function getLocale()
+function getLocale() -- ### todo: handle in Locale module
 	local locale = Informant.GetFilterVal('locale');
 	if (locale ~= 'on') and (locale ~= 'off') and (locale ~= 'default') then
 		return locale;
@@ -548,6 +553,7 @@ function getLocale()
 end
 
 -- local categories = {GetAuctionItemClasses()} -- GetAuctionItemClasses removed in 7.0.0
+-- ### TODO - review categories for different WoW versions...
 local categories = {
 		AUCTION_CATEGORY_WEAPONS,
 		AUCTION_CATEGORY_ARMOR,
@@ -1293,8 +1299,8 @@ function debugPrintQuick(...)
 	return printquick(...)
 end
 
-Informant = {
-	version = INFORMANT_VERSION,
+local install = {
+	version = VERSION,
 	GetItem = getItem,
 	GetRowCount = getRowCount,
 	AddLine = addLine,
@@ -1322,7 +1328,9 @@ Informant = {
 	GetQuestName = getQuestName,
 	OnEvent = onEvent,
 	DebugPrint = infDebugPrint,
-	DebugPrintQuick = debugPrintQuick
+	DebugPrintQuick = debugPrintQuick,
 }
 
-_G.Informant = Informant
+for k, v in pairs(install) do
+	Informant[k] = v
+end

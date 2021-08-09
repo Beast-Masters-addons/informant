@@ -31,10 +31,16 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 
-if (Informant_Manifest) then return end
+--[[ Create the Informant table as the first thing. Install empty module tables. ]]
+local Informant = {
+	Manifest = {},
+	Locale = {},
+}
+_G.Informant = Informant
 
-Informant_Manifest = { }
-local manifest = Informant_Manifest
+-- ### global Informant_Manifest was not used anywhere, therefore has been removed to reduce globals
+
+local manifest = Informant.Manifest
 
 manifest.revs = { }
 manifest.dist = {
@@ -51,7 +57,7 @@ function manifest.RegisterRevision(path, revision)
 		nLog.AddMessage("Informant", "AucRevision", N_INFO, "Loaded "..file, "Loaded", file, "revision", rev)
 	end
 end
-Informant_RegisterRevision = manifest.RegisterRevision
+Informant_RegisterRevision = manifest.RegisterRevision -- ### we shall leave this global here for now
 
 
 function manifest.ShowMessage(msg)
