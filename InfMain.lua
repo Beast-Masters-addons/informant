@@ -1061,9 +1061,6 @@ function onLoad()
 
 	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
 
-	InformantFrame:RegisterEvent("MERCHANT_SHOW");
-	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
-
 	setupSlidebar()
 end
 
@@ -1081,6 +1078,13 @@ local function frameLoaded()
 	tooltip:AddCallback(Informant.TooltipHandler, 300)
 	tooltip:AltChatLinkRegister(callbackAltChatLinkTooltip)
 	ALTCHATLINKTOOLTIP_OPEN = tooltip:AltChatLinkConstants()
+
+	InformantFrame:SetBackdrop({
+			bgFile = "Interface/DialogFrame/UI-DialogBox-Background",
+			edgeFile = "Interface/TutorialFrame/TutorialFrameBorder",
+			tile = true, tileSize = 32, edgeSize = 32,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 }
+		})
 
 	onLoad()
 end
