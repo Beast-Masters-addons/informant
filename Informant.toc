@@ -29,8 +29,8 @@ Data\InfQuests.lua
 Data\InfVendors.lua
 Data\InfData.lua
 
-InfCommand.lua
 InfSettings.lua
+InfCommand.lua
 InfTooltip.lua
 
 Informant.xml

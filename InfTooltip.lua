@@ -32,6 +32,7 @@ local setFilter = Informant.Settings.SetSetting
 local debugPrint
 
 local tooltip = LibStub("nTipHelper:1")
+local _TRANS = Informant.Locale.Translate
 
 function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	-- nothing to do, if informant is disabled
@@ -49,7 +50,7 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	local sell = 0
 	local buy = 0
 	local stacks = 1
-	
+
 	local itemInfo = Informant.GetItem(link)
 	if (not itemInfo) then return end
 	Informant.itemInfo = itemInfo

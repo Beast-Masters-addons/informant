@@ -30,73 +30,82 @@
 		since that is its designated purpose as per:
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
+if not Informant then return end
 Informant_RegisterRevision("$URL$", "$Rev$")
+local commands = Informant.Commands
 
 -- function prototypes
-local commandHandler, cmdHelp, onOff, genVarSet, chatPrint, restoreDefault, cmdLocale, setLocale, isValidLocale
+local cmdHelp, onOff, genVarSet, numberVarSet,boolVarSet, chatPrint, restoreDefault, getLocaleText, getLocaleList, setLocale
+local parseCommand
 local debugPrint
 
 -- Localization function prototypes
-local delocalizeFilterVal, localizeFilterVal, getLocalizedFilterVal, delocalizeCommand, localizeCommand, buildCommandMap
+local delocalizeParam, localizeParam, getLocalizedParam
 
-local commandMap = nil
-local commandMapRev = nil
+local _TRANS = Informant.Locale.Translate
 
-Informant.InitCommands = function()
+-- Lookup tables for localiztion (initialized after Locale module activated)
+local mapDelocalize, mapLocalize
+
+commands.OnLoad = function()
+	commands.OnLoad = nil -- Only called once from InfMain
+
+	-- Setup slash commands and handler
 	SLASH_INFORMANT1 = "/informant"
 	SLASH_INFORMANT2 = "/inform"
 	SLASH_INFORMANT3 = "/info"
 	SLASH_INFORMANT4 = "/inf"
-	SlashCmdList["INFORMANT"] = commandHandler
+	SlashCmdList["INFORMANT"] = commands.CommandHandler
 
-	chatPrint(_TRANS('INF_Help_Welcome'):format(INFORMANT_VERSION))
-end
+	-- Localizations are now available
 
-
-function buildCommandMap()
-	commandMap = {
-		[_TRANS('INF_Help_On')]			=	'on',
-		[_TRANS('INF_Help_Off')]			=	'off',
-		[_TRANS('INF_Help_CmdHelp')]			=	'help',
-		[_TRANS('INF_Help_Toggle')]		=	'toggle',
-		[_TRANS('INF_Help_CmdDisable')]		=	'disable',
-		[_TRANS('INF_Help_CmdLocale')]		=	'locale',
-		[_TRANS('INF_Help_CmdDefault')]		=	'default',
-		[_TRANS('INF_Help_CmdEmbed')]			=	'embed',
-		[_TRANS('INF_Help_CmdShowILevel')]		=	'show-ilevel',
-		[_TRANS('INF_Help_CmdShowLink')]			=	'show-link',
-		[_TRANS('INF_Help_CmdShowStack')]		=	'show-stack',
-		[_TRANS('INF_Help_CmdShowUsage')]		=	'show-usage',
-		[_TRANS('INF_Help_CmdShowQuest')]		=	'show-quest',
-		[_TRANS('INF_Help_CmdShowMerchant')]		=	'show-merchant',
-		[_TRANS('INF_Help_CmdShowZeroMerchants')] =	'show-zero-merchants',
-		[_TRANS('INF_Help_CmdShowVendor')]		=	'show-vendor',
-		[_TRANS('INF_Help_CmdShowVendorBuy')]	=	'show-vendor-buy',
-		[_TRANS('INF_Help_CmdShowVendorSell')]	=	'show-vendor-sell',
+	mapLocalize = {
+		['on'] = _TRANS('INF_Help_On'),
+		['off'] = _TRANS('INF_Help_Off'),
+		['help'] = _TRANS('INF_Help_CmdHelp'),
+		['toggle'] = _TRANS('INF_Help_Toggle'),
+		['disable'] = _TRANS('INF_Help_CmdDisable'),
+		['locale'] = _TRANS('INF_Help_CmdLocale'),
+		['default'] = _TRANS('INF_Help_CmdDefault'),
+		['embed'] = _TRANS('INF_Help_CmdEmbed'),
+		['show-ilevel'] = _TRANS('INF_Help_CmdShowILevel'),
+		['show-link'] = _TRANS('INF_Help_CmdShowLink'),
+		['show-stack'] = _TRANS('INF_Help_CmdShowStack'),
+		['show-usage'] = _TRANS('INF_Help_CmdShowUsage'),
+		['show-quest'] = _TRANS('INF_Help_CmdShowQuest'),
+		['show-merchant'] = _TRANS('INF_Help_CmdShowMerchant'),
+		['show-zero-merchants'] = _TRANS('INF_Help_CmdShowZeroMerchants'),
+		['show-vendor'] = _TRANS('INF_Help_CmdShowVendor'),
+		['show-vendor-buy'] = _TRANS('INF_Help_CmdShowVendorBuy'),
+		['show-vendor-sell'] = _TRANS('INF_Help_CmdShowVendorSell'),
+		['all'] = _TRANS('INF_Help_CmdClearAll'),
 	}
-
-	commandMapRev = {}
-	for k,v in pairs(commandMap) do
-		commandMapRev[v] = k
+	mapDelocalize = {}
+	for k,v in pairs(mapLocalize) do
+		mapDelocalize[v:lower()] = k
 	end
+	mapLocalize['true'] = mapLocalize['on']
+	mapLocalize['false'] = mapLocalize['off']
+
+	chatPrint(_TRANS('INF_Help_Welcome'):format(Informant.version))
 end
 
---Cleaner Command Handling Functions (added by MentalPower)
-function commandHandler(command, source)
-	--To print or not to print, that is the question...
+-- Informant.Commands.CommandHandler(command [, silent])
+-- command : string - the command string to parse
+-- silent : boolean (optional) - whether to suppress printing to chat (may be ignored for some commands)
+function commands.CommandHandler(command, silent)
 	local chatprint
-	if (source == "GUI") then
-		chatprint = false
-	else
+	assert(type(command) == "string") -- ### DEBUG
+	--To print or not to print, that is the question...
+	if type(silent) == "table" then
+		-- SlashCmdList passes an EditBox as the second arguament
 		chatprint = true
+	else
+		chatprint = not silent
 	end
 
-	--Divide the large command into smaller logical sections (Shameless copy from the original function)
-	local cmd, param = command:match("^([%w%-]+)%s*(.*)$")
-
-	cmd = cmd or command or ""
-	param = param or ""
-	cmd = delocalizeCommand(cmd)
+	local cmd, param = parseCommand(command)
+	cmd = delocalizeParam(cmd)
 
 	--Now for the real Command handling
 	if ((cmd == "") or (cmd == "help")) then
@@ -124,15 +133,17 @@ function commandHandler(command, source)
 		end
 	elseif (cmd == "locale") then
 		setLocale(param, chatprint)
+	elseif cmd == "list-locales" then
+		setLocale("list", chatprint)
 	elseif (cmd == "default") then
 		restoreDefault(param, chatprint)
 	elseif (
 		cmd == "embed" or cmd == "show-stack" or cmd == "show-usage" or
 		cmd == "show-quest" or cmd == "show-merchant" or cmd == "show-vendor" or
-		cmd == "show-vendor-buy" or cmd == "show-vendor-sell" or cmd == "show-ilevel" or 
+		cmd == "show-vendor-buy" or cmd == "show-vendor-sell" or cmd == "show-ilevel" or
 		cmd == "show-link" or cmd == "show-zero-merchants"
 	) then
-		genVarSet(cmd, param, chatprint)
+		boolVarSet(cmd, param, chatprint)
 	elseif (cmd == "about") then
 		chatPrint(_TRANS('about'))
 	else
@@ -149,24 +160,24 @@ function cmdHelp()
 	local lineFormat = "  |cffffffff/informant %s "..onOffToggle.."|r |cffff4020[%s]|r - %s"
 
 	chatPrint(_TRANS('INF_Help_CmdHeader'))
-	chatPrint("  |cffffffff/informant "..onOffToggle.."|r |cffff4020["..getLocalizedFilterVal('all').."]|r - " .. _TRANS('INF_HelpTooltip_EnableInformant'))
+	chatPrint("  |cffffffff/informant "..onOffToggle.."|r |cffff4020["..getLocalizedParam('all').."]|r - " .. _TRANS('INF_HelpTooltip_EnableInformant'))
 
 	chatPrint("  |cffffffff/informant ".._TRANS('INF_Help_CmdDisable').."|r - " .. _TRANS('INF_Help_CmdHelpDisable'))
 
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowVendor'), getLocalizedFilterVal('show-vendor'), _TRANS('INF_HelpTooltip_VendorToggle')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowVendorSell'), getLocalizedFilterVal('show-vendor-sell'), _TRANS('INF_HelpTooltip_ShowVendorSell')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowVendorBuy'), getLocalizedFilterVal('show-vendor-buy'), _TRANS('INF_HelpTooltip_ShowVendorBuy')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowUsage'), getLocalizedFilterVal('show-usage'), _TRANS('INF_HelpTooltip_ShowUsage')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdQuest'), getLocalizedFilterVal('show-quest'), _TRANS('INF_HelpTooltip_ShowQuest')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdMerchant'), getLocalizedFilterVal('show-merchant'), _TRANS('INF_HelpTooltip_ShowMerchant')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowZeroMerchant'), getLocalizedFilterVal('show-zero-merchants'), _TRANS('INF_HelpTooltip_ShowZeroMerchants')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowStack'), getLocalizedFilterVal('show-stack'), _TRANS('INF_HelpTooltip_ShowStack')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowILevel'), getLocalizedFilterVal('show-ilevel'), _TRANS('INF_HelpTooltip_ShowIlevel')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowLink'), getLocalizedFilterVal('show-link'), _TRANS('INF_HelpTooltip_ShowLink')))
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdEmbed'), getLocalizedFilterVal('embed'), _TRANS('INF_HelpTooltip_Embed')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowVendor'), getLocalizedParam('show-vendor'), _TRANS('INF_HelpTooltip_VendorToggle')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowVendorSell'), getLocalizedParam('show-vendor-sell'), _TRANS('INF_HelpTooltip_ShowVendorSell')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowVendorBuy'), getLocalizedParam('show-vendor-buy'), _TRANS('INF_HelpTooltip_ShowVendorBuy')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowUsage'), getLocalizedParam('show-usage'), _TRANS('INF_HelpTooltip_ShowUsage')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdQuest'), getLocalizedParam('show-quest'), _TRANS('INF_HelpTooltip_ShowQuest')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdMerchant'), getLocalizedParam('show-merchant'), _TRANS('INF_HelpTooltip_ShowMerchant')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowZeroMerchant'), getLocalizedParam('show-zero-merchants'), _TRANS('INF_HelpTooltip_ShowZeroMerchants')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowStack'), getLocalizedParam('show-stack'), _TRANS('INF_HelpTooltip_ShowStack')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowILevel'), getLocalizedParam('show-ilevel'), _TRANS('INF_HelpTooltip_ShowIlevel')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdShowLink'), getLocalizedParam('show-link'), _TRANS('INF_HelpTooltip_ShowLink')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdEmbed'), getLocalizedParam('embed'), _TRANS('INF_HelpTooltip_Embed')))
 
 	lineFormat = "  |cffffffff/informant %s %s|r |cffff4020[%s]|r - %s"
-	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdLocale'), _TRANS('INF_Help_OptLocale'), getLocalizedFilterVal('locale'), _TRANS('INF_Help_Locale')))
+	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdLocale'), _TRANS('INF_Help_OptLocale'), getLocaleText(), _TRANS('INF_Help_Locale')))
 
 	lineFormat = "  |cffffffff/informant %s %s|r - %s"
 	chatPrint(lineFormat:format(_TRANS('INF_Help_CmdDefault'), "", _TRANS('INF_Helptooltip_DefaultProfile')))
@@ -186,25 +197,19 @@ end
 	If chatprint is "true" then the state will also be printed to the user.
 --]]
 function onOff(state, chatprint)
-	if (type(state) == "string") then
-		state = delocalizeFilterVal(state)
+	state = delocalizeParam(state)
 
-	elseif (state == nil) then
-		state = 'toggle'
-	end
-
-	if (state == 'on' or state == 'off' or type(param) == "boolean") then
+	if state == 'on' or state == 'off' or type(param) == "boolean" then
 		Informant.Settings.SetSetting('all', state)
-
-	elseif (state == 'toggle') then
+	elseif state == 'toggle' or state == "" or state == nil then
 		Informant.Settings.SetSetting('all', not Informant.Settings.GetSetting('all'))
 	end
 
 	--Print the change and alert the GUI if the command came from slash commands. Do nothing if they came from the GUI.
-	if (chatprint) then
+	if chatprint then
 		state = Informant.Settings.GetSetting('all')
 
-		if (state) then
+		if state then
 			chatPrint(_TRANS('INF_Help_InfOn'))
 		else
 			chatPrint(_TRANS('INF_Help_InfOff'))
@@ -213,21 +218,19 @@ function onOff(state, chatprint)
 end
 
 function restoreDefault(param, chatprint)
-	local paramLocalized
+	local paramLocalized = param
+	param = delocalizeParam(param)
 
-	if ( (param == nil) or (param == "") ) then
+	if param == nil or param == "" then
 		return
-	elseif ((param == _TRANS('INF_Help_CmdClearAll')) or (param == "all")) then
-		param = "all"
+	elseif param == "all" then
 		Informant.Settings.RestoreDefaults()
 	else
-		paramLocalized = param
-		param = delocalizeCommand(param)
 		Informant.Settings.SetSetting(param, nil)
 	end
 
-	if (chatprint) then
-		if (param == "all") then
+	if chatprint then
+		if param == "all" then
 			chatPrint(_TRANS('INF_Help_CmdDefaultAll'))
 		else
 			chatPrint(_TRANS('INF_Help_CmdDefaultSingle'):format(paramLocalized))
@@ -235,134 +238,146 @@ function restoreDefault(param, chatprint)
 	end
 end
 
+-- For non-boolean settings, if we add any in future
 function genVarSet(variable, param, chatprint)
-	if (type(param) == "string") then
-		param = delocalizeFilterVal(param)
+	param = delocalizeParam(param)
+
+	Informant.Settings.SetSetting(variable, param)
+
+	if chatprint then
+		chatPrint(format("%s has been set to %s", localizeParam(variable), getLocalizedParam(variable)))
+	end
+end
+
+-- For settings which must be number type, if we add any in future
+function numberVarSet(variable, param, chatprint)
+	param = delocalizeParam(param)
+
+	if param == nil or param == "" or param == "default" then
+		Informant.Settings.SetSetting(variable, nil)
+	else
+		param = tonumber(param)
+		if param then
+			Informant.Settings.SetSetting(variable, param)
+		end
 	end
 
-	if (param == "on" or param == "off" or type(param) == "boolean") then
-		Informant.Settings.SetSetting(variable, param)
-	elseif (param == "toggle" or param == nil or param == "") then
+	if chatprint then
+		chatPrint(format("%s has been set to %s", localizeParam(variable), getLocalizedParam(variable)))
+	end
+end
+
+function boolVarSet(variable, param, chatprint)
+	param = delocalizeParam(param)
+
+	if param == "on" or param == "off" or param == "default" or type(param) == "boolean" then
+		Informant.Settings.SetSetting(variable, param) -- SetSetting converts the above strings to boolean
+	elseif param == "toggle" or param == nil or param == "" then
 		param = Informant.Settings.SetSetting(variable, not Informant.Settings.GetSetting(variable))
 	end
 
-	if (chatprint) then
-		if (Informant.Settings.GetSetting(variable)) then
-			chatPrint(_TRANS('INF_Interface_EnableInformant'):format(localizeCommand(variable)))
+	if chatprint then
+		if Informant.Settings.GetSetting(variable) then
+			chatPrint(_TRANS('INF_Interface_EnableInformant'):format(localizeParam(variable)))
 		else
-			chatPrint(_TRANS('INF_Help_Disable'):format(localizeCommand(variable)))
+			chatPrint(_TRANS('INF_Help_Disable'):format(localizeParam(variable)))
 		end
 	end
 end
 
-function isValidLocale(param)
-	return (InformantLocalizations and InformantLocalizations[param])
+function getLocaleText()
+	local current, future, futuredefault = Informant.Locale.GetLocale()
+	if not (current and future) then
+		return "Unknown"
+	end
+	local text = current
+	if current ~= future then
+		text = text .. "/" .. future
+	end
+	if futuredefault then
+		text = text .. "(default)"
+	end
+
+	return text
 end
+
+function getLocaleList()
+	local list = Informant.Locale.GetLocaleList()
+	local text = list[1].."(default)" -- index [1] is always the default locale
+	for i = 2, #list do
+		text = text .. ", " .. list[i]
+	end
+	return text
+end
+
 
 function setLocale(param, chatprint)
-	param = delocalizeFilterVal(param)
-	local validLocale
+	param = delocalizeParam(param)
 
-	if (param == 'default') or (param == 'off') then
-		Babylonian.SetOrder('')
-		validLocale = true
-
-	elseif (isValidLocale(param)) then
-		Babylonian.SetOrder(param)
-		validLocale = true
-
-	else
-		validLocale = false
+	if param == "list" then
+		chatPrint("Available locales:")
+		chatPrint(getLocaleList())
+		return
 	end
 
-	BINDING_HEADER_INFORMANT_HEADER = _TRANS('INF_Help_CmdInformant')
-	BINDING_NAME_INFORMANT_POPUPDOWN = _TRANS('INF_Help_CmdLoadMsg')
+	local success = Informant.Locale.SetLocale(param)
 
-	if (chatprint) then
-		if (validLocale) then
-			chatPrint(_TRANS('INF_Help_CmdSetLocale'):format(_TRANS('INF_Help_CmdLocale'), param))
-
+	if chatprint then
+		if success then
+			chatPrint(_TRANS('INF_Help_CmdSetLocale'):format(_TRANS('INF_Help_CmdLocale'), param)) -- note this will be in old locale
 		else
 			chatPrint(_TRANS("INF_Help_LocaleUnknown"):format(param))
-			local locales = "    "
-			for locale, data in pairs(InformantLocalizations) do
-				locales = locales .. " '" .. locale .. "' "
-			end
-			chatPrint(locales)
+			chatPrint(getLocaleList())
 		end
 	end
-
-	commandMap = nil
-	commandMapRev = nil
 end
 
 function chatPrint(msg)
-	if (DEFAULT_CHAT_FRAME) then
+	if DEFAULT_CHAT_FRAME then
 		DEFAULT_CHAT_FRAME:AddMessage(msg, 0.25, 0.55, 1.0)
 	end
+end
+
+-- Parse command string to extract the first block of non-space characters
+-- returns:
+-- [1] first : first extracted command; works for utf8 multibyte characters
+--		returns "" if no command found (i.e. no non-space characters)
+-- [2] remainder : rest of the string following 'first', with leading and trailing spaces trimmed
+--		returns "" if no further commands or parameters found
+--		parseCommand may be called on the remainder to extract the next subcommand or parameter
+function parseCommand(command)
+	local first, remainder = command:match("^%s*(%S+)(.*)$")
+	if not first then return "", "" end
+	remainder = remainder:match("^%s*(.-)%s*$") or ""
+	return first, remainder
 end
 
 --------------------------------------
 --		Localization functions		--
 --------------------------------------
 
-function delocalizeFilterVal(value)
-	if (value == _TRANS('INF_Help_On')) then
-		return true
-
-	elseif (value == _TRANS('INF_Help_Off')) then
-		return false
-
-	elseif (value == _TRANS('INF_Help_CmdDefault')) then
-		return 'default'
-
-	elseif (value == _TRANS('INF_Help_Toggle')) then
-		return 'toggle'
-
-	else
-		return value
+-- Convert a localized slash command, parameter or value into the lowercase generic English version
+-- Returns the original value if not recognised, or not a string
+function delocalizeParam(cmd)
+	if type(cmd) ~= "string" then
+		return cmd
 	end
+	cmd = cmd:lower()
+	return mapDelocalize[cmd] or cmd
 end
 
-function localizeFilterVal(value)
-	local result
-
-	if (value == 'on' or (type(value) == "boolean" and value == true)) then
-		result = _TRANS('INF_Help_On')
-
-	elseif (value == 'off' or (type(value) == "boolean" and value == false)) then
-		result = _TRANS('INF_Help_Off')
-
-	elseif (value == 'default') then
-		result = _TRANS('INF_Help_CmdDefault')
-
-	elseif (value == 'toggle') then
-		result = _TRANS('INF_Help_Toggle')
-	end
-
-	return result or value
+-- Translate a generic English slash command, parameter or value to the localized version, if available
+-- Returns the original value (converted to a string) if no localization available
+-- Always returns a string
+function localizeParam(cmd)
+	cmd = tostring(cmd)
+	local cmdlow = cmd:lower()
+	return mapLocalize[cmdlow] or cmd
 end
 
-function getLocalizedFilterVal(key)
-	return localizeFilterVal(Informant.Settings.GetSetting(key))
-end
-
--- Turns a localized slash command into the generic English version of the command
-function delocalizeCommand(cmd)
-	if (not commandMap) then
-		buildCommandMap()
-	end
-
-	return commandMap[cmd] or cmd
-end
-
--- Translate a generic English slash command to the localized version, if available
-function localizeCommand(cmd)
-	if (not commandMapRev) then
-		buildCommandMap()
-	end
-
-	return commandMapRev[cmd] or cmd
+-- Fetch parameter, localize if available, and convert to string for printing
+function getLocalizedParam(key)
+	return localizeParam(Informant.Settings.GetSetting(key))
 end
 
 -------------------------------------------------------------------------------
@@ -391,9 +406,3 @@ end
 function debugPrint(message, title, errorCode, level)
 	return Informant.DebugPrint(message, "InfCommand", title, errorCode, level)
 end
-
--- Globally accessible functions
-Informant.SetLocale = setLocale
-
-
-

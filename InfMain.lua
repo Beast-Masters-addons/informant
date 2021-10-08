@@ -28,24 +28,23 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 
-local _G=_G
+local _G = _G
 local Informant = _G.Informant
 if not Informant then return end
 
 Informant_RegisterRevision("$URL$","$Rev$")
 
 local VERSION = "<%version%>"
-if (VERSION == "<".."%version%>") then
-	VERSION = "6.0.DEV"
+if VERSION:byte(1) == 60 then -- '<' character
+	VERSION = "6.1.DEV"
 end
-_G.INFORMANT_VERSION = VERSION -- ### keep this global for now
 
 local type,pairs,ipairs,select = type,pairs,ipairs,select
 local tonumber,tostring,strmatch = tonumber,tostring,strmatch
 local strsplit,strsub,format = strsplit,strsub,format
 local tinsert,wipe = tinsert,wipe
 local GetItemInfo = GetItemInfo
--- GLOBALS: INFORMANT_VERSION, _TRANS, LibStub
+-- GLOBALS: LibStub
 -- GLOBALS: InformantLocalUpdates, InformantConfig
 -- GLOBALS: InformantFrame, InformantFrameScrollBar
 -- GLOBALS: UIParent, MerchantFrame
@@ -67,6 +66,7 @@ local infDebugPrint         -- debugPrint(message, category, title, errorCode, l
 local onEvent				-- onEvent(event)
 local onLoad				-- onLoad()
 local onVariablesLoaded		-- onVariablesLoaded()
+local onInitialize
 local onQuit				-- onQuit()
 local scrollUpdate			-- scrollUpdate(offset)
 local setDatabase			-- setDatabase(database)
@@ -95,15 +95,12 @@ local OnTooltipAddMoney
 local self = {}
 local lines = {}
 local addonName = "Informant"
-
+local _TRANS = Informant.Locale.Translate
 local tooltip = LibStub("nTipHelper:1")
 
 -- GLOBAL VARIABLES
 
-BINDING_HEADER_INFORMANT_HEADER = _TRANS('INF_Interface_BindingHeader') -- ### TODO: move to InfLocale; set these after Locale is initialized
-BINDING_NAME_INFORMANT_POPUPDOWN = _TRANS('INF_Interface_BindingTitle')
-
-InformantConfig = {} -- ### TODO: do this proprly during ADDOB_LOADED, move to InfSettings.lua
+InformantConfig = {} -- ### TODO: do this properly during ADDON_LOADED, move to InfSettings.lua
 
 -- LOCAL DEFINES
 
@@ -125,8 +122,7 @@ CLASS_TO_CATEGORY_MAP = {
 	[12] = 12, --Quest
 }
 
-local soulbindtypes = {_TRANS("INF_Tooltip_SoulBindUse"),_TRANS("INF_Tooltip_SoulBindEquip"),_TRANS("INF_Tooltip_SoulBindPickup")}
-local specialbindtypes = {_TRANS("INF_Tooltip_SpecialBindAccount"),_TRANS("INF_Tooltip_SpecialBindGuild")}
+local soulbindtypes, specialbindtypes
 
 -- FUNCTION DEFINITIONS
 
@@ -544,12 +540,8 @@ function setCraftCount(craft_counts)
 	Informant.SetCraftCount = nil -- Set only once
 end
 
-function getLocale() -- ### todo: handle in Locale module
-	local locale = Informant.GetFilterVal('locale');
-	if (locale ~= 'on') and (locale ~= 'off') and (locale ~= 'default') then
-		return locale;
-	end
-	return GetLocale();
+function getLocale()
+	return Informant.Locale.GetLocale()
 end
 
 -- local categories = {GetAuctionItemClasses()} -- GetAuctionItemClasses removed in 7.0.0
@@ -981,7 +973,7 @@ local function slidebarclickhandler(_, button)
 	end
 end
 
-local function slidebar()
+local function setupSlidebar()
 	if LibStub then
 		local LibDataBroker = LibStub:GetLibrary("LibDataBroker-1.1", true)
 		if LibDataBroker then
@@ -1008,46 +1000,11 @@ local function slidebar()
 	end
 end
 
-function onLoad()
-	InformantFrame:RegisterEvent("ADDON_LOADED")
-
-	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
-
-	InformantFrame:RegisterEvent("MERCHANT_SHOW");
-	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
-
-	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
-
-	InformantFrame:RegisterEvent("MERCHANT_SHOW");
-	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
-
-	InformantFrameTitle:SetText(_TRANS('INF_Interface_InfWinTitle'))
-	slidebar()
-end
-
-local ALTCHATLINKTOOLTIP_OPEN
-local function callbackAltChatLinkTooltip(link, text, button, chatFrame)
-	if button == "LeftButton"
-	and Informant.Settings.GetSetting("altchatlink-tooltip")
-	and link:sub(1, 4) == "item" then
-		return ALTCHATLINKTOOLTIP_OPEN
-	end
-end
-
-local function frameLoaded()
+local function setupStubby()
 	Stubby.RegisterEventHook("PLAYER_LEAVING_WORLD", "Informant", onQuit)
-
-	tooltip:Activate()
-	tooltip:AddCallback(Informant.TooltipHandler, 300)
-	tooltip:AltChatLinkRegister(callbackAltChatLinkTooltip)
-	ALTCHATLINKTOOLTIP_OPEN = tooltip:AltChatLinkConstants()
-
-	onLoad()
-
 	-- Setup the default for stubby to always load (people can override this on a
 	-- per toon basis)
 	Stubby.SetConfig("Informant", "LoadType", "always", true)
-
 	-- Register our temporary command hook with stubby
 	Stubby.RegisterBootCode("Informant", "CommandHandler",
 	-- Localize Me!
@@ -1083,23 +1040,65 @@ local function frameLoaded()
 		SLASH_INFORMANT3 = "/info"
 		SLASH_INFORMANT4 = "/inf"
 		SlashCmdList["INFORMANT"] = cmdHandler
-	]]);
+	]])
 	Stubby.RegisterBootCode("Informant", "Triggers", [[
 		local loadType = Stubby.GetConfig("Informant", "LoadType")
 		if (loadType == "always") then
 			LoadAddOn("Informant")
 		else
-			Stubby.Print("]].._TRANS('INF_Help_CmdLoadMsg')..[[");
+			Stubby.Print("]].._TRANS('INF_Help_CmdLoadMsg')..[["); -- ### _TRANS
 		end
-	]]);
+	]])
+end
+
+function onLoad()
+	InformantFrame:RegisterEvent("ADDON_LOADED")
+
+	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
+
+	InformantFrame:RegisterEvent("MERCHANT_SHOW");
+	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
+
+	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
+
+	InformantFrame:RegisterEvent("MERCHANT_SHOW");
+	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
+
+	setupSlidebar()
+end
+
+local ALTCHATLINKTOOLTIP_OPEN
+local function callbackAltChatLinkTooltip(link, text, button, chatFrame)
+	if button == "LeftButton"
+	and Informant.Settings.GetSetting("altchatlink-tooltip")
+	and link:sub(1, 4) == "item" then
+		return ALTCHATLINKTOOLTIP_OPEN
+	end
+end
+
+local function frameLoaded()
+	tooltip:Activate()
+	tooltip:AddCallback(Informant.TooltipHandler, 300)
+	tooltip:AltChatLinkRegister(callbackAltChatLinkTooltip)
+	ALTCHATLINKTOOLTIP_OPEN = tooltip:AltChatLinkConstants()
+
+	onLoad()
 end
 
 function onVariablesLoaded()
 	if (not InformantConfig) then
 		InformantConfig = {}
 	end
+end
 
+function onInitialize()
+	-- Translations are now available
 	InformantFrameTitle:SetText(_TRANS('INF_Interface_InfWinTitle'))
+	BINDING_HEADER_INFORMANT_HEADER = _TRANS('INF_Interface_BindingHeader')
+	BINDING_NAME_INFORMANT_POPUPDOWN = _TRANS('INF_Interface_BindingTitle')
+
+	soulbindtypes = {_TRANS("INF_Tooltip_SoulBindUse"),_TRANS("INF_Tooltip_SoulBindEquip"),_TRANS("INF_Tooltip_SoulBindPickup")}
+	specialbindtypes = {_TRANS("INF_Tooltip_SpecialBindAccount"),_TRANS("INF_Tooltip_SpecialBindGuild")}
 
 	if (InformantConfig.position) then
 		InformantFrame:ClearAllPoints()
@@ -1112,13 +1111,16 @@ function onVariablesLoaded()
 		InformantConfig.welcomed = true
 	end
 
-	Informant.InitCommands()
+	Informant.Commands.OnLoad()
+	setupStubby()
 end
 
 function onEvent(event, addon)
 
 	if (event == "ADDON_LOADED" and addon:lower() == "informant") then
 		onVariablesLoaded()
+		Informant.Locale.OnLoad() -- Translations are available after this point
+		onInitialize()
 		InformantFrame:UnregisterEvent("ADDON_LOADED")
 		scrubLocalUpdateInfo()		-- to fix up data errors
 	end

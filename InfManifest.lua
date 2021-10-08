@@ -35,6 +35,8 @@
 local Informant = {
 	Manifest = {},
 	Locale = {},
+	Settings = {},
+	Commands = {},
 }
 _G.Informant = Informant
 

@@ -63,13 +63,14 @@ Usage:
 
 
 ]]
+if not Informant then return end
+
 Informant_RegisterRevision("$URL$", "$Rev$")
 
-local lib = {}
-Informant.Settings = lib
-local private = {}
+local lib = Informant.Settings
 local gui
 local debugPrint
+local _TRANS = Informant.Locale.Translate
 
 local UserSig = format("users.%s.%s", GetRealmName(), UnitName("player"))
 
@@ -94,7 +95,7 @@ end
 
 
 local function cleanse( profile )
-	if (profile) then
+	if type(profile) == "table" then
 		wipe(profile)
 	end
 end
@@ -111,7 +112,6 @@ end
 -- moved from InfMain.lua filterDefaults
 local settingDefaults = {
 	['all'] = true,
-	['locale'] = 'default',
 	['embed'] = false,
 	['show-vendor'] = true,
 	['show-vendor-buy'] = true,
@@ -262,7 +262,11 @@ local function setter(setting, value)
 
 		-- Refresh all values to reflect current data
 		gui:Refresh()
-
+	elseif a == "locale" then
+		local success = Informant.Locale.SetLocale(value)
+		if success then
+			gui:Refresh()
+		end
 	else
 		-- Set the value for this setting in the current profile
 		local db = getUserProfile()
@@ -301,6 +305,9 @@ local function getter(setting)
 		else -- other profile settings - no return values
 			return
 		end
+	elseif a == "locale" then
+		local _, future = Informant.Locale.GetLocale()
+		return future
 	end
 
 	local db = getUserProfile()
@@ -320,25 +327,20 @@ function lib.GetSetting(setting, default)
 	end
 end
 
---[[
-function lib.UpdateGuiConfig()
-	if gui then
-		if gui:IsVisible() then
-			gui:Hide()
-		end
-		gui = nil
-		lib.MakeGuiConfig()
-	end
-end
---]]
-
-function lib.MakeGuiConfig()
-	if gui then return end
-
+local function makeGuiConfig()
 	local id, last, cont
 	local Configator = LibStub:GetLibrary("Configator")
 	gui = Configator:Create(setter, getter)
 	lib.Gui = gui
+
+	local localelist = Informant.Locale.GetLocaleList()
+	local localedropdown = {}
+	for index = 1, #localelist do
+		tinsert(localedropdown, {localelist[index], localelist[index]})
+	end
+	local function selectorLocales()
+		return localedropdown
+	end
 
   	gui:AddCat("Informant")	-- TODO - localize me!
 
@@ -394,6 +396,9 @@ function lib.MakeGuiConfig()
 	gui:AddControl(id, "Checkbox",   0, 1, "auto-update", _TRANS('INF_Interface_AutoUpdate')) --"Automatically update item information at merchants"
 	gui:AddTip(id, _TRANS('INF_HelpTooltip_AutoUpdate')) --"Allow Informant to scan your bags and merchant inventory for updates"
 
+	gui:AddControl(id, "Selectbox", 0, 1, selectorLocales, "locale", 60, "Change localization language (for next session)") -- "locale" is not a true setting, it gets special handling by setter and getter functions
+	gui:AddTip(id, "The selected Locale takes effect after a /reload or on next login")
+
 	-- TODO - localize me!
 	gui:AddHelp(id, "what is",
 		_TRANS('INF_Help_WhatIs'), --"What is Informant?"
@@ -445,10 +450,14 @@ function lib.MakeGuiConfig()
 		"You can delete a profile when you don't want to use it anymore, or you want to create it from scratch again with default values. Deleting a profile will also affect any other characters who are using the profile."
 	)
 
+	makeGuiConfig = nil
 end
 
-
-
+function lib.MakeGuiConfig()
+	if makeGuiConfig then
+		makeGuiConfig()
+	end
+end
 
 
 -------------------------------------------------------------------------------
