@@ -40,14 +40,13 @@
 		</Scripts>
 	</GameTooltip>
 
-	<Frame name="InformantFrame" toplevel="true" parent="UIParent" frameStrata="DIALOG" hidden="true" enableMouse="true" moveable="true" inherits="BackdropTemplate">
+	<Frame name="InformantFrame" toplevel="true" parent="UIParent" frameStrata="DIALOG" hidden="true" enableMouse="true" movable="true" inherits="BackdropTemplate">
 		<Size>
 			<AbsDimension x="380" y="380"/>
 		</Size>
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
-		<TitleRegion setAllPoints="true"/>
 		<Scripts>
 			<OnLoad>
 				Informant.FrameLoaded()
@@ -61,6 +60,8 @@
 			<OnEvent>
 				Informant.OnEvent(event, ...);
 			</OnEvent>
+			<OnDragStart>self:StartMoving()</OnDragStart>
+			<OnDragStop>self:StopMovingOrSizing()</OnDragStop>
 		</Scripts>
 		<Layers>
 			<Layer level="OVERLAY">
