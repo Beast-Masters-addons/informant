@@ -907,7 +907,7 @@ local function doUpdateMerchant()
 	local vendorID = updateMerchantName()
 	if not vendorID then return end
 	updateBuyPricesFromMerchant( vendorID )
-	updateSellPricesFromMerchant()
+	--updateSellPricesFromMerchant()
 
 	wipe(cache)
 end
@@ -1054,12 +1054,12 @@ end
 function onLoad()
 	InformantFrame:RegisterEvent("ADDON_LOADED")
 
-	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
+	--Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
 
 	InformantFrame:RegisterEvent("MERCHANT_SHOW");
 	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
 
-	Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
+	--Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
 
 	setupSlidebar()
 end
