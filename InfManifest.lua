@@ -85,7 +85,7 @@ function manifest.ShowMessage(msg)
 		messageFrame.done:SetPoint("BOTTOMRIGHT", messageFrame, "BOTTOMRIGHT", -10, 10)
 		messageFrame.done:SetScript("OnClick", function() messageFrame:Hide() end)
 
-		messageFrame.text = messageFrame:CreateFontString("", "HIGH")
+		messageFrame.text = messageFrame:CreateFontString(nil, "OVERLAY")
 		messageFrame.text:SetPoint("TOPLEFT", messageFrame, "TOPLEFT", 10, -10)
 		messageFrame.text:SetPoint("BOTTOMRIGHT", messageFrame.done, "TOPRIGHT")
 		messageFrame.text:SetFont(STANDARD_TEXT_FONT,13)
