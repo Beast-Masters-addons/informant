@@ -51,6 +51,20 @@ local GetItemInfo = GetItemInfo
 -- GLOBALS: UnitGUID, UnitFactionGroup, UnitName
 -- GLOBALS: InRepairMode, GetMerchantItemLink, GetMerchantItemInfo, GetMerchantNumItems
 
+-- Locals to handle C_Container namespace in newer build of clients; expect these to be merged to all clients eventually ### hybrid
+local GetContainerNumSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
+local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
+-- Special handling for C_Container.GetContainerItemInfo, which now returns a table instead of multiple return values
+-- We only return up to the 6th return value; all returns might not be used
+local GetContainerItemInfoSpecial = GetContainerItemInfo
+if C_Container and C_Container.GetContainerItemInfo then
+	GetContainerItemInfoSpecial = function(bag, slot)
+		local info = C_Container.GetContainerItemInfo(bag, slot)
+		if info then
+			return info.iconFileID, info.stackCount, info.isLocked, info.quality, info.isReadable, info.hasLoot
+		end
+	end
+end
 
 -- LOCAL FUNCTION PROTOTYPES:
 local addLine				-- addLine(text, color)
@@ -725,7 +739,7 @@ local function TooltipScanBagItem(bag, slot)
 	local tt = Informant_ScanTooltip
 	tt.scanningMoneyFound = false
 	tt:ClearLines()
-	local _, count = GetContainerItemInfo(bag, slot)
+	local _, count = GetContainerItemInfoSpecial(bag, slot)
 	if (not count or count < 1) then return end
 	tt.scanningStack = count
 
