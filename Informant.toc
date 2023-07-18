@@ -1,11 +1,12 @@
 ## Title: Informant
 ## Notes: Displays detailed item information in tooltips, such as use, vendor sales information, and more.
 ##
-## Interface: 80205
+## Interface: 100105
 ## LoadOnDemand: 1
 ## Dependencies: Stubby
 ## OptionalDeps: !nLog, Babylonian, DebugLib, Configator, SlideBar, LibExtraTip, TipHelper, LibDataBroker
 ## SavedVariables: InformantConfig, InformantLocalUpdates
+## IconTexture: Interface/Addons/Informant/inficon.blp
 ##
 ## Version: <%version%> (<%codename%>)
 ## Revision: $Id$
