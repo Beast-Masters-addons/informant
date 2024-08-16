@@ -48,16 +48,7 @@ manifest.revs = { }
 manifest.dist = {
 --[[<%revisions%>]]}
 
-local libRevision = LibStub("LibRevision")
-function manifest.RegisterRevision(path, revision)
-	local detail, file, rev = libRevision:Set(path,revision,"5.1.DEV.", 'auctioneer', 'libs')
-	if not file then return end
-	if not rev then rev = 0 else rev = tonumber(rev) or 0 end
-
-	manifest.revs[file] = rev
-	if (nLog) then
-		nLog.AddMessage("Informant", "AucRevision", N_INFO, "Loaded "..file, "Loaded", file, "revision", rev)
-	end
+function manifest.RegisterRevision() -- ### LibRevision removed
 end
 Informant_RegisterRevision = manifest.RegisterRevision -- ### we shall leave this global here for now
 

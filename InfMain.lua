@@ -1030,11 +1030,11 @@ local function setupStubby()
 			if (cmd == "load") then
 				if (param == "") then
 					Stubby.Print("Manually loading Informant...")
-					LoadAddOn("Informant")
+					C_AddOns.LoadAddOn("Informant")
 				elseif (param == "always") then
 					Stubby.Print("Setting Informant to always load for this character")
 					Stubby.SetConfig("Informant", "LoadType", param)
-					LoadAddOn("Informant")
+					C_AddOns.LoadAddOn("Informant")
 				elseif (param == "never") then
 					Stubby.Print("Setting Informant to never load automatically for this character (you may still load manually)")
 					Stubby.SetConfig("Informant", "LoadType", param)
@@ -1058,7 +1058,7 @@ local function setupStubby()
 	Stubby.RegisterBootCode("Informant", "Triggers", [[
 		local loadType = Stubby.GetConfig("Informant", "LoadType")
 		if (loadType == "always") then
-			LoadAddOn("Informant")
+			C_AddOns.LoadAddOn("Informant")
 		else
 			Stubby.Print("]].._TRANS('INF_Help_CmdLoadMsg')..[["); -- ### _TRANS
 		end
