@@ -56,7 +56,7 @@ Informant_RegisterRevision = manifest.RegisterRevision -- ### we shall leave thi
 function manifest.ShowMessage(msg)
 	local messageFrame = manifest.messageFrame
 	if not messageFrame then
-		messageFrame = CreateFrame("Frame", "", UIParent, BackdropTemplateMixin and "BackdropTemplate")
+		messageFrame = CreateFrame("Frame", "", UIParent, "BackdropTemplate")
 		manifest.messageFrame = messageFrame
 
 		messageFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
@@ -71,7 +71,8 @@ function manifest.ShowMessage(msg)
 		})
 		messageFrame:SetBackdropColor(0.5,0,0, 0.8)
 
-		messageFrame.done = CreateFrame("Button", "", messageFrame, "OptionsButtonTemplate")
+		messageFrame.done = CreateFrame("Button", nil, messageFrame, "UIPanelButtonTemplate")
+		messageFrame.done:SetSize(90, 21)
 		messageFrame.done:SetText(OKAY)
 		messageFrame.done:SetPoint("BOTTOMRIGHT", messageFrame, "BOTTOMRIGHT", -10, 10)
 		messageFrame.done:SetScript("OnClick", function() messageFrame:Hide() end)
