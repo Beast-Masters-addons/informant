@@ -128,6 +128,12 @@ local settingDefaults = {
 	['show-binding'] = false,
 	['altchatlink-tooltip'] = false,
 
+	-- addons compartment & minimap
+	['addoncompartment'] = true,
+	['miniicon-enable'] = true,
+	['miniicon-angle'] = 118,
+	['miniicon-distance'] = 12,
+
 -- leave this option off until we have real data to test with
 -- enable only for dev testing
 	['show-crafted'] = false,
@@ -411,7 +417,7 @@ local function makeGuiConfig()
 	--Copied from ADV
 	id = gui:AddTab("Profiles")
 
-	gui:AddControl(id, "Header",     0,    _TRANS('INF_Interface_SetupProfile')) --"Setup, Configure and Edit Profiles"
+	gui:AddControl(id, "Header",     0,    _TRANS('INF_Interface_SetupProfiles')) --"Setup, Configure and Edit Profiles"
 
 	gui:AddControl(id, "Subhead",    0,    _TRANS('INF_Interface_ActivateProfile')) --"Activate a current profile"
 	gui:AddControl(id, "Selectbox",  0, 1, "profile.profiles", "profile")
@@ -449,6 +455,24 @@ local function makeGuiConfig()
 		"Why would I want to delete a profile?",
 		"You can delete a profile when you don't want to use it anymore, or you want to create it from scratch again with default values. Deleting a profile will also affect any other characters who are using the profile."
 	)
+
+	id = gui:AddTab("Access") -- section for options access methods
+	-- slidebar is handled in slidebar options and skipped here
+	-- covered is minimap, and, when available, the blizzard addons compartment
+	-- both starters are pulled form Enchantrix
+	gui:AddControl(id, "Header",     0,    _TRANS('INF_Access_Config_Options')) -- "How would you like to access these options?"
+
+	gui:AddControl(id, "Subhead",    0,    _TRANS("INF_GuiMinimapOptions"))
+	gui:AddControl(id, "Checkbox",   0, 1, "miniicon-enable", _TRANS("INF_GuiMinimapShowButton"))
+	gui:AddControl(id, "Slider",     0, 1, "miniicon-angle", 0, 360, 1, _TRANS("INF_GuiMinimapButtonAngle"))
+	gui:AddControl(id, "Slider",     0, 1, "miniicon-distance", -80, 80, 1, _TRANS("INF_GuiMinimapButtonDist"))
+
+
+	if AddonCompartmentFrame then
+		gui:AddControl(id, "Subhead",    0,    _TRANS('INF_GuiAddOnsCompartmentOptions')) -- "Show in Blizzard's AddOnCompatment:"
+		gui:AddControl(id, "Checkbox",   0, 1, "addoncompartment", _TRANS('INF_GuiAddOnsCompartmentEnable')) -- give a checkbox window for this (start enabled as it's new)
+		gui:AddTip(id, _TRANS("INF_GuiAddOnsCompartmentWarning"))
+	end
 
 	makeGuiConfig = nil
 end
