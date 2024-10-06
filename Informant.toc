@@ -34,3 +34,5 @@ InfCommand.lua
 InfTooltip.lua
 
 Informant.xml
+
+InfOptAcc.lua
