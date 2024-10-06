@@ -23,6 +23,10 @@
 		along with this program(see GPL.txt); if not, write to the Free Software
 		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
+
+if not Informant then return end
+
+-- some basics for this file
 Informant_RegisterRevision("$URL$", "$Rev$")
 local addonName = "Informant"
 local getValue = Informant.Settings.GetSetting
@@ -101,15 +105,15 @@ local function dragStop()
 end
 
 function miniIcon.Reposition(angle)
-	if not getValue("miniicon-enable") then
+	if not getValue('miniicon-enable') then
 		miniIcon:Hide()
 		return
 	end
 	miniIcon:Show()
-	if not angle then angle = getValue("miniicon-angle") or 0.5
-	else setValue("miniicon-angle", angle) end
+	if not angle then angle = getValue('miniicon-angle') or 0.5
+	else setValue('miniicon-angle', angle) end
 	angle = angle
-	local distance = getValue("miniicon-distance")
+	local distance = getValue('miniicon-distance')
 
 	local width,height = Minimap:GetWidth()/2, Minimap:GetHeight()/2
 	width = width+distance
@@ -225,7 +229,7 @@ function AddonLoaded()
 	-- setupSlidebar()  -- if slidebar is moved here\
 	
 	-- if enabled, kick off the minimap icon
-	if getValue("miniicon-enable") then
+	if getValue('miniicon-enable') then
 		miniIcon.Reposition()
 	end
 
@@ -240,8 +244,7 @@ function AddonLoaded()
 	end
 end
 
--- fifth sense the add on is loaded and set off our loaded function
-
+-- fifth sense the add on is loading and set off our loaded function
 loading, _ = C_AddOns.IsAddOnLoaded(addonName)
 if loading then
 	AddonLoaded() -- load options access methods
