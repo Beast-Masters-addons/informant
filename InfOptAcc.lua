@@ -24,8 +24,6 @@
 		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
 
-local _G = _G
-local Informant = _G.Informant
 if not Informant then return end
 
 -- some basics for this file
@@ -82,7 +80,7 @@ end
 ]]
 
 -- second the classic minimap button
-local miniIcon = CreateFrame("Button", "InfMiniMapIcon", Minimap);
+miniIcon = CreateFrame("Button", "InfMiniMapIcon", Minimap);
 Informant.MiniIcon = miniIcon
 miniIcon.infMoving = false
 
