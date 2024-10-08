@@ -130,9 +130,9 @@ local settingDefaults = {
 
 	-- addons compartment & minimap
 	['addoncompartment'] = true,
-	['miniicon-enable'] = true,
-	['miniicon-angle'] = 118,
-	['miniicon-distance'] = 12,
+	['mmenable'] = true,
+	['mmangle'] = 118,
+	['mmdistance'] = 12,
 
 -- leave this option off until we have real data to test with
 -- enable only for dev testing
@@ -283,7 +283,15 @@ local function setter(setting, value)
 -- not implemented yet
 --		Informant.SideIcon.Update()
 	end
-
+	
+	-- if updating the minimap icon setting
+	if (a == "mmenable") then
+		if a then
+			miniIcon:Show()
+		else
+			miniIcon:Hide()
+		end
+	end
 end
 
 function lib.SetSetting(...)
@@ -462,10 +470,10 @@ local function makeGuiConfig()
 	-- both starters are pulled form Enchantrix
 	gui:AddControl(id, "Header",     0,    _TRANS('INF_Access_Config_Options')) -- "How would you like to access these options?"
 
-	gui:AddControl(id, "Subhead",    0,    _TRANS("INF_GuiMinimapOptions"))
-	gui:AddControl(id, "Checkbox",   0, 1, "miniicon-enable", _TRANS("INF_GuiMinimapShowButton"))
-	gui:AddControl(id, "Slider",     0, 1, "miniicon-angle", 0, 360, 1, _TRANS("INF_GuiMinimapButtonAngle"))
-	gui:AddControl(id, "Slider",     0, 1, "miniicon-distance", -80, 80, 1, _TRANS("INF_GuiMinimapButtonDist"))
+	gui:AddControl(id, "Subhead",    0,    _TRANS("INF_GuiMinimapOptions")) -- show in the minimap
+	gui:AddControl(id, "Checkbox",   0, 1, "mmenable", _TRANS("INF_GuiMinimapShowButton")) -- give a checkbox window for this (start enabled as it's new)
+	gui:AddControl(id, "Slider",     0, 1, "mmangle", 0, 360, 1, _TRANS("INF_GuiMinimapButtonAngle"))
+	gui:AddControl(id, "Slider",     0, 1, "mmdistance", -80, 80, 1, _TRANS("INF_GuiMinimapButtonDist"))
 
 
 	if AddonCompartmentFrame then
@@ -510,4 +518,3 @@ end
 function debugPrint(message, title, errorCode, level)
 	return Informant.DebugPrint(message, "InfSettings", title, errorCode, level)
 end
-

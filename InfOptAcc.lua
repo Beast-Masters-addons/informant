@@ -105,15 +105,15 @@ local function dragStop()
 end
 
 function miniIcon.Reposition(angle)
-	if not getValue('miniicon-enable') then
+	if not getValue("mmenable") then
 		miniIcon:Hide()
 		return
 	end
 	miniIcon:Show()
-	if not angle then angle = getValue('miniicon-angle') or 0.5
-	else setValue('miniicon-angle', angle) end
+	if not angle then angle = getValue('mmangle') or 0.5
+	else setValue('mmangle', angle) end
 	angle = angle
-	local distance = getValue('miniicon-distance')
+	local distance = getValue('mmdistance')
 
 	local width,height = Minimap:GetWidth()/2, Minimap:GetHeight()/2
 	width = width+distance
@@ -194,7 +194,6 @@ miniIcon:SetScript("OnUpdate", update)
 miniIcon:SetScript("OnEnter", mmButton_OnEnter)
 miniIcon:SetScript("OnLeave", mmButton_OnLeave)
 
-
 -- third the addons compartment
 local function doAddonCompartment()
 	if AddonCompartmentFrame then
@@ -226,10 +225,10 @@ end
 
 -- fourth a trigger function for our methods
 function AddonLoaded()
-	-- setupSlidebar()  -- if slidebar is moved here\
+	-- setupSlidebar()  -- if slidebar is moved here ...
 	
 	-- if enabled, kick off the minimap icon
-	if getValue('miniicon-enable') then
+	if getValue("mmenable") then
 		miniIcon.Reposition()
 	end
 
