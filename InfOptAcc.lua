@@ -24,14 +24,13 @@
 		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
 
+local _G = _G
+local Informant = _G.Informant
 if not Informant then return end
 
 -- some basics for this file
 Informant_RegisterRevision("$URL$", "$Rev$")
 local addonName = "Informant"
-local getValue = Informant.Settings.GetSetting
-local setValue = Informant.Settings.SetSetting
-
 
 --[[
 	This section is for loading Informant Options Access (InfOptAcc) Methods
@@ -105,15 +104,15 @@ local function dragStop()
 end
 
 function miniIcon.Reposition(angle)
-	if not getValue("mmenable") then
+	if not Informant.Settings.GetSetting("miniicon.enable") then
 		miniIcon:Hide()
 		return
 	end
 	miniIcon:Show()
-	if not angle then angle = getValue('mmangle') or 0.5
-	else setValue('mmangle', angle) end
+	if not angle then angle = Informant.Settings.GetSetting('miniicon.angle') or 0.5
+	else Informant.Settings.SetSetting('miniicon.angle', angle) end
 	angle = angle
-	local distance = getValue('mmdistance')
+	local distance = Informant.Settings.GetSetting('miniicon.distance')
 
 	local width,height = Minimap:GetWidth()/2, Minimap:GetHeight()/2
 	width = width+distance
@@ -228,12 +227,12 @@ function AddonLoaded()
 	-- setupSlidebar()  -- if slidebar is moved here ...
 	
 	-- if enabled, kick off the minimap icon
-	if getValue("mmenable") then
+	if Informant.Settings.GetSetting("miniicon.enable") then
 		miniIcon.Reposition()
 	end
 
 	if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then  -- if the addons compartment exists
-		if getValue("addoncompartment") then -- if enabled, check for the blizzard addons compartment
+		if Informant.Settings.GetSetting("addoncompartment") then -- if enabled, check for the blizzard addons compartment
 			if doAddonCompartment then
 				doAddonCompartment()
 				-- only call this function once
