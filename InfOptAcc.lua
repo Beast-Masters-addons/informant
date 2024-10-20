@@ -24,11 +24,7 @@
 		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
 
-if not Informant then return end
-
--- some basics for this file
-Informant_RegisterRevision("$URL$", "$Rev$")
-local addonName = "Informant"
+local addonName, _ = ... -- return addon name dynamically
 
 --[[
 	This section is for loading Informant Options Access (InfOptAcc) Methods
@@ -107,10 +103,10 @@ function miniIcon.Reposition(angle)
 		return
 	end
 	miniIcon:Show()
-	if not angle then angle = Informant.Settings.GetSetting('miniicon.angle') or 0.5
-	else Informant.Settings.SetSetting('miniicon.angle', angle) end
+	if not angle then angle = Informant.Settings.GetSetting("miniicon.angle")
+	else Informant.Settings.SetSetting("miniicon.angle", angle) end
 	angle = angle
-	local distance = Informant.Settings.GetSetting('miniicon.distance')
+	local distance = Informant.Settings.GetSetting("miniicon.distance")
 
 	local width,height = Minimap:GetWidth()/2, Minimap:GetHeight()/2
 	width = width+distance
@@ -230,7 +226,7 @@ function AddonLoaded()
 	end
 
 	if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then  -- if the addons compartment exists
-		if Informant.Settings.GetSetting("addoncompartment") then -- if enabled, check for the blizzard addons compartment
+		if Informant.Settings.GetSetting("addoncompartment") then -- do we want to display?
 			if doAddonCompartment then
 				doAddonCompartment()
 				-- only call this function once
@@ -241,7 +237,11 @@ function AddonLoaded()
 end
 
 -- fifth sense the add on is loading and set off our loaded function
-loading, _ = C_AddOns.IsAddOnLoaded(addonName)
-if loading then
-	AddonLoaded() -- load options access methods
+local frame = CreateFrame("Frame") -- used to sense events
+local function onEvent(self, event, name) -- used to trigger AFTER saved variables are in play
+  if name ~= addonName then return end -- don't process event if it wasn't our addon that loaded
+  AddonLoaded() -- load options access methods
+  self:UnregisterEvent("ADDON_LOADED") -- don't process further loaded events
 end
+frame:SetScript("OnEvent", onEvent) -- watch events
+frame:RegisterEvent("ADDON_LOADED") -- when an add on is fully loaded...
