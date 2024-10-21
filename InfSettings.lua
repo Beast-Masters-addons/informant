@@ -280,8 +280,8 @@ local function setter(setting, value)
 	end
 
 	if (a == "sideIcon") and Informant.SideIcon then
--- not implemented yet
---		Informant.SideIcon.Update()
+		-- not implemented yet
+		--		Informant.SideIcon.Update()
 	end
 	
 	-- if updating the minimap icon settings
@@ -292,11 +292,9 @@ local function setter(setting, value)
 				return
 			end
 			miniIcon:Show()
-		end
-		if b == "angle" then
+		elseif b == "angle" then
 			miniIcon.Reposition(angle)
 		end
-		-- todo: enable distance adjustments
 	end
 end
 
@@ -361,7 +359,7 @@ local function makeGuiConfig()
 	local function selectorLocales()
 		return localedropdown
 	end
-
+	
   	gui:AddCat("Informant")	-- TODO - localize me!
 
 	id = gui:AddTab("General")
@@ -479,10 +477,9 @@ local function makeGuiConfig()
 	gui:AddControl(id, "Subhead",    0,    _TRANS("INF_GuiMinimapOptions")) -- show in the minimap
 	gui:AddControl(id, "Checkbox",   0, 1, "miniicon.enable", _TRANS("INF_GuiMinimapShowButton")) -- give a checkbox window for this (start enabled as it's new)
 	gui:AddControl(id, "Slider",     0, 1, "miniicon.angle", 0, 360, 1, _TRANS("INF_GuiMinimapButtonAngle")) -- create the angle slider
-	gui:AddControl(id, "Slider",     0, 1, "miniicon.distance", -80, 80, 1, _TRANS("INF_GuiMinimapButtonDist"))
 
 
-	if AddonCompartmentFrame then
+	if AddonCompartmentFrame then  -- variable appears built into wow
 		gui:AddControl(id, "Subhead",    0,    _TRANS('INF_GuiAddOnsCompartmentOptions')) -- "Show in Blizzard's AddOnCompatment:"
 		gui:AddControl(id, "Checkbox",   0, 1, "addoncompartment", _TRANS('INF_GuiAddOnsCompartmentEnable')) -- give a checkbox window for this (start enabled as it's new)
 		gui:AddTip(id, _TRANS("INF_GuiAddOnsCompartmentWarning"))
