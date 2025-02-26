@@ -755,6 +755,16 @@ InformantLocalizations = {
 		["INF_Interface_ShowZeroMerchants"]	= "Show a message when no merchants are known";
 		["INF_Interface_VendorToggle"]	= "Show Vendor Buy/Sell Prices";
 
+		-- Section: Settings > Access > MiniMap, Blizzard's AddOns Compartment, etc
+		["INF_Access_Config_Options"]	= "How would you like to access these options?";
+		["INF_GuiAddOnsCompartmentOptions"]	= "Show in Blizzard's AddOns Compartment";
+		["INF_GuiAddOnsCompartmentWarning"]	= "This setting requires a UI reload to take effect";
+		["INF_GuiAddOnsCompartmentEnable"] = "Display button in AddOns Compartment";
+		["INF_GuiMinimapButtonAngle"]	= "Button angle: %d";
+		["INF_GuiMinimapButtonDist"]	= "Distance: %d";
+		["INF_GuiMinimapOptions"]	= "Minimap display options";
+		["INF_GuiMinimapShowButton"]	= "Display Minimap button";
+
 		-- Section: Tooltip
 		["INF_Tooltip_AdditAlchemy"]	= "Alchemy";
 		["INF_Tooltip_AdditAmmoPouch"]	= "Ammo Pouch";

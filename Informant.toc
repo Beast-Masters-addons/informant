@@ -1,7 +1,7 @@
 ## Title: Informant
 ## Notes: Displays detailed item information in tooltips, such as use, vendor sales information, and more. [<%version%>]
 ##
-## Interface: 110002, 40400, 11503
+## Interface: 110100, 40400, 11503
 ## LoadOnDemand: 1
 ## Dependencies: Stubby
 ## OptionalDeps: !nLog, Babylonian, DebugLib, Configator, SlideBar, LibExtraTip, TipHelper, LibDataBroker
@@ -34,3 +34,4 @@ InfCommand.lua
 InfTooltip.lua
 
 Informant.xml
+InfOptAcc.lua
