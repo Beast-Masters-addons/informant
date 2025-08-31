@@ -15,6 +15,7 @@
 ## X-Category: Item Data
 ## X-URL: http://auctioneeraddon.com/
 ## X-Feedback: https://auctioneeraddon.com/slack
+## X-Wago-ID: j6jzlm6R
 ##
 InfManifest.lua
 

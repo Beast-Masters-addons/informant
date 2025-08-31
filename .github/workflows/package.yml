@@ -29,11 +29,11 @@ jobs:
 
       - name: WoW Packager
         uses: BigWigsMods/packager@v2.4.3
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/options'
 
       - name: WoW Packager without upload
         uses: BigWigsMods/packager@v2.4.3
-        if: github.ref != 'refs/heads/master'
+        if: github.ref != 'refs/heads/options'
         with:
           args: -d
 
