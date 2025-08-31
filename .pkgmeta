@@ -1,0 +1,18 @@
+package-as: Informant
+
+externals:
+  Libs/Babylonian:
+    url: https://gitlab.com/norganna-wow/libs/babylonian.git
+  Libs/Configator:
+    url: https://gitlab.com/norganna-wow/libs/configator.git
+  Libs/DebugLib:
+    url: https://gitlab.com/norganna-wow/libs/debuglib.git
+  Libs/LibDataBroker:
+    url: https://gitlab.com/norganna-wow/libs/libdatabroker.git
+  Libs/LibExtraTip:
+    url: https://gitlab.com/norganna-wow/libs/libextratip.git
+  Libs/TipHelper:
+    url: https://gitlab.com/norganna-wow/libs/tiphelper.git
+
+ignore:
+  - get_libs.sh
