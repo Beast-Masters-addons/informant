@@ -1,0 +1,44 @@
+name: Package
+
+# Controls when the action will run. 
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: WoW Packager
+        uses: BigWigsMods/packager@v2.4.3
+        if: github.ref == 'refs/heads/master'
+
+      - name: WoW Packager without upload
+        uses: BigWigsMods/packager@v2.4.3
+        if: github.ref != 'refs/heads/master'
+        with:
+          args: -d
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Informant ${{ github.head_ref || github.ref_name }}
+          path: ${{ github.workspace }}/.release
+          include-hidden-files: true
