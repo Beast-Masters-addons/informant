@@ -48,10 +48,6 @@ manifest.revs = { }
 manifest.dist = {
 --[[<%revisions%>]]}
 
-function manifest.RegisterRevision() -- ### LibRevision removed
-end
-Informant_RegisterRevision = manifest.RegisterRevision -- ### we shall leave this global here for now
-
 
 function manifest.ShowMessage(msg)
 	local messageFrame = manifest.messageFrame
@@ -104,5 +100,3 @@ function manifest.Validate()
 	end
 	return true
 end
-
-Informant_RegisterRevision("$URL$", "$Rev$")

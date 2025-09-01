@@ -28,9 +28,6 @@
 		since that is it's designated purpose as per:
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 -->
-	<Script>
-		Informant_RegisterRevision("$URL$", "$Rev$")
-	</Script>
 
 	<GameTooltip name="Informant_ScanTooltip" frameStrata="TOOLTIP" hidden="true" parent="UIParent" inherits="GameTooltipTemplate">
 		<Scripts>

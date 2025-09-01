@@ -31,7 +31,6 @@
 		http://www.fsf.org/licensing/licenses/gpl-faq.html#InterpreterIncompat
 ]]
 if not Informant then return end
-Informant_RegisterRevision("$URL$", "$Rev$")
 local commands = Informant.Commands
 
 -- function prototypes

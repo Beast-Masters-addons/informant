@@ -262,5 +262,3 @@ end
 function debugPrint(message, title, errorCode, level)
 	return Informant.DebugPrint(message, "InfLocale", title, errorCode, level)
 end
-
-Informant_RegisterRevision("$URL$", "$Rev$")

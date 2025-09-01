@@ -32,7 +32,6 @@ local _G = _G
 local Informant = _G.Informant
 if not Informant then return end
 
-Informant_RegisterRevision("$URL$","$Rev$")
 
 local VERSION = "<%version%>"
 if VERSION:byte(1) == 60 then -- '<' character

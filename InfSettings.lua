@@ -65,7 +65,6 @@ Usage:
 ]]
 if not Informant then return end
 
-Informant_RegisterRevision("$URL$", "$Rev$")
 
 local lib = Informant.Settings
 local gui
