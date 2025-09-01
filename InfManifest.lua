@@ -44,6 +44,11 @@ _G.Informant = Informant
 
 local manifest = Informant.Manifest
 
+if _G.Stubby then
+	_G.Stubby.SetConfig("Informant", "LoadType", "never")
+	_G.StubbyConfig["Informant"] = nil
+	_G.StubbyConfig["informant"] = nil
+end
 manifest.revs = { }
 manifest.dist = {
 --[[<%revisions%>]]}
