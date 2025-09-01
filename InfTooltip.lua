@@ -24,18 +24,24 @@
 		Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
 
+local addon = _G.LibStub("AceAddon-3.0"):GetAddon("Informant")
+---@type Informant_Settings
+local options = addon:GetModule("Informant_Settings")
+---@type Informant_Locale
+local locale = addon:GetModule("Informant_Locale")
+
 local nilSafeString			-- nilSafeString(String)
 local whitespace			-- whitespace(length)
-local getFilter = Informant.Settings.GetSetting
-local setFilter = Informant.Settings.SetSetting
+local getFilter = options.get
+local setFilter = options.set
 local debugPrint
 
 local tooltip = LibStub("nTipHelper:1")
-local _TRANS = Informant.Locale.Translate
+local _TRANS = locale.Translate
 
 function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	-- nothing to do, if informant is disabled
-	if (not getFilter('all')) then
+	if (not options.get('enable')) then
 		return
 	end
 

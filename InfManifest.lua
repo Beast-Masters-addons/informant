@@ -34,74 +34,16 @@
 --[[ Create the Informant table as the first thing. Install empty module tables. ]]
 local Informant = {
 	Manifest = {},
-	Locale = {},
-	Settings = {},
-	Commands = {},
 }
 _G.Informant = Informant
 
 -- ### global Informant_Manifest was not used anywhere, therefore has been removed to reduce globals
 
+local addon = _G.LibStub("AceAddon-3.0"):NewAddon("Informant")
 local manifest = Informant.Manifest
 
 if _G.Stubby then
 	_G.Stubby.SetConfig("Informant", "LoadType", "never")
 	_G.StubbyConfig["Informant"] = nil
 	_G.StubbyConfig["informant"] = nil
-end
-manifest.revs = { }
-manifest.dist = {
---[[<%revisions%>]]}
-
-
-function manifest.ShowMessage(msg)
-	local messageFrame = manifest.messageFrame
-	if not messageFrame then
-		messageFrame = CreateFrame("Frame", "", UIParent, "BackdropTemplate")
-		manifest.messageFrame = messageFrame
-
-		messageFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-		messageFrame:SetWidth(400);
-		messageFrame:SetHeight(200);
-		messageFrame:SetFrameStrata("DIALOG")
-		messageFrame:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			tile = true, tileSize = 32, edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 }
-		})
-		messageFrame:SetBackdropColor(0.5,0,0, 0.8)
-
-		messageFrame.done = CreateFrame("Button", nil, messageFrame, "UIPanelButtonTemplate")
-		messageFrame.done:SetSize(90, 21)
-		messageFrame.done:SetText(OKAY)
-		messageFrame.done:SetPoint("BOTTOMRIGHT", messageFrame, "BOTTOMRIGHT", -10, 10)
-		messageFrame.done:SetScript("OnClick", function() messageFrame:Hide() end)
-
-		messageFrame.text = messageFrame:CreateFontString(nil, "OVERLAY")
-		messageFrame.text:SetPoint("TOPLEFT", messageFrame, "TOPLEFT", 10, -10)
-		messageFrame.text:SetPoint("BOTTOMRIGHT", messageFrame.done, "TOPRIGHT")
-		messageFrame.text:SetFont(STANDARD_TEXT_FONT,13)
-		messageFrame.text:SetJustifyH("LEFT")
-		messageFrame.text:SetJustifyV("TOP")
-	end
-	messageFrame.text:SetText(msg)
-	messageFrame:Show()
-end
-
-function manifest.Validate()
-	local matches = true
-	for file, revision in pairs(manifest.dist) do
-		local current = manifest.revs[file]
-		if (not current or current ~= revision) then
-			matches = false
-			if (nLog) then
-				nLog.AddMessage("Informant", "Validate", N_WARNING, "File revision mismatch", "File", file, "should be revision", revision, "but is actually", current)
-			end
-		end
-	end
-	if (not matches) then
-		manifest.ShowMessage("|cffff1111Warning:|r Your Informant installation appears to have mismatching file versions.\n\nPlease make sure you delete the old:\n  |cffffaa11Interface\\AddOns\\Informant|r\ndirectory, reinstall a fresh copy from:\n  |cff44ff11http://auctioneeraddon.com/dl/Informant|r\nand restart WoW completely before reporting any bugs.\n\nThanks,\n  The Informant Dev Team.")
-	end
-	return true
 end

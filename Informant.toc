@@ -1,13 +1,22 @@
 ## Title: Informant
 ## Notes: Displays detailed item information in tooltips, such as use, vendor sales information, and more. [<%version%>]
-##
+## Category: Inventory
+## Category-deDE: Inventar
+## Category-esES: Inventario
+## Category-esMX: Inventario
+## Category-frFR: Inventaire
+## Category-itIT: Inventario
+## Category-koKR: 소지품
+## Category-ptBR: Inventário
+## Category-ruRU: Инвентарь
+## Category-zhCN: 物品栏
+## Category-zhTW: 物品欄
 ## Interface: 110200, 50500, 11507
-## OptionalDeps: !nLog, Babylonian, DebugLib, Configator, SlideBar, LibExtraTip, TipHelper, LibDataBroker
-## SavedVariables: InformantConfig, InformantLocalUpdates
+## OptionalDeps: !nLog, Babylonian, DebugLib, SlideBar, LibExtraTip, TipHelper, LibDataBroker
+## LoadSavedVariablesFirst: true
+## SavedVariables: InformantConfig, InformantLocalUpdates, InformantDB
 ## IconTexture: Interface/Addons/Informant/inficon.blp
-##
-## Version: <%version%> (<%codename%>)
-## Revision: $Id$
+## Version: @project-version@
 ## Author: Norganna's AddOns
 ## X-Part-Of: Auctioneer
 ## X-Category: Item Data
@@ -16,9 +25,10 @@
 ##
 InfManifest.lua
 
-Libs\Load.xml
+libs.xml
 
 InfStrings.lua
+InfAceSettings.lua
 InfLocale.lua
 
 InfMain.lua
@@ -27,8 +37,6 @@ Data\InfQuests.lua
 Data\InfVendors.lua
 Data\InfData.lua
 
-InfSettings.lua
-InfCommand.lua
 InfTooltip.lua
 
 Informant.xml

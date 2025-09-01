@@ -41,8 +41,11 @@
 
 local Informant = Informant
 if not Informant then return end
-local locale = Informant.Locale
-
+local addon = _G.LibStub("AceAddon-3.0"):GetAddon("Informant")
+---@class Informant_Locale
+local locale = addon:NewModule("Informant_Locale")
+---@type Informant_Settings
+local settings = addon:GetModule('Informant_Settings')
 local Babylonian = LibStub("Babylonian")
 local babylonian = Babylonian(InformantLocalizations)
 
@@ -91,8 +94,11 @@ function locale.ValidateLocale(proposedlocale)
 		-- In this special case we test defaultLocale (not isActive)
 		error("InfLocale: ValidateLocale called before active", 2)
 	end
+	assert(type(proposedlocale) == "string")
+	print('Validate locale', proposedlocale)
 
 	if proposedlocale == nil or proposedlocale == "" then
+		print('Invalid locale', proposedlocale)
 		return defaultLocale, true
 	elseif type(proposedlocale) == "string" then
 		local test = strlower(proposedlocale)
@@ -120,36 +126,13 @@ function locale.SetLocale(proposedlocale)
 		error("InfLocale: SetLocale called before active", 2)
 	end
 
-	local config = InformantConfig
 	local newlocale, isdefault = locale.ValidateLocale(proposedlocale)
 	if not newlocale then
 		return
 	end
-
-	if isdefault then
-		config.localesaved = nil
-		return true
-	else
-		config.localesaved = newlocale
-		return true
-	end
-end
-
--- Informant.Locale.GetLocale()
--- returns <locale for current session>, <locale for future session>, <isFutureLocaleDefault>
-function locale.GetLocale()
-	if not isActive then
-		error("InfLocale: GetLocale called before active", 2)
-	end
-
-	local isFutureDefault = false
-	local futureLocale = InformantConfig.localesaved
-	if not futureLocale then
-		futureLocale = defaultLocale
-		isFutureDefault = true
-	end
-
-	return sessionLocale, futureLocale, isFutureDefault
+	sessionLocale = newlocale
+    settings.set('locale', newlocale)
+    return true
 end
 
 -- Informant.Locale.GetLocaleList([usetable])
@@ -184,25 +167,8 @@ function locale.IsActive()
 	return isActive
 end
 
--- Informant.Locale.SetCallbackOnActive(callback)
--- callback : function to be called when the Locale module has become active, i.e. when translations are available
--- Should be used by modules that do not have their own OnLoad handler, but need to perform localizations at startup
-function locale.SetCallbackOnActive(callback)
-	if type(callback) == "function" then
-		if isActive then
-			callback()
-		else
-			tinsert(listCallbacks, callback)
-		end
-	else
-		error("Usage: Informant.Locale.SetCallbackOnActive(callback); callback must be a function", 2)
-	end
-end
 
--- Informant.Locale.OnLoad()
--- Called from InfMain. Self-deleting. Do not try to call from anywhere else.
-function locale.OnLoad()
-	locale.OnLoad = nil
+function locale:OnInitialize()
 
 	defaultLocale = GetLocale()
 	local found = false
@@ -217,23 +183,14 @@ function locale.OnLoad()
 		defaultLocale = "enUS" -- fallback to enUS (which should always exist)
 	end
 
-	local config = InformantConfig
-	if config.localesaved then
-		sessionLocale = locale.ValidateLocale(config.localesaved)
-		if not sessionLocale then
-			config.localesaved = nil -- remove invalid saved locale
-			sessionLocale = defaultLocale
-		end
-	else
-		sessionLocale = defaultLocale
-	end
+    sessionLocale = locale.ValidateLocale(settings.get('locale'))
+    if not sessionLocale then
+        settings.set('locale', defaultLocale) -- remove invalid saved locale
+        sessionLocale = defaultLocale
+    end
 
 	isActive = true
 
-	for _, callback in ipairs(listCallbacks) do
-		callback()
-	end
-	listCallbacks = nil
 end
 
 -------------------------------------------------------------------------------

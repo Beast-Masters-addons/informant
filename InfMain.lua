@@ -33,10 +33,15 @@ local Informant = _G.Informant
 if not Informant then return end
 
 
-local VERSION = "<%version%>"
-if VERSION:byte(1) == 60 then -- '<' character
-	VERSION = "6.1.DEV"
-end
+local VERSION = "@project-version@"
+
+local addon = _G.LibStub("AceAddon-3.0"):GetAddon("Informant")
+---@class Informant_Main
+local main = addon:NewModule("Informant_Main", "AceEvent-3.0")
+---@type Informant_Settings
+local options = addon:GetModule('Informant_Settings')
+---@type Informant_Locale
+local locale = addon:GetModule("Informant_Locale")
 
 local type,pairs,ipairs,select = type,pairs,ipairs,select
 local tonumber,tostring,strmatch = tonumber,tostring,strmatch
@@ -70,17 +75,12 @@ local addLine				-- addLine(text, color)
 local clear					-- clear()
 local debugPrint            -- debugPrint(message, title, errorCode, level)
 local frameActive			-- frameActive(isActive)
-local frameLoaded			-- frameLoaded()
 local getCatName			-- getCatName(catID)
 local getItem				-- getItem(itemLink)
 local getLocale
 local getRowCount			-- getRowCount()
 local infDebugPrint         -- debugPrint(message, category, title, errorCode, level)
 local onEvent				-- onEvent(event)
-local onLoad				-- onLoad()
-local onVariablesLoaded		-- onVariablesLoaded()
-local onInitialize
-local onQuit				-- onQuit()
 local scrollUpdate			-- scrollUpdate(offset)
 local setDatabase			-- setDatabase(database)
 local setRequirements		-- setRequirements(requirements)
@@ -108,12 +108,8 @@ local OnTooltipAddMoney
 local self = {}
 local lines = {}
 local addonName = "Informant"
-local _TRANS = Informant.Locale.Translate
+local _TRANS = locale.Translate
 local tooltip = LibStub("nTipHelper:1")
-
--- GLOBAL VARIABLES
-
-InformantConfig = {} -- ### TODO: do this properly during ADDON_LOADED, move to InfSettings.lua
 
 -- LOCAL DEFINES
 
@@ -553,10 +549,6 @@ function setCraftCount(craft_counts)
 	Informant.SetCraftCount = nil -- Set only once
 end
 
-function getLocale()
-	return Informant.Locale.GetLocale()
-end
-
 -- local categories = {GetAuctionItemClasses()} -- GetAuctionItemClasses removed in 7.0.0
 -- ### TODO - review categories for different WoW versions...
 local categories = {
@@ -915,7 +907,7 @@ local function doUpdateMerchant()
 
 	if ((not MerchantFrame:IsVisible()) or InRepairMode()) then return end
 
-	if (not Informant.Settings.GetSetting('auto-update')) then return end
+	if (not options.get('auto-update')) then return end
 
 	local vendorID = updateMerchantName()
 	if not vendorID then return end
@@ -967,23 +959,8 @@ local function scrubLocalUpdateInfo()
 
 end
 
-
-function onQuit()
-	if (not InformantConfig.position) then
-		InformantConfig.position = { }
-	end
-	InformantConfig.position.x, InformantConfig.position.y = InformantFrame:GetCenter()
-end
-
 local function slidebarclickhandler(_, button)
-	--if we rightclick open the configuration window for the whole addon
-	Informant.Settings.MakeGuiConfig()
-	local gui = Informant.Settings.Gui
-	if (gui:IsVisible()) then
-		gui:Hide()
-	else
-		gui:Show()
-	end
+	options:toggle()
 end
 
 local function setupSlidebar()
@@ -1013,17 +990,10 @@ local function setupSlidebar()
 	end
 end
 
-function onLoad()
-	InformantFrame:RegisterEvent("ADDON_LOADED")
-
-	--Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
-
-	InformantFrame:RegisterEvent("MERCHANT_SHOW");
-	InformantFrame:RegisterEvent("MERCHANT_UPDATE");
-
-	--Informant_ScanTooltip:SetScript("OnTooltipAddMoney", OnTooltipAddMoney);
-
+function main:OnInitialize()
 	setupSlidebar()
+	self:RegisterEvent("MERCHANT_SHOW", doUpdateMerchant)
+	self:RegisterEvent("MERCHANT_UPDATE", doUpdateMerchant)
 end
 
 local ALTCHATLINKTOOLTIP_OPEN
@@ -1047,17 +1017,9 @@ local function frameLoaded()
 			tile = true, tileSize = 32, edgeSize = 32,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 }
 		})
-
-	onLoad()
 end
 
-function onVariablesLoaded()
-	if (not InformantConfig) then
-		InformantConfig = {}
-	end
-end
-
-function onInitialize()
+local function onInitialize()
 	-- Translations are now available
 	InformantFrameTitle:SetText(_TRANS('INF_Interface_InfWinTitle'))
 	BINDING_HEADER_INFORMANT_HEADER = _TRANS('INF_Interface_BindingHeader')
@@ -1066,35 +1028,17 @@ function onInitialize()
 	soulbindtypes = {_TRANS("INF_Tooltip_SoulBindUse"),_TRANS("INF_Tooltip_SoulBindEquip"),_TRANS("INF_Tooltip_SoulBindPickup")}
 	specialbindtypes = {_TRANS("INF_Tooltip_SpecialBindAccount"),_TRANS("INF_Tooltip_SpecialBindGuild")}
 
-	if (InformantConfig.position) then
-		InformantFrame:ClearAllPoints()
-		InformantFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", InformantConfig.position.x, InformantConfig.position.y)
-	end
 
-	if (not InformantConfig.welcomed) then
+	if not options.get('welcomed') then
 		clear()
 		addLine(_TRANS('INF_Help_FirstUse'))
-		InformantConfig.welcomed = true
+		options.set('welcomed', true)
 	end
-
-	Informant.Commands.OnLoad()
-	setupStubby()
 end
 
-function onEvent(event, addon)
-
-	if (event == "ADDON_LOADED" and addon:lower() == "informant") then
-		onVariablesLoaded()
-		Informant.Locale.OnLoad() -- Translations are available after this point
-		onInitialize()
-		InformantFrame:UnregisterEvent("ADDON_LOADED")
-		scrubLocalUpdateInfo()		-- to fix up data errors
-	end
-
-	if( event == "MERCHANT_SHOW" or event == "MERCHANT_UPDATE" ) then
-		doUpdateMerchant()
-	end
-
+function main:OnEnable()
+	onInitialize()
+	scrubLocalUpdateInfo()		-- to fix up data errors
 end
 
 function frameActive(isActive)
@@ -1292,9 +1236,7 @@ local install = {
 	FrameActive = frameActive,
 	FrameLoaded = frameLoaded,
 	ScrollUpdate = scrollUpdate,
-	GetLocale = getLocale,
 	GetQuestName = getQuestName,
-	OnEvent = onEvent,
 	DebugPrint = infDebugPrint,
 	DebugPrintQuick = debugPrintQuick,
 }

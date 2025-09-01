@@ -1,0 +1,29 @@
+package-as: Informant
+
+externals:
+  libs/Ace3:
+    url: https://repos.wowace.com/wow/ace3/trunk/
+  libs/BM-utils:
+    url: https://github.com/Beast-Masters-addons/BM-utils.git
+    tag: v2.0
+  libs/LibDataBroker:
+    tag: v1.1.4
+    url: https://github.com/tekkub/libdatabroker-1-1.git
+  libs/LibDBIcon:
+    url: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+
+  libs/Babylonian:
+    url: https://gitlab.com/norganna-wow/libs/babylonian.git
+#  libs/Configator:
+#    url: https://gitlab.com/norganna-wow/libs/configator.git
+  libs/DebugLib:
+    url: https://gitlab.com/norganna-wow/libs/debuglib.git
+  libs/LibExtraTip:
+    url: https://gitlab.com/norganna-wow/libs/libextratip.git
+  libs/TipHelper:
+    url: https://gitlab.com/norganna-wow/libs/tiphelper.git
+
+
+
+ignore:
+  - get_libs.sh
