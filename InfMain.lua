@@ -1013,57 +1013,6 @@ local function setupSlidebar()
 	end
 end
 
-local function setupStubby()
-	Stubby.RegisterEventHook("PLAYER_LEAVING_WORLD", "Informant", onQuit)
-	-- Setup the default for stubby to always load (people can override this on a
-	-- per toon basis)
-	Stubby.SetConfig("Informant", "LoadType", "always", true)
-	-- Register our temporary command hook with stubby
-	Stubby.RegisterBootCode("Informant", "CommandHandler",
-	-- Localize Me!
-	[[
-		local function cmdHandler(msg)
-			local cmd, param = msg:lower():match("^(%w+)%s*(.*)$")
-			cmd = cmd or msg:lower() or "";
-			param = param or "";
-			if (cmd == "load") then
-				if (param == "") then
-					Stubby.Print("Manually loading Informant...")
-					C_AddOns.LoadAddOn("Informant")
-				elseif (param == "always") then
-					Stubby.Print("Setting Informant to always load for this character")
-					Stubby.SetConfig("Informant", "LoadType", param)
-					C_AddOns.LoadAddOn("Informant")
-				elseif (param == "never") then
-					Stubby.Print("Setting Informant to never load automatically for this character (you may still load manually)")
-					Stubby.SetConfig("Informant", "LoadType", param)
-				else
-					Stubby.Print("Your command was not understood")
-				end
-			else
-				Stubby.Print("Informant is currently not loaded.")
-				Stubby.Print("  You may load it now by typing |cffffffff/informant load|r")
-				Stubby.Print("  You may also set your loading preferences for this character by using the following commands:")
-				Stubby.Print("  |cffffffff/informant load always|r - Informant will always load for this character")
-				Stubby.Print("  |cffffffff/informant load never|r - Informant will never load automatically for this character (you may still load it manually)")
-			end
-		end
-		SLASH_INFORMANT1 = "/informant"
-		SLASH_INFORMANT2 = "/inform"
-		SLASH_INFORMANT3 = "/info"
-		SLASH_INFORMANT4 = "/inf"
-		SlashCmdList["INFORMANT"] = cmdHandler
-	]])
-	Stubby.RegisterBootCode("Informant", "Triggers", [[
-		local loadType = Stubby.GetConfig("Informant", "LoadType")
-		if (loadType == "always") then
-			C_AddOns.LoadAddOn("Informant")
-		else
-			Stubby.Print("]].._TRANS('INF_Help_CmdLoadMsg')..[["); -- ### _TRANS
-		end
-	]])
-end
-
 function onLoad()
 	InformantFrame:RegisterEvent("ADDON_LOADED")
 

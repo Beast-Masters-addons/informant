@@ -123,13 +123,6 @@ function commands.CommandHandler(command, silent)
 
 	elseif (cmd == "on" or cmd == "off" or cmd == "toggle") then
 		onOff(cmd, chatprint)
-	elseif (cmd == "disable") then
-		Stubby.SetConfig("Informant", "LoadType", "never")
-	elseif (cmd == "load") then
-		if (param == "always") or (param == "never") then
-			chatPrint("Setting Informant to "..param.." load for this toon")
-			Stubby.SetConfig("Informant", "LoadType", param)
-		end
 	elseif (cmd == "locale") then
 		setLocale(param, chatprint)
 	elseif cmd == "list-locales" then
