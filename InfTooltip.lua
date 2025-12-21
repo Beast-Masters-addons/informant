@@ -32,8 +32,6 @@ local locale = addon:GetModule("Informant_Locale")
 
 local nilSafeString			-- nilSafeString(String)
 local whitespace			-- whitespace(length)
-local getFilter = options.get
-local setFilter = options.set
 local debugPrint
 
 local tooltip = LibStub("nTipHelper:1")
@@ -93,43 +91,43 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	itemInfo.itemSell = sell
 	itemInfo.itemQuant = quant
 
-	if getFilter("ModTTShow") then
-		if getFilter("ModTTShow") == "never" then
+	if options.get("ModTTShow") then
+		if options.get("ModTTShow") == "never" then
 			return
-		elseif getFilter("ModTTShow") == "noalt" and IsAltKeyDown() then
+		elseif options.get("ModTTShow") == "noalt" and IsAltKeyDown() then
 			return
-		elseif getFilter("ModTTShow") == "alt" and not IsAltKeyDown() then
+		elseif options.get("ModTTShow") == "alt" and not IsAltKeyDown() then
 			return
-		elseif getFilter("ModTTShow") == "noshift" and IsShiftKeyDown() then
+		elseif options.get("ModTTShow") == "noshift" and IsShiftKeyDown() then
 			return
-		elseif getFilter("ModTTShow") == "shift" and not IsShiftKeyDown() then
+		elseif options.get("ModTTShow") == "shift" and not IsShiftKeyDown() then
 			return
-		elseif getFilter("ModTTShow") == "noctrl" and IsControlKeyDown() then
+		elseif options.get("ModTTShow") == "noctrl" and IsControlKeyDown() then
 			return
-		elseif getFilter("ModTTShow") == "ctrl" and not IsControlKeyDown() then
+		elseif options.get("ModTTShow") == "ctrl" and not IsControlKeyDown() then
 			return
 		end
 	else
-		setFilter("ModTTShow", "always")
+		options.set("ModTTShow", "always")
 	end
 
-	local embedded = getFilter('embed')
+	local embedded = options.get('embed')
 
 	tooltip:SetColor(1,1,1)
-	if (getFilter('show-ilevel')) then
+	if (options.get('show_ilevel')) then
 		if (itemInfo.itemLevel) then
 			tooltip:AddLine(_TRANS('INF_Tooltip_ItemLevel'):format(itemInfo.itemLevel), nil, embedded)
 		end
 	end
 
-	if (getFilter('show-binding')) and itemInfo.soulBindText then
+	if (options.get('show_binding')) and itemInfo.soulBindText then
 		tooltip:AddLine(itemInfo.soulBindText, nil, embedded)
 	end
-	if (getFilter('show-binding')) and itemInfo.specialBindText then
+	if (options.get('show_binding')) and itemInfo.specialBindText then
 		tooltip:AddLine(itemInfo.specialBindText, nil, embedded)
 	end
 
-	if (getFilter('show-link')) then
+	if (options.get('show_link')) then
 		local showlink = link:match("item:([^|]+)")
 		if showlink then
 			tooltip:AddLine(_TRANS('INF_Tooltip_ItemLink'):format(showlink), nil, embedded)
@@ -137,24 +135,24 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	end
 
 	--DEFAULT_CHAT_FRAME:AddMessage("Got vendor: "..(buy or 0).."/"..(sell or 0))
-	if (getFilter('show-vendor')) then
+	if (options.get('show_vendor')) then
 		if ((buy > 0) or (sell > 0)) then
 			local bgsc = tooltip:Coins(buy)
 			local sgsc = tooltip:Coins(sell)
 
 			tooltip:SetColor(0.8, 0.5, 0.1)
 			if (count and (count > 1)) then
-				if (getFilter('show-vendor-buy')) then
+				if (options.get('show_vendor-buy')) then
 					tooltip:AddLine(_TRANS('INF_Tooltip_ShowVendorBuyMult'):format(count, bgsc), buy*count, embedded)
 				end
-				if (getFilter('show-vendor-sell')) then
+				if (options.get('show_vendor-sell')) then
 					tooltip:AddLine(_TRANS('INF_Tooltip_ShowVendorSellMult'):format(count, sgsc), sell*count, embedded)
 				end
 			else
-				if (getFilter('show-vendor-buy')) then
+				if (options.get('show_vendor-buy')) then
 					tooltip:AddLine(_TRANS('INF_Tooltip_ShowVendorBuy'):format(), buy, embedded)
 				end
-				if (getFilter('show-vendor-sell')) then
+				if (options.get('show_vendor-sell')) then
 					tooltip:AddLine(_TRANS('INF_Tooltip_ShowVendorSell'):format(), sell, embedded)
 				end
 			end
@@ -162,32 +160,32 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	end
 
 	tooltip:SetColor(1,1,1)
-	if (getFilter('show-stack')) then
+	if (options.get('show_stack')) then
 		if (stacks > 1) then
 			tooltip:AddLine(_TRANS('INF_Tooltip_StackSize'):format(stacks), nil, embedded)
 		end
 	end
 
-	if (getFilter('show-merchant')) then
+	if (options.get('show_merchant')) then
 		if (itemInfo.vendors) then
 			local merchantCount = #itemInfo.vendors
 			if (merchantCount > 0) then
 				tooltip:AddLine(_TRANS('INF_Tooltip_ShowMerchant'):format(merchantCount), 0.5, 0.8, 0.5, embedded)
 			else
 				-- NOTE - there are 2 cases for "no known":  nil list, and zero length list
-				if (getFilter('show-zero-merchants')) then
+				if (options.get('show_zero-merchants')) then
 					tooltip:AddLine(_TRANS('INF_Tooltip_NoKnownMerchants'), 0.8, 0.2, 0.2, embedded)
 				end
 			end
 		else
 			-- NOTE - there are 2 cases for "no known":  nil list, and zero length list
-			if (getFilter('show-zero-merchants')) then
+			if (options.get('show_zero-merchants')) then
 				tooltip:AddLine(_TRANS('INF_Tooltip_NoKnownMerchants'), 0.8, 0.2, 0.2, embedded)
 			end
 		end
 	end
 
-	if (getFilter('show-usage')) then
+	if (options.get('show_usage')) then
 		tooltip:SetColor(0.6, 0.4, 0.8)
 		local reagentInfo = ""
 		if (itemInfo.classText) then
@@ -218,7 +216,7 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 	end
 
 -- ccox - TODO - localize me!
-	if ( getFilter('show-crafted') and itemInfo.crafts) then
+	if ( options.get('show_crafted') and itemInfo.crafts) then
 		local crafted_item = itemInfo.crafts
 		local itemName, itemLink, itemQuality, itemLevel, playerLevel, itemType, itemSubType, stackCount, equipLoc, texture, sellPrice = GetItemInfo( tonumber( crafted_item ) )
 		local item_craft_count = itemInfo.craftsCount or 1
@@ -255,7 +253,7 @@ function Informant.TooltipHandler(frame, item, count, name, link, quality)
 		end
 	end
 
-	if (getFilter('show-quest')) then
+	if (options.get('show_quest')) then
 		if (itemInfo.quests) then
 			local questCount = itemInfo.questCount
 			if (questCount > 0) then
