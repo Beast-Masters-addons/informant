@@ -11,7 +11,7 @@
 ## Category-ruRU: Инвентарь
 ## Category-zhCN: 物品栏
 ## Category-zhTW: 物品欄
-## Interface: 110200, 50500, 11507
+## Interface: 110200, 50500, 20505, 11507
 ## OptionalDeps: !nLog, Babylonian, DebugLib, SlideBar, LibExtraTip, TipHelper, LibDataBroker
 ## LoadSavedVariablesFirst: true
 ## SavedVariables: InformantConfig, InformantLocalUpdates, InformantDB
