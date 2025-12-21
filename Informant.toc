@@ -1,5 +1,5 @@
 ## Title: Informant
-## Notes: Displays detailed item information in tooltips, such as use, vendor sales information, and more. [<%version%>]
+## Notes: Displays detailed item information in tooltips, such as use, vendor sales information, and more.
 ## Category: Inventory
 ## Category-deDE: Inventar
 ## Category-esES: Inventario
@@ -20,9 +20,9 @@
 ## Author: Norganna's AddOns
 ## X-Part-Of: Auctioneer
 ## X-Category: Item Data
-## X-URL: http://auctioneeraddon.com/
-## X-Feedback: https://auctioneeraddon.com/slack
-##
+## X-URL: https://github.com/Beast-Masters-addons/informant
+## X-Wago-ID: j6jzlm6R
+
 InfManifest.lua
 
 libs.xml
